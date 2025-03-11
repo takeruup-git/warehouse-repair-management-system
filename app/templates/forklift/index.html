@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}フォークリフト一覧 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>フォークリフト一覧</h1>
+    <a href="{{ url_for('forklift.create') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> 新規登録
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-striped table-hover" id="forkliftTable">
+                <thead>
+                    <tr>
+                        <th>管理番号</th>
+                        <th>メーカー</th>
+                        <th>タイプ</th>
+                        <th>動力</th>
+                        <th>製造年月日</th>
+                        <th>経過年数</th>
+                        <th>配置倉庫</th>
+                        <th>ステータス</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forklift in forklifts %}
+                    <tr>
+                        <td>{{ forklift.management_number }}</td>
+                        <td>{{ forklift.manufacturer }}</td>
+                        <td>{{ forklift.type_name }}</td>
+                        <td>{{ forklift.power_source_name }}</td>
+                        <td>{{ forklift.manufacture_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ "%.1f"|format(forklift.elapsed_years) }}年</td>
+                        <td>{{ forklift.warehouse_group }} {{ forklift.warehouse_number }} {{ forklift.floor }}</td>
+                        <td>
+                            <span class="badge {% if forklift.asset_status == 'active' %}bg-success{% elif forklift.asset_status == 'under_repair' %}bg-warning{% else %}bg-secondary{% endif %}">
+                                {{ forklift.status_name }}
+                            </span>
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="{{ url_for('forklift.edit', id=forklift.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ forklift.id }}">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- 削除確認モーダル -->
+                            <div class="modal fade" id="deleteModal{{ forklift.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">削除確認</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>フォークリフト「{{ forklift.management_number }}」を削除してもよろしいですか？</p>
+                                            <p class="text-danger">この操作は取り消せません。関連する修繕履歴もすべて削除されます。</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                            <form action="{{ url_for('forklift.delete', id=forklift.id) }}" method="post">
+                                                <input type="hidden" name="operator_name" id="operator_name_{{ forklift.id }}">
+                                                <button type="submit" class="btn btn-danger">削除</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 削除モーダルが表示されたときに操作者名を設定
+        const deleteModals = document.querySelectorAll('[id^="deleteModal"]');
+        deleteModals.forEach(modal => {
+            modal.addEventListener('show.bs.modal', function() {
+                const forkliftId = this.id.replace('deleteModal', '');
+                const operatorField = document.getElementById(`operator_name_${forkliftId}`);
+                const globalOperator = document.getElementById('global-operator-name').value;
+                
+                if (operatorField && globalOperator) {
+                    operatorField.value = globalOperator;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

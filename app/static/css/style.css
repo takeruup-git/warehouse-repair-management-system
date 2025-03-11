@@ -1,0 +1,89 @@
+/* 全体のスタイル */
+body {
+    font-family: "MS Gothic", "Yu Gothic", sans-serif;
+    background-color: #f8f9fa;
+}
+
+/* ナビゲーションバー */
+.navbar-brand {
+    font-weight: bold;
+}
+
+/* カード */
+.card {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    background-color: #f8f9fa;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.125);
+}
+
+/* テーブル */
+.table th {
+    background-color: #f8f9fa;
+}
+
+/* フォーム */
+.form-label {
+    font-weight: 500;
+}
+
+/* フッター */
+.footer {
+    border-top: 1px solid #dee2e6;
+}
+
+/* ダッシュボード */
+.dashboard-card {
+    transition: transform 0.2s;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+}
+
+/* アラート */
+.alert-box {
+    border-left: 4px solid;
+}
+
+.alert-box.danger {
+    border-left-color: #dc3545;
+}
+
+.alert-box.warning {
+    border-left-color: #ffc107;
+}
+
+.alert-box.success {
+    border-left-color: #28a745;
+}
+
+/* 印刷用スタイル */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    .print-only {
+        display: block !important;
+    }
+    
+    body {
+        font-size: 12pt;
+    }
+    
+    .container {
+        width: 100%;
+        max-width: 100%;
+    }
+}
+
+/* レスポンシブ調整 */
+@media (max-width: 768px) {
+    .table-responsive {
+        font-size: 0.9rem;
+    }
+}

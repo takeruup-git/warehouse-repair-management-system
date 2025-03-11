@@ -1,0 +1,152 @@
+{% extends "base.html" %}
+
+{% block title %}修繕履歴追加 - {{ forklift.management_number }} - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>修繕履歴追加</h1>
+    <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 戻る
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">フォークリフト情報</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>管理番号:</strong> {{ forklift.management_number }}</p>
+                <p><strong>メーカー:</strong> {{ forklift.manufacturer }}</p>
+                <p><strong>タイプ:</strong> {{ forklift.type_name }}</p>
+                <p><strong>動力:</strong> {{ forklift.power_source_name }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>製造年月日:</strong> {{ forklift.manufacture_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>経過年数:</strong> {{ "%.1f"|format(forklift.elapsed_years) }}年</p>
+                <p><strong>配置倉庫:</strong> {{ forklift.warehouse_group }} {{ forklift.warehouse_number }} {{ forklift.floor }}</p>
+                <p><strong>ステータス:</strong> {{ forklift.status_name }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">修繕履歴登録</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" action="{{ url_for('forklift.add_repair', id=forklift.id) }}" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="repair_date" class="form-label">修繕日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="repair_date" name="repair_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contractor" class="form-label">施工業者 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="contractor" name="contractor" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_target_type" class="form-label">修繕対象種別 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="repair_target_type" name="repair_target_type" required>
+                            {% for type_key, type_name in repair_target_types.items() %}
+                            <option value="{{ type_key }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_item" class="form-label">修繕項目 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="repair_item" name="repair_item" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_cost" class="form-label">修繕費用 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="repair_cost" name="repair_cost" required>
+                            <span class="input-group-text">円</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_reason" class="form-label">修繕理由 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="repair_reason" name="repair_reason" required>
+                            {% for reason_key, reason_name in repair_reasons.items() %}
+                            <option value="{{ reason_key }}">{{ reason_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hour_meter" class="form-label">アワーメーター</label>
+                        <input type="number" class="form-control" id="hour_meter" name="hour_meter">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">写真添付</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quotation" class="form-label">見積書添付</label>
+                        <input type="file" class="form-control" id="quotation" name="quotation" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="approval_document" class="form-label">社内承認書類添付</label>
+                        <input type="file" class="form-control" id="approval_document" name="approval_document" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="completion_report" class="form-label">修繕完了報告書</label>
+                        <input type="file" class="form-control" id="completion_report" name="completion_report" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="5"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 登録
+                </button>
+                <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 修繕日に今日の日付をデフォルト値として設定
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('repair_date').value = today;
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

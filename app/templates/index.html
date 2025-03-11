@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}ダッシュボード - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">ダッシュボード</h1>
+
+<div class="row">
+    <!-- 月別修繕費推移グラフ -->
+    <div class="col-lg-8 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">月別修繕費推移グラフ</h5>
+            </div>
+            <div class="card-body">
+                <canvas id="monthlyCostChart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <!-- 修繕費上位5号車 -->
+    <div class="col-lg-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">修繕費上位5号車</h5>
+            </div>
+            <div class="card-body">
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>管理番号</th>
+                                <th class="text-end">修繕費合計</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for vehicle in top_vehicles %}
+                            <tr>
+                                <td>{{ vehicle[0] }}</td>
+                                <td class="text-end">{{ "{:,}".format(vehicle[1]) }}円</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- 1年以内の交換・点検アラート -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header bg-danger text-white">
+                <h5 class="card-title mb-0">1年以内の交換・点検アラート</h5>
+            </div>
+            <div class="card-body">
+                {% if alerts %}
+                <div class="table-responsive">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th>管理番号</th>
+                                <th>項目</th>
+                                <th>予定日</th>
+                                <th class="text-end">残り日数</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for alert in alerts %}
+                            <tr {% if alert.days_left <= 30 %}class="table-danger"{% elif alert.days_left <= 90 %}class="table-warning"{% endif %}>
+                                <td>{{ alert.management_number }}</td>
+                                <td>{{ alert.item }}</td>
+                                <td>{{ alert.date }}</td>
+                                <td class="text-end">{{ alert.days_left }}日</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <p class="text-center my-3">1年以内の交換・点検予定はありません。</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- 最近の修繕履歴 -->
+    <div class="col-lg-6 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="card-title mb-0">最近の修繕履歴</h5>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-tabs" id="repairTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="forklift-tab" data-bs-toggle="tab" data-bs-target="#forklift-repairs" type="button" role="tab">フォークリフト</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="facility-tab" data-bs-toggle="tab" data-bs-target="#facility-repairs" type="button" role="tab">倉庫施設</button>
+                    </li>
+                </ul>
+                <div class="tab-content mt-3" id="repairTabsContent">
+                    <div class="tab-pane fade show active" id="forklift-repairs" role="tabpanel">
+                        {% if recent_repairs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>日付</th>
+                                        <th>管理番号</th>
+                                        <th>修繕項目</th>
+                                        <th class="text-end">費用</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for repair in recent_repairs %}
+                                    <tr>
+                                        <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ repair.target_management_number }}</td>
+                                        <td>{{ repair.repair_item }}</td>
+                                        <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center my-3">最近の修繕履歴はありません。</p>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="facility-repairs" role="tabpanel">
+                        {% if recent_facility_repairs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>日付</th>
+                                        <th>倉庫番号</th>
+                                        <th>修繕項目</th>
+                                        <th class="text-end">費用</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for repair in recent_facility_repairs %}
+                                    <tr>
+                                        <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ repair.target_warehouse_number }}</td>
+                                        <td>{{ repair.repair_item }}</td>
+                                        <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="text-center my-3">最近の修繕履歴はありません。</p>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 月別修繕費推移グラフ
+        const ctx = document.getElementById('monthlyCostChart').getContext('2d');
+        const monthlyCostChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: [{% for month in months %}'{{ month }}月'{% if not loop.last %}, {% endif %}{% endfor %}],
+                datasets: [
+                    {
+                        label: 'フォークリフト',
+                        data: {{ forklift_costs }},
+                        backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: '倉庫施設',
+                        data: {{ facility_costs }},
+                        backgroundColor: 'rgba(255, 99, 132, 0.5)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'その他',
+                        data: {{ other_costs }},
+                        backgroundColor: 'rgba(75, 192, 192, 0.5)',
+                        borderColor: 'rgba(75, 192, 192, 1)',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        stacked: true
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value.toLocaleString() + '円';
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.raw.toLocaleString() + '円';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    });
+</script>
+{% endblock %}
