@@ -20,6 +20,7 @@ class Forklift(Asset):
     warehouse_number = db.Column(db.String(50), nullable=False)
     floor = db.Column(db.String(10), nullable=False)
     operator = db.Column(db.String(50))
+    updated_by = db.Column(db.String(100))
     
     # リレーションシップ
     repairs = db.relationship('ForkliftRepair', back_populates='forklift', cascade='all, delete-orphan')
@@ -87,6 +88,7 @@ class ForkliftRepair(db.Model):
     version = db.Column(db.Integer, nullable=False, default=1)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100))
     
     # リレーションシップ
     forklift = db.relationship('Forklift', back_populates='repairs')
@@ -143,6 +145,9 @@ class ForkliftPrediction(db.Model):
     next_tire_replacement_date = db.Column(db.Date)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    updated_by = db.Column(db.String(100))
+    annual_inspection_status = db.Column(db.String(20))  # passed, failed, pending
+    annual_inspection_notes = db.Column(db.Text)
     
     # リレーションシップ
     forklift = db.relationship('Forklift')
