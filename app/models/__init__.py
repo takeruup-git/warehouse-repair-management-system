@@ -3,6 +3,8 @@ from datetime import datetime
 
 db = SQLAlchemy()
 
+from .operator import Operator
+
 # 監査ログモデル
 class AuditLog(db.Model):
     __tablename__ = 'audit_logs'

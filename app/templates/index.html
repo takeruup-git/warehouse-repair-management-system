@@ -9,11 +9,23 @@
     <!-- 月別修繕費推移グラフ -->
     <div class="col-lg-8 mb-4">
         <div class="card h-100">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">月別修繕費推移グラフ</h5>
+                <div>
+                    <a href="{{ url_for('report.monthly_cost') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-graph-up"></i> 詳細分析
+                    </a>
+                    <a href="{{ url_for('report.repair_target_summary') }}" class="btn btn-sm btn-outline-info">
+                        <i class="bi bi-pie-chart"></i> 種別実績
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <canvas id="monthlyCostChart"></canvas>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    グラフは積み上げ表示で、フォークリフト、倉庫施設、その他の修繕費を表示しています。
+                </div>
             </div>
         </div>
     </div>
@@ -21,28 +33,58 @@
     <!-- 修繕費上位5号車 -->
     <div class="col-lg-4 mb-4">
         <div class="card h-100">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">修繕費上位5号車</h5>
+                <a href="{{ url_for('report.vehicle_history') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="bi bi-graph-up"></i> 詳細分析
+                </a>
             </div>
             <div class="card-body">
+                {% if top_vehicles %}
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm table-hover">
                         <thead>
                             <tr>
                                 <th>管理番号</th>
                                 <th class="text-end">修繕費合計</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for vehicle in top_vehicles %}
                             <tr>
                                 <td>{{ vehicle[0] }}</td>
-                                <td class="text-end">{{ "{:,}".format(vehicle[1]) }}円</td>
+                                <td class="text-end">
+                                    <span class="badge bg-danger">{{ "{:,}".format(vehicle[1]) }}円</span>
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('forklift.view', management_number=vehicle[0]) }}" 
+                                           class="btn btn-outline-primary btn-sm" 
+                                           title="フォークリフト詳細">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('repair.index') }}?management_number={{ vehicle[0] }}" 
+                                           class="btn btn-outline-info btn-sm"
+                                           title="修繕履歴">
+                                            <i class="bi bi-tools"></i>
+                                        </a>
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
+                <div class="alert alert-info mt-3 mb-0">
+                    <i class="bi bi-info-circle"></i> 
+                    修繕費が高額な車両は、定期点検や予防保全の強化を検討してください。
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle"></i> 修繕履歴がありません。
+                </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -52,19 +94,26 @@
     <!-- 1年以内の交換・点検アラート -->
     <div class="col-lg-6 mb-4">
         <div class="card h-100">
-            <div class="card-header bg-danger text-white">
+            <div class="card-header bg-danger text-white d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">1年以内の交換・点検アラート</h5>
+                <span class="badge bg-light text-danger">{{ alerts|length }}件</span>
             </div>
             <div class="card-body">
                 {% if alerts %}
+                <div class="alert alert-info mb-3">
+                    <i class="bi bi-info-circle"></i> 
+                    残り日数が30日以内は<span class="badge bg-danger">赤</span>、
+                    90日以内は<span class="badge bg-warning text-dark">黄</span>で表示されます。
+                </div>
                 <div class="table-responsive">
-                    <table class="table table-sm">
+                    <table class="table table-sm table-hover">
                         <thead>
                             <tr>
                                 <th>管理番号</th>
                                 <th>項目</th>
                                 <th>予定日</th>
                                 <th class="text-end">残り日数</th>
+                                <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -73,14 +122,46 @@
                                 <td>{{ alert.management_number }}</td>
                                 <td>{{ alert.item }}</td>
                                 <td>{{ alert.date }}</td>
-                                <td class="text-end">{{ alert.days_left }}日</td>
+                                <td class="text-end">
+                                    {% if alert.days_left <= 30 %}
+                                        <span class="badge bg-danger">{{ alert.days_left }}日</span>
+                                    {% elif alert.days_left <= 90 %}
+                                        <span class="badge bg-warning text-dark">{{ alert.days_left }}日</span>
+                                    {% else %}
+                                        {{ alert.days_left }}日
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('forklift.view', management_number=alert.management_number) }}" 
+                                           class="btn btn-outline-primary btn-sm" 
+                                           title="フォークリフト詳細">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        {% if alert.item == 'バッテリー交換' %}
+                                        <a href="{{ url_for('inspection.battery_fluid') }}" 
+                                           class="btn btn-outline-info btn-sm"
+                                           title="バッテリー液量点検表">
+                                            <i class="bi bi-battery-charging"></i>
+                                        </a>
+                                        {% elif alert.item == '年次点検' %}
+                                        <a href="{{ url_for('inspection.periodic_self') }}" 
+                                           class="btn btn-outline-info btn-sm"
+                                           title="定期自主検査記録表">
+                                            <i class="bi bi-clipboard-check"></i>
+                                        </a>
+                                        {% endif %}
+                                    </div>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
                     </table>
                 </div>
                 {% else %}
-                <p class="text-center my-3">1年以内の交換・点検予定はありません。</p>
+                <div class="alert alert-success">
+                    <i class="bi bi-check-circle"></i> 1年以内の交換・点検予定はありません。
+                </div>
                 {% endif %}
             </div>
         </div>
@@ -89,29 +170,50 @@
     <!-- 最近の修繕履歴 -->
     <div class="col-lg-6 mb-4">
         <div class="card h-100">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h5 class="card-title mb-0">最近の修繕履歴</h5>
+                <div>
+                    <a href="{{ url_for('repair.index') }}" class="btn btn-sm btn-outline-primary">
+                        <i class="bi bi-list"></i> 一覧
+                    </a>
+                    <a href="{{ url_for('repair.create_other_repair') }}" class="btn btn-sm btn-outline-success">
+                        <i class="bi bi-plus-circle"></i> 登録
+                    </a>
+                </div>
             </div>
             <div class="card-body">
                 <ul class="nav nav-tabs" id="repairTabs" role="tablist">
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link active" id="forklift-tab" data-bs-toggle="tab" data-bs-target="#forklift-repairs" type="button" role="tab">フォークリフト</button>
+                        <button class="nav-link active" id="forklift-tab" data-bs-toggle="tab" data-bs-target="#forklift-repairs" type="button" role="tab">
+                            フォークリフト
+                            <span class="badge bg-secondary">{{ recent_repairs|length }}</span>
+                        </button>
                     </li>
                     <li class="nav-item" role="presentation">
-                        <button class="nav-link" id="facility-tab" data-bs-toggle="tab" data-bs-target="#facility-repairs" type="button" role="tab">倉庫施設</button>
+                        <button class="nav-link" id="facility-tab" data-bs-toggle="tab" data-bs-target="#facility-repairs" type="button" role="tab">
+                            倉庫施設
+                            <span class="badge bg-secondary">{{ recent_facility_repairs|length }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-repairs" type="button" role="tab">
+                            その他修繕
+                            <span class="badge bg-secondary">{{ recent_other_repairs|length }}</span>
+                        </button>
                     </li>
                 </ul>
                 <div class="tab-content mt-3" id="repairTabsContent">
                     <div class="tab-pane fade show active" id="forklift-repairs" role="tabpanel">
                         {% if recent_repairs %}
                         <div class="table-responsive">
-                            <table class="table table-sm">
+                            <table class="table table-sm table-hover">
                                 <thead>
                                     <tr>
                                         <th>日付</th>
                                         <th>管理番号</th>
                                         <th>修繕項目</th>
                                         <th class="text-end">費用</th>
+                                        <th>操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -121,25 +223,38 @@
                                         <td>{{ repair.target_management_number }}</td>
                                         <td>{{ repair.repair_item }}</td>
                                         <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('repair.view_forklift_repair', id=repair.id) }}" class="btn btn-outline-primary btn-sm" title="詳細">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('repair.create_similar_forklift_repair', id=repair.id) }}" class="btn btn-outline-success btn-sm" title="類似修繕を登録">
+                                                    <i class="bi bi-files"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         {% else %}
-                        <p class="text-center my-3">最近の修繕履歴はありません。</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 最近の修繕履歴はありません。
+                        </div>
                         {% endif %}
                     </div>
                     <div class="tab-pane fade" id="facility-repairs" role="tabpanel">
                         {% if recent_facility_repairs %}
                         <div class="table-responsive">
-                            <table class="table table-sm">
+                            <table class="table table-sm table-hover">
                                 <thead>
                                     <tr>
                                         <th>日付</th>
                                         <th>倉庫番号</th>
                                         <th>修繕項目</th>
                                         <th class="text-end">費用</th>
+                                        <th>操作</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -149,13 +264,63 @@
                                         <td>{{ repair.target_warehouse_number }}</td>
                                         <td>{{ repair.repair_item }}</td>
                                         <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('repair.view_facility_repair', id=repair.id) }}" class="btn btn-outline-primary btn-sm" title="詳細">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                                <a href="{{ url_for('repair.create_similar_facility_repair', id=repair.id) }}" class="btn btn-outline-success btn-sm" title="類似修繕を登録">
+                                                    <i class="bi bi-files"></i>
+                                                </a>
+                                            </div>
+                                        </td>
                                     </tr>
                                     {% endfor %}
                                 </tbody>
                             </table>
                         </div>
                         {% else %}
-                        <p class="text-center my-3">最近の修繕履歴はありません。</p>
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 最近の修繕履歴はありません。
+                        </div>
+                        {% endif %}
+                    </div>
+                    <div class="tab-pane fade" id="other-repairs" role="tabpanel">
+                        {% if recent_other_repairs %}
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>日付</th>
+                                        <th>対象名</th>
+                                        <th>修繕項目</th>
+                                        <th class="text-end">費用</th>
+                                        <th>操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for repair in recent_other_repairs %}
+                                    <tr>
+                                        <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                        <td>{{ repair.target_name }}</td>
+                                        <td>{{ repair.repair_item }}</td>
+                                        <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                        <td>
+                                            <div class="btn-group btn-group-sm">
+                                                <a href="{{ url_for('repair.view_other_repair', id=repair.id) }}" class="btn btn-outline-primary btn-sm" title="詳細">
+                                                    <i class="bi bi-eye"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <div class="alert alert-info">
+                            <i class="bi bi-info-circle"></i> 最近の修繕履歴はありません。
+                        </div>
                         {% endif %}
                     </div>
                 </div>
