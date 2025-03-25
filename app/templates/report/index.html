@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>レポート</h1>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">月次修繕費用レポート</h5>
+                    <p class="card-text">月ごとの修繕費用レポートを生成します。</p>
+                    <a href="{{ url_for('report.monthly_cost') }}" class="btn btn-primary">レポート作成</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">フォークリフト修繕履歴</h5>
+                    <p class="card-text">フォークリフトごとの修繕履歴レポートを生成します。</p>
+                    <a href="{{ url_for('report.vehicle_history') }}" class="btn btn-primary">レポート作成</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">修繕対象種別集計</h5>
+                    <p class="card-text">修繕対象種別ごとの集計レポートを生成します。</p>
+                    <a href="{{ url_for('report.repair_target_summary') }}" class="btn btn-primary">レポート作成</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">倉庫施設修繕履歴</h5>
+                    <p class="card-text">倉庫施設ごとの修繕履歴レポートを生成します。</p>
+                    <a href="{{ url_for('report.warehouse_history') }}" class="btn btn-primary">レポート作成</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

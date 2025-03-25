@@ -1,0 +1,167 @@
+{% extends "base.html" %}
+
+{% block title %}その他修繕詳細 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>その他修繕詳細</h1>
+    <div>
+        <a href="{{ url_for('repair.index') }}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> 一覧に戻る
+        </a>
+        <a href="{{ url_for('repair.edit_other_repair', id=repair.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> 編集
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">修繕基本情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%">修繕日</th>
+                            <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>対象名</th>
+                            <td>{{ repair.target_name }}</td>
+                        </tr>
+                        <tr>
+                            <th>カテゴリ</th>
+                            <td>{{ repair.category }}</td>
+                        </tr>
+                        <tr>
+                            <th>修繕費用</th>
+                            <td>{{ "{:,}".format(repair.repair_cost) }}円</td>
+                        </tr>
+                        <tr>
+                            <th>業者</th>
+                            <td>{{ repair.contractor }}</td>
+                        </tr>
+                        <tr>
+                            <th>作成者</th>
+                            <td>{{ repair.operator }}</td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td>{{ repair.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td>{{ repair.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">備考</h5>
+            </div>
+            <div class="card-body">
+                {% if repair.notes %}
+                <p>{{ repair.notes|replace('\n', '<br>')|safe }}</p>
+                {% else %}
+                <p class="text-muted">備考はありません</p>
+                {% endif %}
+            </div>
+        </div>
+        
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">写真・添付ファイル</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    {% if repair.photo_path %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">写真</div>
+                            <div class="card-body text-center">
+                                <a href="{{ repair.photo_path }}" target="_blank">
+                                    <img src="{{ repair.photo_path }}" alt="修繕写真" class="img-fluid" style="max-height: 150px;">
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if repair.quotation_path %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card">
+                            <div class="card-header">見積書</div>
+                            <div class="card-body text-center">
+                                <a href="{{ repair.quotation_path }}" target="_blank" class="btn btn-outline-primary">
+                                    <i class="bi bi-file-earmark-text"></i> 見積書を表示
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                    
+                    {% if not repair.photo_path and not repair.quotation_path %}
+                    <div class="col-12">
+                        <p class="text-muted">添付ファイルはありません</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-3">
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteOtherModal">
+        <i class="bi bi-trash"></i> 削除
+    </button>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteOtherModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">削除確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>この修繕履歴を削除しますか？</p>
+                <p class="text-danger">この操作は取り消せません。</p>
+            </div>
+            <div class="modal-footer">
+                <form action="{{ url_for('repair.delete_other_repair', id=repair.id) }}" method="post">
+                    <input type="hidden" name="operator_name" id="operator_name">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-danger" id="delete-confirm">削除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 削除ボタンクリック時に操作者名を設定
+        const deleteButton = document.getElementById('delete-confirm');
+        deleteButton.addEventListener('click', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

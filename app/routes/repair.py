@@ -20,17 +20,19 @@ def index():
     return render_template('repair/index.html',
                           forklift_repairs=forklift_repairs,
                           facility_repairs=facility_repairs,
-                          other_repairs=other_repairs)
+                          other_repairs=other_repairs,
+                          repair_target_types=Config.REPAIR_TARGET_TYPE_NAMES,
+                          repair_reasons=Config.REPAIR_REASON_NAMES)
 
 @repair_bp.route('/forklift/<int:id>')
 def view_forklift_repair(id):
     repair = ForkliftRepair.query.get_or_404(id)
-    return render_template('repair/view_forklift.html', repair=repair)
+    return render_template('repair/view_forklift.html', repair=repair, repair_target_types=Config.REPAIR_TARGET_TYPE_NAMES, repair_reasons=Config.REPAIR_REASON_NAMES)
 
 @repair_bp.route('/facility/<int:id>')
 def view_facility_repair(id):
     repair = FacilityRepair.query.get_or_404(id)
-    return render_template('repair/view_facility.html', repair=repair)
+    return render_template('repair/view_facility.html', repair=repair, repair_reasons=Config.REPAIR_REASON_NAMES)
 
 @repair_bp.route('/other/<int:id>')
 def view_other_repair(id):

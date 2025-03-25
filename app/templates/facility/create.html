@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+
+{% block title %}倉庫施設新規登録 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>倉庫施設新規登録</h1>
+    <a href="{{ url_for('facility.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('facility.create') }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <h4 class="mb-3">基本情報</h4>
+                    
+                    <div class="mb-3">
+                        <label for="asset_management_number" class="form-label">資産管理番号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="asset_management_number" name="asset_management_number" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="department" class="form-label">部門 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="department" name="department" value="物流部" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="acquisition_date" class="form-label">取得年月日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="acquisition_date" name="acquisition_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="useful_life" class="form-label">耐用年数 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="useful_life" name="useful_life" value="30" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="depreciation_rate" class="form-label">償却率 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="depreciation_rate" name="depreciation_rate" value="0.033" step="0.001" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="acquisition_cost" class="form-label">取得価額 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="acquisition_cost" name="acquisition_cost" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="residual_value" class="form-label">残存価額 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="residual_value" name="residual_value" value="1" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="asset_status" class="form-label">資産ステータス <span class="text-danger">*</span></label>
+                        <select class="form-select" id="asset_status" name="asset_status" required>
+                            {% for status_key, status_name in asset_statuses.items() %}
+                            <option value="{{ status_key }}" {% if status_key == 'active' %}selected{% endif %}>{{ status_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <h4 class="mb-3">倉庫施設情報</h4>
+                    
+                    <div class="mb-3">
+                        <label for="warehouse_number" class="form-label">倉庫番号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="warehouse_number" name="warehouse_number" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="construction_date" class="form-label">建築年月日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="construction_date" name="construction_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="main_structure" class="form-label">主要構造 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="main_structure" name="main_structure" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="ownership_type" class="form-label">所有形態 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="ownership_type" name="ownership_type" required>
+                            {% for type_key, type_name in ownership_types.items() %}
+                            <option value="{{ type_key }}">{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="floor_count" class="form-label">階層数 <span class="text-danger">*</span></label>
+                        <input type="number" class="form-control" id="floor_count" name="floor_count" min="1" value="1" required>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 登録
+                </button>
+                <a href="{{ url_for('facility.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 取得年月日と建築年月日に今日の日付をデフォルト値として設定
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('acquisition_date').value = today;
+        document.getElementById('construction_date').value = today;
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

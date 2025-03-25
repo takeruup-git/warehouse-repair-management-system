@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+
+{% block title %}その他修繕登録 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>その他修繕登録</h1>
+    <a href="{{ url_for('repair.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('repair.create_other_repair') }}" enctype="multipart/form-data">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="repair_date" class="form-label">修繕日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="repair_date" name="repair_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="target_name" class="form-label">対象名 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="target_name" name="target_name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="category" class="form-label">カテゴリ <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="category" name="category" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_cost" class="form-label">修繕費用 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="repair_cost" name="repair_cost" required>
+                            <span class="input-group-text">円</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="contractor" class="form-label">業者 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="contractor" name="contractor" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">写真</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quotation" class="form-label">見積書</label>
+                        <input type="file" class="form-control" id="quotation" name="quotation" accept=".pdf,.jpg,.jpeg,.png">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 登録
+                </button>
+                <a href="{{ url_for('repair.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 修繕日に今日の日付をデフォルト値として設定
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('repair_date').value = today;
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

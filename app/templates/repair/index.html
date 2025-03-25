@@ -1,0 +1,277 @@
+{% extends "base.html" %}
+
+{% block title %}修繕履歴一覧 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>修繕履歴一覧</h1>
+    <a href="{{ url_for('repair.create_other_repair') }}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> その他修繕登録
+    </a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <ul class="nav nav-tabs" id="repairTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="forklift-tab" data-bs-toggle="tab" data-bs-target="#forklift-repairs" type="button" role="tab">
+                    フォークリフト ({{ forklift_repairs|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="facility-tab" data-bs-toggle="tab" data-bs-target="#facility-repairs" type="button" role="tab">
+                    倉庫施設 ({{ facility_repairs|length }})
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="other-tab" data-bs-toggle="tab" data-bs-target="#other-repairs" type="button" role="tab">
+                    その他 ({{ other_repairs|length }})
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content mt-3" id="repairTabsContent">
+            <!-- フォークリフト修繕履歴 -->
+            <div class="tab-pane fade show active" id="forklift-repairs" role="tabpanel">
+                {% if forklift_repairs %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>修繕日</th>
+                                <th>管理番号</th>
+                                <th>修繕対象種別</th>
+                                <th>修繕項目</th>
+                                <th>理由</th>
+                                <th class="text-end">費用</th>
+                                <th>業者</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for repair in forklift_repairs %}
+                            <tr>
+                                <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ repair.target_management_number }}</td>
+                                <td>{% if repair.repair_target_type and repair.repair_target_type in repair_target_types %}{{ repair_target_types[repair.repair_target_type] }}{% else %}{{ repair.repair_target_type }}{% endif %}</td>
+                                <td>{{ repair.repair_item }}</td>
+                                <td>{% if repair.repair_reason and repair.repair_reason in repair_reasons %}{{ repair_reasons[repair.repair_reason] }}{% else %}{{ repair.repair_reason }}{% endif %}</td>
+                                <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                <td>{{ repair.contractor }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('repair.view_forklift_repair', id=repair.id) }}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('repair.edit_forklift_repair', id=repair.id) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteForkliftModal{{ repair.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 削除確認モーダル -->
+                                    <div class="modal fade" id="deleteForkliftModal{{ repair.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">削除確認</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>フォークリフト「{{ repair.target_management_number }}」の修繕履歴を削除しますか？</p>
+                                                    <p class="text-danger">この操作は取り消せません。</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <form action="{{ url_for('repair.delete_forklift_repair', id=repair.id) }}" method="post">
+                                                        <input type="hidden" name="operator_name" id="operator_name_f{{ repair.id }}">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                                        <button type="submit" class="btn btn-danger delete-confirm" data-id="f{{ repair.id }}">削除</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    フォークリフトの修繕履歴はありません。
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- 倉庫施設修繕履歴 -->
+            <div class="tab-pane fade" id="facility-repairs" role="tabpanel">
+                {% if facility_repairs %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>修繕日</th>
+                                <th>倉庫番号</th>
+                                <th>フロア</th>
+                                <th>修繕項目</th>
+                                <th>理由</th>
+                                <th class="text-end">費用</th>
+                                <th>業者</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for repair in facility_repairs %}
+                            <tr>
+                                <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ repair.target_warehouse_number }}</td>
+                                <td>{{ repair.floor }}</td>
+                                <td>{{ repair.repair_item }}</td>
+                                <td>{% if repair.repair_reason and repair.repair_reason in repair_reasons %}{{ repair_reasons[repair.repair_reason] }}{% else %}{{ repair.repair_reason }}{% endif %}</td>
+                                <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                <td>{{ repair.contractor }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('repair.view_facility_repair', id=repair.id) }}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('repair.edit_facility_repair', id=repair.id) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteFacilityModal{{ repair.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 削除確認モーダル -->
+                                    <div class="modal fade" id="deleteFacilityModal{{ repair.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">削除確認</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>倉庫施設「{{ repair.target_warehouse_number }}」の修繕履歴を削除しますか？</p>
+                                                    <p class="text-danger">この操作は取り消せません。</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <form action="{{ url_for('repair.delete_facility_repair', id=repair.id) }}" method="post">
+                                                        <input type="hidden" name="operator_name" id="operator_name_l{{ repair.id }}">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                                        <button type="submit" class="btn btn-danger delete-confirm" data-id="l{{ repair.id }}">削除</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    倉庫施設の修繕履歴はありません。
+                </div>
+                {% endif %}
+            </div>
+            
+            <!-- その他修繕履歴 -->
+            <div class="tab-pane fade" id="other-repairs" role="tabpanel">
+                {% if other_repairs %}
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>修繕日</th>
+                                <th>対象名</th>
+                                <th>カテゴリ</th>
+                                <th class="text-end">費用</th>
+                                <th>業者</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for repair in other_repairs %}
+                            <tr>
+                                <td>{{ repair.repair_date.strftime('%Y-%m-%d') }}</td>
+                                <td>{{ repair.target_name }}</td>
+                                <td>{{ repair.category }}</td>
+                                <td class="text-end">{{ "{:,}".format(repair.repair_cost) }}円</td>
+                                <td>{{ repair.contractor }}</td>
+                                <td>
+                                    <div class="btn-group btn-group-sm">
+                                        <a href="{{ url_for('repair.view_other_repair', id=repair.id) }}" class="btn btn-outline-primary">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                        <a href="{{ url_for('repair.edit_other_repair', id=repair.id) }}" class="btn btn-outline-secondary">
+                                            <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteOtherModal{{ repair.id }}">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </div>
+                                    
+                                    <!-- 削除確認モーダル -->
+                                    <div class="modal fade" id="deleteOtherModal{{ repair.id }}" tabindex="-1" aria-hidden="true">
+                                        <div class="modal-dialog">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title">削除確認</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <p>「{{ repair.target_name }}」の修繕履歴を削除しますか？</p>
+                                                    <p class="text-danger">この操作は取り消せません。</p>
+                                                </div>
+                                                <div class="modal-footer">
+                                                    <form action="{{ url_for('repair.delete_other_repair', id=repair.id) }}" method="post">
+                                                        <input type="hidden" name="operator_name" id="operator_name_o{{ repair.id }}">
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                                        <button type="submit" class="btn btn-danger delete-confirm" data-id="o{{ repair.id }}">削除</button>
+                                                    </form>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="alert alert-info">
+                    その他の修繕履歴はありません。
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 削除ボタンクリック時に操作者名を設定
+        const deleteButtons = document.querySelectorAll('.delete-confirm');
+        deleteButtons.forEach(function(button) {
+            button.addEventListener('click', function() {
+                const id = this.dataset.id;
+                const operatorField = document.getElementById('operator_name_' + id);
+                const globalOperator = document.getElementById('global-operator-name').value;
+                
+                if (operatorField && globalOperator) {
+                    operatorField.value = globalOperator;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

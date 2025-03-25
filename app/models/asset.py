@@ -26,8 +26,25 @@ class Asset(db.Model):
         return Config.ASSET_STATUS_NAMES.get(self.asset_status, self.asset_status)
     
     @property
+    def asset_status_name(self):
+        return Config.ASSET_STATUS_NAMES.get(self.asset_status, self.asset_status)
+    
+    @property
     def asset_type_name(self):
         return Config.ASSET_TYPE_NAMES.get(self.asset_type, self.asset_type)
+    
+    @property
+    def elapsed_years(self):
+        """経過年数を計算"""
+        if hasattr(self, 'manufacture_date'):
+            start_date = self.manufacture_date
+        elif hasattr(self, 'construction_date'):
+            start_date = self.construction_date
+        else:
+            start_date = self.acquisition_date
+            
+        days_difference = (Config.CURRENT_DATE.date() - start_date).days
+        return days_difference / 365.25  # うるう年も考慮した年数
     
     def __repr__(self):
         return f'<Asset {self.asset_management_number}>'
@@ -46,7 +63,9 @@ class Asset(db.Model):
             'residual_value': self.residual_value,
             'asset_status': self.asset_status,
             'status_name': self.status_name,
-            'version': self.version
+            'asset_status_name': self.asset_status_name,
+            'version': self.version,
+            'elapsed_years': self.elapsed_years
         }
     
     def increment_version(self):

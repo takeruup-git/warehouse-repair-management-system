@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block title %}バッテリー液量点検表詳細 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>バッテリー液量点検表詳細</h1>
+    <div>
+        <a href="{{ url_for('inspection.battery_fluid') }}" class="btn btn-secondary me-2">
+            <i class="bi bi-arrow-left"></i> 一覧に戻る
+        </a>
+        <a href="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}" class="btn btn-primary">
+            <i class="bi bi-pencil"></i> 編集
+        </a>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">基本情報</h5>
+            </div>
+            <div class="card-body">
+                <table class="table table-striped">
+                    <tbody>
+                        <tr>
+                            <th style="width: 35%">点検日</th>
+                            <td>{{ check.check_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>管理番号</th>
+                            <td>{{ check.management_number }}</td>
+                        </tr>
+                        <tr>
+                            <th>倉庫</th>
+                            <td>{{ check.warehouse }}</td>
+                        </tr>
+                        <tr>
+                            <th>経過年数</th>
+                            <td>{{ check.elapsed_years }}年</td>
+                        </tr>
+                        <tr>
+                            <th>液量</th>
+                            <td>{{ check.fluid_level }}</td>
+                        </tr>
+                        {% if check.refill_date %}
+                        <tr>
+                            <th>補充日</th>
+                            <td>{{ check.refill_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>補充者</th>
+                            <td>{{ check.refiller }}</td>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>確認日</th>
+                            <td>{{ check.confirmation_date.strftime('%Y-%m-%d') }}</td>
+                        </tr>
+                        <tr>
+                            <th>点検責任者</th>
+                            <td>{{ check.inspector }}</td>
+                        </tr>
+                        <tr>
+                            <th>作成者</th>
+                            <td>{{ check.operator }}</td>
+                        </tr>
+                        <tr>
+                            <th>作成日時</th>
+                            <td>{{ check.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                        <tr>
+                            <th>更新日時</th>
+                            <td>{{ check.updated_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="card-title mb-0">備考</h5>
+            </div>
+            <div class="card-body">
+                {% if check.notes %}
+                <p>{{ check.notes|replace('\n', '<br>')|safe }}</p>
+                {% else %}
+                <p class="text-muted">備考はありません</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-3">
+    <button type="button" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal">
+        <i class="bi bi-trash"></i> 削除
+    </button>
+</div>
+
+<!-- 削除確認モーダル -->
+<div class="modal fade" id="deleteModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">削除確認</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>このバッテリー液量点検表を削除しますか？</p>
+                <p class="text-danger">この操作は取り消せません。</p>
+            </div>
+            <div class="modal-footer">
+                <form action="{{ url_for('inspection.delete_battery_fluid', id=check.id) }}" method="post">
+                    <input type="hidden" name="operator_name" id="operator_name">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                    <button type="submit" class="btn btn-danger" id="delete-confirm">削除</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 削除ボタンクリック時に操作者名を設定
+        const deleteButton = document.getElementById('delete-confirm');
+        deleteButton.addEventListener('click', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

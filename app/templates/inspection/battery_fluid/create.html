@@ -1,0 +1,169 @@
+{% extends "base.html" %}
+
+{% block title %}バッテリー液量点検表作成 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>バッテリー液量点検表作成</h1>
+    <a href="{{ url_for('inspection.battery_fluid') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('inspection.create_battery_fluid') }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="check_date" class="form-label">点検日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="check_date" name="check_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="forklift_id" class="form-label">フォークリフト <span class="text-danger">*</span></label>
+                        <select class="form-select" id="forklift_id" name="forklift_id" required>
+                            <option value="">選択してください</option>
+                            {% for forklift in forklifts %}
+                            <option value="{{ forklift.id }}" data-management-number="{{ forklift.management_number }}" data-warehouse="{{ forklift.warehouse_group }} {{ forklift.warehouse_number }} {{ forklift.floor }}" data-elapsed-years="{{ "%.2f"|format(forklift.elapsed_years) }}">
+                                {{ forklift.management_number }} ({{ forklift.model }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="management_number" class="form-label">管理番号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="management_number" name="management_number" readonly required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="warehouse" class="form-label">倉庫 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="warehouse" name="warehouse" readonly required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="elapsed_years" class="form-label">経過年数 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="elapsed_years" name="elapsed_years" readonly required>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="fluid_level" class="form-label">液量 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fluid_level" name="fluid_level" required>
+                            <option value="良">良</option>
+                            <option value="要補充">要補充</option>
+                            <option value="不良">不良</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="refill_date" class="form-label">補充日</label>
+                        <input type="date" class="form-control" id="refill_date" name="refill_date">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="refiller" class="form-label">補充者</label>
+                        <select class="form-select" id="refiller" name="refiller">
+                            <option value="">選択してください</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirmation_date" class="form-label">確認日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="confirmation_date" name="confirmation_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="inspector" class="form-label">点検責任者 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="inspector" name="inspector" required>
+                            <option value="">選択してください</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 保存
+                </button>
+                <a href="{{ url_for('inspection.battery_fluid') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 今日の日付をデフォルト値として設定
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('check_date').value = today;
+        document.getElementById('confirmation_date').value = today;
+        
+        // フォークリフト選択時に関連データを自動入力
+        const forkliftSelect = document.getElementById('forklift_id');
+        forkliftSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (selectedOption.value) {
+                document.getElementById('management_number').value = selectedOption.dataset.managementNumber;
+                document.getElementById('warehouse').value = selectedOption.dataset.warehouse;
+                document.getElementById('elapsed_years').value = selectedOption.dataset.elapsedYears;
+            } else {
+                document.getElementById('management_number').value = '';
+                document.getElementById('warehouse').value = '';
+                document.getElementById('elapsed_years').value = '';
+            }
+        });
+        
+        // 液量が「良」の場合は補充日と補充者を無効化
+        const fluidLevelSelect = document.getElementById('fluid_level');
+        const refillDateInput = document.getElementById('refill_date');
+        const refillerSelect = document.getElementById('refiller');
+        
+        function updateRefillFields() {
+            if (fluidLevelSelect.value === '良') {
+                refillDateInput.disabled = true;
+                refillDateInput.value = '';
+                refillerSelect.disabled = true;
+                refillerSelect.value = '';
+            } else {
+                refillDateInput.disabled = false;
+                refillerSelect.disabled = false;
+            }
+        }
+        
+        fluidLevelSelect.addEventListener('change', updateRefillFields);
+        updateRefillFields();
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}バッテリー液量点検表編集 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>バッテリー液量点検表編集</h1>
+    <a href="{{ url_for('inspection.view_battery_fluid', id=check.id) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 詳細に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="check_date" class="form-label">点検日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="check_date" name="check_date" value="{{ check.check_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="management_number" class="form-label">管理番号</label>
+                        <input type="text" class="form-control" id="management_number" value="{{ check.management_number }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="warehouse" class="form-label">倉庫</label>
+                        <input type="text" class="form-control" id="warehouse" value="{{ check.warehouse }}" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="elapsed_years" class="form-label">経過年数</label>
+                        <input type="text" class="form-control" id="elapsed_years" value="{{ check.elapsed_years }}" readonly>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="fluid_level" class="form-label">液量 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fluid_level" name="fluid_level" required>
+                            <option value="良" {% if check.fluid_level == '良' %}selected{% endif %}>良</option>
+                            <option value="要補充" {% if check.fluid_level == '要補充' %}selected{% endif %}>要補充</option>
+                            <option value="不良" {% if check.fluid_level == '不良' %}selected{% endif %}>不良</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="refill_date" class="form-label">補充日</label>
+                        <input type="date" class="form-control" id="refill_date" name="refill_date" value="{{ check.refill_date.strftime('%Y-%m-%d') if check.refill_date else '' }}">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="refiller" class="form-label">補充者</label>
+                        <select class="form-select" id="refiller" name="refiller">
+                            <option value="">選択してください</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}" {% if check.refiller == employee.name %}selected{% endif %}>{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="confirmation_date" class="form-label">確認日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="confirmation_date" name="confirmation_date" value="{{ check.confirmation_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="inspector" class="form-label">点検責任者 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="inspector" name="inspector" required>
+                            <option value="">選択してください</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}" {% if check.inspector == employee.name %}selected{% endif %}>{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3">{{ check.notes }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 更新
+                </button>
+                <a href="{{ url_for('inspection.view_battery_fluid', id=check.id) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 液量が「良」の場合は補充日と補充者を無効化
+        const fluidLevelSelect = document.getElementById('fluid_level');
+        const refillDateInput = document.getElementById('refill_date');
+        const refillerSelect = document.getElementById('refiller');
+        
+        function updateRefillFields() {
+            if (fluidLevelSelect.value === '良') {
+                refillDateInput.disabled = true;
+                refillDateInput.value = '';
+                refillerSelect.disabled = true;
+                refillerSelect.value = '';
+            } else {
+                refillDateInput.disabled = false;
+                refillerSelect.disabled = false;
+            }
+        }
+        
+        fluidLevelSelect.addEventListener('change', updateRefillFields);
+        updateRefillFields();
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>月次修繕費用レポート</h1>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            レポート条件
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('report.monthly_cost') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="year">年</label>
+                            <select class="form-control" id="year" name="year" required>
+                                {% for year in years %}
+                                <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}年</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="month">月</label>
+                            <select class="form-control" id="month" name="month">
+                                <option value="">全期間</option>
+                                {% for i in range(1, 13) %}
+                                <option value="{{ i }}">{{ i }}月</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="asset_type">資産種類</label>
+                            <select class="form-control" id="asset_type" name="asset_type" required>
+                                {% for asset_type, asset_name in asset_types.items() %}
+                                <option value="{{ asset_type }}">{{ asset_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="target_id">対象</label>
+                            <select class="form-control" id="target_id" name="target_id">
+                                <option value="">全て</option>
+                                <optgroup label="フォークリフト" id="forklift_options">
+                                    {% for forklift in forklifts %}
+                                    <option value="{{ forklift.id }}" data-type="forklift">{{ forklift.management_number }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                <optgroup label="倉庫施設" id="facility_options">
+                                    {% for facility in facilities %}
+                                    <option value="{{ facility.id }}" data-type="facility">{{ facility.warehouse_number }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="export_format">出力形式</label>
+                            <select class="form-control" id="export_format" name="export_format" required>
+                                <option value="excel">Excel</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">レポート作成</button>
+                        <a href="{{ url_for('report.index') }}" class="btn btn-secondary">戻る</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const assetTypeSelect = document.getElementById('asset_type');
+        const targetIdSelect = document.getElementById('target_id');
+        const forkliftOptions = document.getElementById('forklift_options');
+        const facilityOptions = document.getElementById('facility_options');
+        
+        function updateTargetOptions() {
+            const assetType = assetTypeSelect.value;
+            
+            // すべてのオプションを非表示
+            for (const option of targetIdSelect.options) {
+                if (option.parentElement.tagName === 'OPTGROUP') {
+                    option.style.display = 'none';
+                }
+            }
+            
+            // オプショングループも非表示
+            if (forkliftOptions) forkliftOptions.style.display = 'none';
+            if (facilityOptions) facilityOptions.style.display = 'none';
+            
+            // 選択された資産タイプに応じて表示
+            if (assetType === 'forklift' && forkliftOptions) {
+                forkliftOptions.style.display = '';
+                for (const option of targetIdSelect.options) {
+                    if (option.dataset.type === 'forklift') {
+                        option.style.display = '';
+                    }
+                }
+            } else if (assetType === 'facility' && facilityOptions) {
+                facilityOptions.style.display = '';
+                for (const option of targetIdSelect.options) {
+                    if (option.dataset.type === 'facility') {
+                        option.style.display = '';
+                    }
+                }
+            }
+            
+            // その他の場合は「全て」のみ選択可能
+            if (assetType === 'other') {
+                targetIdSelect.value = '';
+                targetIdSelect.disabled = true;
+            } else {
+                targetIdSelect.disabled = false;
+            }
+        }
+        
+        // 初期表示と変更時のイベント
+        updateTargetOptions();
+        assetTypeSelect.addEventListener('change', updateTargetOptions);
+    });
+</script>
+{% endblock %}

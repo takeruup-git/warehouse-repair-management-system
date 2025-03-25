@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+
+{% block title %}定期自主検査記録表一覧 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>定期自主検査記録表一覧</h1>
+    <div>
+        <a href="{{ url_for('inspection.create_periodic_self') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 新規作成
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        {% if inspections %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>点検日</th>
+                        <th>管理番号</th>
+                        <th>点検種別</th>
+                        <th>モーター状態</th>
+                        <th>タイヤ状態</th>
+                        <th>フォーク状態</th>
+                        <th>修理対応</th>
+                        <th>点検者</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for inspection in inspections %}
+                    <tr>
+                        <td>{{ inspection.inspection_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ inspection.management_number }}</td>
+                        <td>{{ inspection.inspection_type }}</td>
+                        <td>{{ inspection.motor_condition }}</td>
+                        <td>{{ inspection.tire_condition }}</td>
+                        <td>{{ inspection.fork_condition }}</td>
+                        <td>{{ inspection.repair_action }}</td>
+                        <td>{{ inspection.inspector }}</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="#" class="btn btn-outline-primary">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <a href="#" class="btn btn-outline-secondary">
+                                    <i class="bi bi-pencil"></i>
+                                </a>
+                                <button type="button" class="btn btn-outline-danger">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="alert alert-info">
+            定期自主検査記録表のデータがありません。
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-4">
+    <p>
+        <strong>注意:</strong> このページは開発中です。現在、詳細表示、編集、削除機能はまだ実装されていません。
+    </p>
+</div>
+{% endblock %}

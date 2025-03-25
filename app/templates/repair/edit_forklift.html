@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+
+{% block title %}フォークリフト修繕編集 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>フォークリフト修繕編集</h1>
+    <a href="{{ url_for('repair.view_forklift_repair', id=repair.id) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 詳細に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('repair.edit_forklift_repair', id=repair.id) }}" enctype="multipart/form-data">
+            <input type="hidden" name="version" value="{{ repair.version }}">
+            
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="repair_date" class="form-label">修繕日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="repair_date" name="repair_date" value="{{ repair.repair_date.strftime('%Y-%m-%d') }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="contractor" class="form-label">業者 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="contractor" name="contractor" value="{{ repair.contractor }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_target_type" class="form-label">修繕対象種別 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="repair_target_type" name="repair_target_type" required>
+                            {% for type_key, type_name in repair_target_types.items() %}
+                            <option value="{{ type_key }}" {% if type_key == repair.repair_target_type %}selected{% endif %}>{{ type_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_item" class="form-label">修繕項目 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="repair_item" name="repair_item" value="{{ repair.repair_item }}" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_cost" class="form-label">修繕費用 <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="repair_cost" name="repair_cost" value="{{ repair.repair_cost }}" required>
+                            <span class="input-group-text">円</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_reason" class="form-label">修繕理由 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="repair_reason" name="repair_reason" required>
+                            {% for reason_key, reason_name in repair_reasons.items() %}
+                            <option value="{{ reason_key }}" {% if reason_key == repair.repair_reason %}selected{% endif %}>{{ reason_name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hour_meter" class="form-label">アワーメーター</label>
+                        <input type="number" class="form-control" id="hour_meter" name="hour_meter" value="{{ repair.hour_meter or '' }}">
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="photo" class="form-label">写真</label>
+                        <input type="file" class="form-control" id="photo" name="photo" accept="image/*">
+                        {% if repair.photo_path %}
+                        <div class="mt-2">
+                            <img src="{{ repair.photo_path }}" alt="現在の写真" class="img-thumbnail" style="max-height: 100px;">
+                            <small class="text-muted">新しい写真をアップロードすると上書きされます</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="quotation" class="form-label">見積書</label>
+                        <input type="file" class="form-control" id="quotation" name="quotation" accept=".pdf,.jpg,.jpeg,.png">
+                        {% if repair.quotation_path %}
+                        <div class="mt-2">
+                            <a href="{{ repair.quotation_path }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-text"></i> 現在の見積書を表示
+                            </a>
+                            <small class="text-muted">新しいファイルをアップロードすると上書きされます</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="approval_document" class="form-label">承認書</label>
+                        <input type="file" class="form-control" id="approval_document" name="approval_document" accept=".pdf,.jpg,.jpeg,.png">
+                        {% if repair.approval_document_path %}
+                        <div class="mt-2">
+                            <a href="{{ repair.approval_document_path }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-check"></i> 現在の承認書を表示
+                            </a>
+                            <small class="text-muted">新しいファイルをアップロードすると上書きされます</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="completion_report" class="form-label">完了報告書</label>
+                        <input type="file" class="form-control" id="completion_report" name="completion_report" accept=".pdf,.jpg,.jpeg,.png">
+                        {% if repair.completion_report_path %}
+                        <div class="mt-2">
+                            <a href="{{ repair.completion_report_path }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-file-earmark-check"></i> 現在の完了報告書を表示
+                            </a>
+                            <small class="text-muted">新しいファイルをアップロードすると上書きされます</small>
+                        </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="4">{{ repair.notes or '' }}</textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 更新
+                </button>
+                <a href="{{ url_for('repair.view_forklift_repair', id=repair.id) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

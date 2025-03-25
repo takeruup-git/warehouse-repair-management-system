@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>フォークリフト修繕履歴レポート</h1>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            レポート条件
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('report.vehicle_history') }}">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="forklift_id">フォークリフト</label>
+                            <select class="form-control" id="forklift_id" name="forklift_id" required>
+                                {% for forklift in forklifts %}
+                                <option value="{{ forklift.id }}">{{ forklift.management_number }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="repair_target_type">修繕対象種別</label>
+                            <select class="form-control" id="repair_target_type" name="repair_target_type">
+                                <option value="">全て</option>
+                                {% for type_code, type_name in repair_target_types.items() %}
+                                <option value="{{ type_code }}">{{ type_name }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="start_date">開始日</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="end_date">終了日</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="form-group">
+                            <label for="export_format">出力形式</label>
+                            <select class="form-control" id="export_format" name="export_format" required>
+                                <option value="excel">Excel</option>
+                                <option value="pdf">PDF</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">レポート作成</button>
+                        <a href="{{ url_for('report.index') }}" class="btn btn-secondary">戻る</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,150 @@
+{% extends "base.html" %}
+
+{% block title %}定期自主検査記録表作成 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>定期自主検査記録表作成</h1>
+    <a href="{{ url_for('inspection.periodic_self') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('inspection.create_periodic_self') }}">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="inspection_date" class="form-label">点検日 <span class="text-danger">*</span></label>
+                        <input type="date" class="form-control" id="inspection_date" name="inspection_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="forklift_id" class="form-label">フォークリフト <span class="text-danger">*</span></label>
+                        <select class="form-select" id="forklift_id" name="forklift_id" required>
+                            <option value="">選択してください</option>
+                            {% for forklift in forklifts %}
+                            <option value="{{ forklift.id }}" data-management-number="{{ forklift.management_number }}">
+                                {{ forklift.management_number }} ({{ forklift.model }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="management_number" class="form-label">管理番号 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="management_number" name="management_number" readonly required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="inspection_type" class="form-label">点検種別 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="inspection_type" name="inspection_type" required>
+                            <option value="月次点検">月次点検</option>
+                            <option value="6ヶ月点検">6ヶ月点検</option>
+                            <option value="年次点検">年次点検</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="col-md-6">
+                    <div class="mb-3">
+                        <label for="motor_condition" class="form-label">モーター状態 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="motor_condition" name="motor_condition" required>
+                            {% for key, name in inspection_results.items() %}
+                            <option value="{{ name }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tire_condition" class="form-label">タイヤ状態 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="tire_condition" name="tire_condition" required>
+                            {% for key, name in inspection_results.items() %}
+                            <option value="{{ name }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="fork_condition" class="form-label">フォーク状態 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="fork_condition" name="fork_condition" required>
+                            {% for key, name in inspection_results.items() %}
+                            <option value="{{ name }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="repair_action" class="form-label">修理対応 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="repair_action" name="repair_action" required>
+                            {% for key, name in repair_actions.items() %}
+                            <option value="{{ key }}">{{ name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="inspector" class="form-label">点検者 <span class="text-danger">*</span></label>
+                        <select class="form-select" id="inspector" name="inspector" required>
+                            <option value="">選択してください</option>
+                            {% for employee in employees %}
+                            <option value="{{ employee.name }}">{{ employee.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="notes" class="form-label">備考</label>
+                        <textarea class="form-control" id="notes" name="notes" rows="3"></textarea>
+                    </div>
+                </div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 保存
+                </button>
+                <a href="{{ url_for('inspection.periodic_self') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 今日の日付をデフォルト値として設定
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('inspection_date').value = today;
+        
+        // フォークリフト選択時に関連データを自動入力
+        const forkliftSelect = document.getElementById('forklift_id');
+        forkliftSelect.addEventListener('change', function() {
+            const selectedOption = this.options[this.selectedIndex];
+            
+            if (selectedOption.value) {
+                document.getElementById('management_number').value = selectedOption.dataset.managementNumber;
+            } else {
+                document.getElementById('management_number').value = '';
+            }
+        });
+        
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}
