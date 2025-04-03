@@ -1,0 +1,47 @@
+{% extends 'base.html' %}
+
+{% block title %}PDFアップロード{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">PDFファイルアップロード</h1>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>PDFファイルをアップロード</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data">
+                <div class="mb-3">
+                    <label for="pdf_file" class="form-label">PDFファイル</label>
+                    <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                    <div class="form-text">アップロードできるのはPDFファイルのみです。最大サイズ: 16MB</div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('pdf_management.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> アップロード
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>アップロードのヒント</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>ファイル名は自動的に安全な形式に変換されます。</li>
+                <li>重複を避けるため、ファイル名には一意の識別子が追加されます。</li>
+                <li>アップロードしたPDFファイルは「PDF管理」ページから閲覧、ダウンロード、削除できます。</li>
+                <li>点検報告書や修繕報告書のPDFは、各資産の詳細ページから直接生成することもできます。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

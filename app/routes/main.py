@@ -6,6 +6,7 @@ from app.models.other_repair import OtherRepair
 from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 from config import Config
+import os
 
 main_bp = Blueprint('main', __name__)
 
@@ -137,6 +138,12 @@ def index():
     recent_repairs = db.session.query(ForkliftRepair).order_by(ForkliftRepair.repair_date.desc()).limit(5).all()
     recent_facility_repairs = db.session.query(FacilityRepair).order_by(FacilityRepair.repair_date.desc()).limit(5).all()
     
+    # 5. PDFファイル数を取得
+    pdf_count = 0
+    pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf')
+    if os.path.exists(pdf_dir):
+        pdf_count = len([f for f in os.listdir(pdf_dir) if f.endswith('.pdf')])
+    
     return render_template('index.html',
                           months=months,
                           forklift_costs=forklift_costs,
@@ -145,7 +152,8 @@ def index():
                           top_vehicles=top_vehicles,
                           alerts=alerts,
                           recent_repairs=recent_repairs,
-                          recent_facility_repairs=recent_facility_repairs)
+                          recent_facility_repairs=recent_facility_repairs,
+                          pdf_count=pdf_count)
 
 @main_bp.route('/about')
 def about():
