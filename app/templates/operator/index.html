@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>操作者管理</h2>
+    <div class="mb-3">
+        <a href="{{ url_for('operator.create') }}" class="btn btn-primary">新規登録</a>
+    </div>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>社員ID</th>
+                    <th>名前</th>
+                    <th>部署</th>
+                    <th>免許種別</th>
+                    <th>免許期限</th>
+                    <th>操作</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for operator in operators %}
+                <tr>
+                    <td>{{ operator.employee_id }}</td>
+                    <td>{{ operator.name }}</td>
+                    <td>{{ operator.department }}</td>
+                    <td>{{ operator.license_type }}</td>
+                    <td>{{ operator.license_expiry.strftime('%Y-%m-%d') if operator.license_expiry else '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('operator.edit', id=operator.id) }}" class="btn btn-sm btn-info">編集</a>
+                        <form action="{{ url_for('operator.delete', id=operator.id) }}" method="POST" class="d-inline">
+                            <button type="submit" class="btn btn-sm btn-danger" onclick="return confirm('本当に削除しますか？')">削除</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

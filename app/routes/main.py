@@ -136,6 +136,7 @@ def index():
     # 4. 最近の修繕履歴
     recent_repairs = db.session.query(ForkliftRepair).order_by(ForkliftRepair.repair_date.desc()).limit(5).all()
     recent_facility_repairs = db.session.query(FacilityRepair).order_by(FacilityRepair.repair_date.desc()).limit(5).all()
+    recent_other_repairs = db.session.query(OtherRepair).order_by(OtherRepair.repair_date.desc()).limit(5).all()
     
     return render_template('index.html',
                           months=months,
@@ -145,7 +146,8 @@ def index():
                           top_vehicles=top_vehicles,
                           alerts=alerts,
                           recent_repairs=recent_repairs,
-                          recent_facility_repairs=recent_facility_repairs)
+                          recent_facility_repairs=recent_facility_repairs,
+                          recent_other_repairs=recent_other_repairs)
 
 @main_bp.route('/about')
 def about():

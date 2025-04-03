@@ -66,6 +66,9 @@
                                         <a href="{{ url_for('repair.edit_forklift_repair', id=repair.id) }}" class="btn btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
                                         </a>
+                                        <a href="{{ url_for('repair.create_similar_forklift_repair', id=repair.id) }}" class="btn btn-outline-success">
+                                            <i class="bi bi-files"></i>
+                                        </a>
                                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteForkliftModal{{ repair.id }}">
                                             <i class="bi bi-trash"></i>
                                         </button>
@@ -140,6 +143,9 @@
                                         </a>
                                         <a href="{{ url_for('repair.edit_facility_repair', id=repair.id) }}" class="btn btn-outline-secondary">
                                             <i class="bi bi-pencil"></i>
+                                        </a>
+                                        <a href="{{ url_for('repair.create_similar_facility_repair', id=repair.id) }}" class="btn btn-outline-success">
+                                            <i class="bi bi-files"></i>
                                         </a>
                                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteFacilityModal{{ repair.id }}">
                                             <i class="bi bi-trash"></i>

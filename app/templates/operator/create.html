@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>操作者登録</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }}">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST">
+        <div class="mb-3">
+            <label for="employee_id" class="form-label">社員ID</label>
+            <input type="text" class="form-control" id="employee_id" name="employee_id" required>
+        </div>
+        <div class="mb-3">
+            <label for="name" class="form-label">名前</label>
+            <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        <div class="mb-3">
+            <label for="department" class="form-label">部署</label>
+            <input type="text" class="form-control" id="department" name="department">
+        </div>
+        <div class="mb-3">
+            <label for="license_type" class="form-label">免許種別</label>
+            <select class="form-control" id="license_type" name="license_type">
+                <option value="">選択してください</option>
+                <option value="フォークリフト運転技能講習">フォークリフト運転技能講習</option>
+                <option value="玉掛け技能講習">玉掛け技能講習</option>
+                <option value="クレーン運転特別教育">クレーン運転特別教育</option>
+            </select>
+        </div>
+        <div class="mb-3">
+            <label for="license_expiry" class="form-label">免許期限</label>
+            <input type="date" class="form-control" id="license_expiry" name="license_expiry">
+        </div>
+        <button type="submit" class="btn btn-primary">登録</button>
+        <a href="{{ url_for('operator.index') }}" class="btn btn-secondary">戻る</a>
+    </form>
+</div>
+{% endblock %}

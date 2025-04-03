@@ -1,5 +1,6 @@
 import os
 from flask import Flask, render_template, request, jsonify
+from flask_migrate import Migrate
 from app.models import db, AuditLog
 import logging
 from logging.handlers import RotatingFileHandler
@@ -29,6 +30,7 @@ def create_app(config_name='default'):
     
     # データベース初期化
     db.init_app(app)
+    migrate = Migrate(app, db)
     
     # ログ設定
     if not app.debug:
@@ -57,6 +59,7 @@ def create_app(config_name='default'):
     from app.routes.inspection import inspection_bp
     from app.routes.report import report_bp
     from app.routes.api import api_bp
+    from app.routes.operator import bp as operator_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(forklift_bp, url_prefix='/forklift')
@@ -65,6 +68,7 @@ def create_app(config_name='default'):
     app.register_blueprint(inspection_bp, url_prefix='/inspection')
     app.register_blueprint(report_bp, url_prefix='/report')
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(operator_bp, url_prefix='/operators')
     
     # エラーハンドラー
     @app.errorhandler(404)

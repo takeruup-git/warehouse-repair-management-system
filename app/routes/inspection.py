@@ -387,6 +387,113 @@ def periodic_self():
     inspections = PeriodicSelfInspection.query.order_by(PeriodicSelfInspection.inspection_date.desc()).all()
     return render_template('inspection/periodic_self/index.html', inspections=inspections)
 
+@inspection_bp.route('/periodic_self/export', methods=['POST'])
+def export_periodic_self():
+    try:
+        # フィルター条件を取得
+        start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
+        end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
+        management_number = request.form.get('management_number', '')
+
+        # クエリを構築
+        query = PeriodicSelfInspection.query
+
+        if management_number:
+            query = query.filter(PeriodicSelfInspection.management_number == management_number)
+
+        query = query.filter(
+            PeriodicSelfInspection.inspection_date >= start_date,
+            PeriodicSelfInspection.inspection_date <= end_date
+        )
+
+        # 結果を取得
+        inspections = query.order_by(PeriodicSelfInspection.inspection_date.asc()).all()
+
+        if not inspections:
+            flash('指定された条件に該当する点検記録がありません。', 'warning')
+            return redirect(url_for('inspection.periodic_self'))
+
+        # Excelファイルを作成
+        output = BytesIO()
+        workbook = pd.ExcelWriter(output, engine='xlsxwriter')
+
+        # データフレームを作成
+        data = []
+        for inspection in inspections:
+            data.append({
+                '点検日': inspection.inspection_date.strftime('%Y-%m-%d'),
+                '管理番号': inspection.management_number,
+                '点検種別': inspection.inspection_type,
+                'モーター状態': inspection.motor_condition,
+                'タイヤ状態': inspection.tire_condition,
+                'フォーク状態': inspection.fork_condition,
+                '修理対応': inspection.repair_action,
+                '点検者': inspection.inspector,
+                '備考': inspection.notes or ''
+            })
+
+        df = pd.DataFrame(data)
+
+        # シート名を設定
+        sheet_name = '定期自主検査記録表'
+        if management_number:
+            sheet_name = f'{management_number}_{sheet_name}'
+
+        # Excelファイルに書き込み
+        df.to_excel(workbook, sheet_name=sheet_name, index=False)
+
+        # シートを取得して書式を設定
+        worksheet = workbook.sheets[sheet_name]
+
+        # 列幅を調整
+        for i, col in enumerate(df.columns):
+            max_length = max(
+                df[col].astype(str).apply(len).max(),
+                len(col)
+            )
+            worksheet.set_column(i, i, max_length + 2)
+
+        # ヘッダー行の書式設定
+        header_format = workbook.book.add_format({
+            'bold': True,
+            'text_wrap': True,
+            'valign': 'vcenter',
+            'align': 'center',
+            'border': 1,
+            'bg_color': '#CCCCCC'
+        })
+
+        for col_num, value in enumerate(df.columns.values):
+            worksheet.write(0, col_num, value, header_format)
+
+        # データ行の書式設定
+        data_format = workbook.book.add_format({
+            'text_wrap': True,
+            'valign': 'vcenter',
+            'border': 1
+        })
+
+        for row in range(len(df)):
+            for col in range(len(df.columns)):
+                worksheet.write(row + 1, col, df.iloc[row, col], data_format)
+
+        workbook.close()
+        output.seek(0)
+
+        # ファイル名を設定
+        filename = f"periodic_self_inspection_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=filename,
+            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+
+    except Exception as e:
+        flash(f'エクスポート中にエラーが発生しました: {str(e)}', 'danger')
+        return redirect(url_for('inspection.periodic_self'))
+
 @inspection_bp.route('/periodic_self/create', methods=['GET', 'POST'])
 def create_periodic_self():
     if request.method == 'POST':
