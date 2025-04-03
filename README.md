@@ -4,6 +4,7 @@
 
 ## 機能
 
+- ユーザー認証：ログイン/ログアウト、権限管理（一般ユーザー、管理者、システム管理者）
 - ダッシュボード：月別修繕費推移グラフ、修繕費上位車両、交換・点検アラート
 - 資産管理：フォークリフト、倉庫施設、昇降機の詳細情報管理
 - 修繕履歴：修繕日、費用、理由、業者などの記録
@@ -19,7 +20,7 @@
 - フロントエンド: HTML / CSS / JavaScript / Bootstrap 5
 - レポート生成: pandas 2.1.0 / reportlab 4.0.4
 
-## セットアップ手順 (Windows環境)
+## セットアップ手順
 
 ### 前提条件
 
@@ -30,52 +31,78 @@
 
 1. リポジトリをクローンまたはダウンロードする
 
-```
-git clone https://github.com/yourusername/warehouse-repair-management-system.git
+```bash
+git clone https://github.com/takeruup-git/warehouse-repair-management-system.git
 cd warehouse-repair-management-system
 ```
 
 2. 仮想環境を作成して有効化する（推奨）
 
-```
+#### Windows環境
+```bash
 python -m venv venv
 venv\Scripts\activate
 ```
 
+#### Linux/Mac環境
+```bash
+python -m venv venv
+source venv/bin/activate
+```
+
 3. 必要なパッケージをインストールする
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
 4. データベースを初期化する
 
-```
+```bash
 python init_db.py
 ```
 
-5. サンプルデータを追加する（オプション）
+5. データベースマイグレーションを適用する
 
+```bash
+python -m flask db upgrade
 ```
+
+6. 初期管理者ユーザーを作成する
+
+```bash
+python add_admin_user.py admin admin@example.com password123
+```
+
+7. サンプルデータを追加する（オプション）
+
+```bash
 python add_sample_data.py
 ```
 
-6. アプリケーションを起動する
+8. アプリケーションを起動する
 
-```
+```bash
 python app.py
 ```
 
-7. ブラウザで以下のURLにアクセスする
+9. ブラウザで以下のURLにアクセスする
 
 ```
-http://localhost:5000
+http://localhost:51021
+```
+
+10. 作成した管理者ユーザーでログインする
+
+```
+ユーザー名: admin
+パスワード: password123
 ```
 
 ローカルネットワーク内の他のコンピュータからアクセスするには、IPアドレスを使用します：
 
 ```
-http://[あなたのIPアドレス]:5000
+http://[あなたのIPアドレス]:51021
 ```
 
 ## ディレクトリ構造
@@ -83,6 +110,7 @@ http://[あなたのIPアドレス]:5000
 ```
 warehouse-repair-management-system/
 ├── app/
+│   ├── forms/           # フォーム定義
 │   ├── models/          # データベースモデル
 │   ├── routes/          # ルート定義
 │   ├── static/          # 静的ファイル（CSS、JS、アップロードファイル）
@@ -94,17 +122,21 @@ warehouse-repair-management-system/
 ├── config.py            # 設定ファイル
 ├── init_db.py           # データベース初期化スクリプト
 ├── add_sample_data.py   # サンプルデータ追加スクリプト
+├── add_admin_user.py    # 管理者ユーザー作成スクリプト
 ├── requirements.txt     # 依存パッケージリスト
 └── README.md            # このファイル
 ```
 
 ## 使用方法
 
-1. ダッシュボード画面から全体の状況を確認
-2. 「資産一覧」から資産の詳細情報を閲覧・編集
-3. 「修繕履歴」から修繕記録を追加・編集
-4. 「点検報告書」から各種点検表を作成・出力
-5. 「レポート」から各種レポートを生成・出力
+1. 管理者ユーザーでログイン
+2. ダッシュボード画面から全体の状況を確認
+3. 「資産一覧」から資産の詳細情報を閲覧・編集
+4. 「修繕履歴」から修繕記録を追加・編集
+5. 「点検報告書」から各種点検表を作成・出力
+6. 「レポート」から各種レポートを生成・出力
+7. CSVファイルからデータをインポート/エクスポート
+8. 管理者は「ユーザー管理」からユーザーの追加・編集・削除が可能
 
 ## サンプルデータ
 
