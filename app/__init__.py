@@ -1,11 +1,12 @@
 import os
-from flask import Flask, render_template, request, jsonify
-from app.models import db, AuditLog
+from flask import Flask, render_template, request, jsonify, url_for
+from app.models import db, AuditLog, login_manager
 import logging
 from logging.handlers import RotatingFileHandler
 from datetime import datetime
 from config import config
 import jinja2
+from flask_login import current_user
 
 # ユーティリティ関数
 def nl2br(value):
@@ -29,6 +30,24 @@ def create_app(config_name='default'):
     
     # データベース初期化
     db.init_app(app)
+    
+    # ログイン管理の初期化
+    login_manager.init_app(app)
+    login_manager.login_view = 'auth.login'
+    login_manager.login_message = 'この機能を利用するにはログインが必要です。'
+    login_manager.login_message_category = 'warning'
+    
+    # デバッグ用：リダイレクト先を表示
+    @app.before_request
+    def log_redirect():
+        print(f"Request URL: {request.url}")
+        print(f"Login view: {login_manager.login_view}")
+        print(f"Login URL: {url_for(login_manager.login_view, _external=True)}")
+    
+    @login_manager.user_loader
+    def load_user(user_id):
+        from app.models.user import User
+        return User.query.get(int(user_id))
     
     # ログ設定
     if not app.debug:
@@ -57,6 +76,7 @@ def create_app(config_name='default'):
     from app.routes.inspection import inspection_bp
     from app.routes.report import report_bp
     from app.routes.api import api_bp
+    from app.routes.auth import auth_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(forklift_bp, url_prefix='/forklift')
@@ -65,6 +85,7 @@ def create_app(config_name='default'):
     app.register_blueprint(inspection_bp, url_prefix='/inspection')
     app.register_blueprint(report_bp, url_prefix='/report')
     app.register_blueprint(api_bp, url_prefix='/api')
+    app.register_blueprint(auth_bp, url_prefix='/auth')
     
     # エラーハンドラー
     @app.errorhandler(404)
@@ -111,7 +132,8 @@ def create_app(config_name='default'):
             'repair_actions': app.config['REPAIR_ACTION_NAMES'],
             'ownership_types': app.config['OWNERSHIP_TYPE_NAMES'],
             'inspection_results': app.config['INSPECTION_RESULT_NAMES'],
-            'inspection_types': app.config['INSPECTION_TYPES']
+            'inspection_types': app.config['INSPECTION_TYPES'],
+            'current_user': current_user
         }
     
     return app

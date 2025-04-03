@@ -1,7 +1,9 @@
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
+from flask_login import LoginManager
 
 db = SQLAlchemy()
+login_manager = LoginManager()
 
 # 監査ログモデル
 class AuditLog(db.Model):
@@ -17,3 +19,6 @@ class AuditLog(db.Model):
     
     def __repr__(self):
         return f'<AuditLog {self.action} on {self.entity_type}:{self.entity_id} by {self.operator}>'
+
+# Import models
+from app.models.user import User

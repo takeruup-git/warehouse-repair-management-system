@@ -6,10 +6,12 @@ from app.models.other_repair import OtherRepair
 from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 from config import Config
+from flask_login import login_required
 
 main_bp = Blueprint('main', __name__)
 
 @main_bp.route('/')
+@login_required
 def index():
     # ダッシュボード用のデータを取得
     
@@ -148,5 +150,6 @@ def index():
                           recent_facility_repairs=recent_facility_repairs)
 
 @main_bp.route('/about')
+@login_required
 def about():
     return render_template('about.html')
