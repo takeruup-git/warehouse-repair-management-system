@@ -1,0 +1,258 @@
+{% extends 'base.html' %}
+
+{% block title %}CSVアップロード{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-12">
+            <h1 class="mb-4">CSVデータインポート</h1>
+            
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">CSVファイルアップロード</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <label for="upload_type" class="form-label">データタイプ</label>
+                            <select class="form-select" id="upload_type" name="upload_type" required>
+                                <option value="" selected disabled>選択してください</option>
+                                <option value="forklift">フォークリフト</option>
+                                <option value="facility">倉庫施設</option>
+                                <option value="repair">修繕履歴</option>
+                            </select>
+                        </div>
+                        
+                        <div class="mb-3">
+                            <label for="file" class="form-label">CSVファイル</label>
+                            <input class="form-control" type="file" id="file" name="file" accept=".csv" required>
+                            <div class="form-text">UTF-8エンコードのCSVファイルをアップロードしてください。</div>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary">アップロード</button>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">CSVファイル形式</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="nav nav-tabs" id="csvFormatTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="forklift-tab" data-bs-toggle="tab" data-bs-target="#forklift" type="button" role="tab" aria-controls="forklift" aria-selected="true">フォークリフト</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="facility-tab" data-bs-toggle="tab" data-bs-target="#facility" type="button" role="tab" aria-controls="facility" aria-selected="false">倉庫施設</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="repair-tab" data-bs-toggle="tab" data-bs-target="#repair" type="button" role="tab" aria-controls="repair" aria-selected="false">修繕履歴</button>
+                        </li>
+                    </ul>
+                    
+                    <div class="tab-content p-3" id="csvFormatTabContent">
+                        <div class="tab-pane fade show active" id="forklift" role="tabpanel" aria-labelledby="forklift-tab">
+                            <h6>フォークリフトCSVフォーマット</h6>
+                            <p>以下のヘッダーを含むCSVファイルを準備してください。<strong>asset_id</strong>は必須です。</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>ヘッダー</th>
+                                            <th>説明</th>
+                                            <th>例</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>asset_id</td>
+                                            <td>資産ID（必須）</td>
+                                            <td>FL-001</td>
+                                        </tr>
+                                        <tr>
+                                            <td>name</td>
+                                            <td>名称</td>
+                                            <td>1号機</td>
+                                        </tr>
+                                        <tr>
+                                            <td>model</td>
+                                            <td>型式</td>
+                                            <td>FD25T-17</td>
+                                        </tr>
+                                        <tr>
+                                            <td>manufacturer</td>
+                                            <td>メーカー</td>
+                                            <td>トヨタ</td>
+                                        </tr>
+                                        <tr>
+                                            <td>forklift_type</td>
+                                            <td>フォークリフトタイプ（reach/counter）</td>
+                                            <td>reach</td>
+                                        </tr>
+                                        <tr>
+                                            <td>power_source</td>
+                                            <td>動力源（battery/diesel/gasoline/lpg）</td>
+                                            <td>battery</td>
+                                        </tr>
+                                        <tr>
+                                            <td>max_load</td>
+                                            <td>最大積載量（kg）</td>
+                                            <td>2500</td>
+                                        </tr>
+                                        <tr>
+                                            <td>purchase_date</td>
+                                            <td>購入日（YYYY-MM-DD）</td>
+                                            <td>2022-04-01</td>
+                                        </tr>
+                                        <tr>
+                                            <td>status</td>
+                                            <td>ステータス（active/inactive/retired/under_repair）</td>
+                                            <td>active</td>
+                                        </tr>
+                                        <tr>
+                                            <td>location</td>
+                                            <td>設置場所</td>
+                                            <td>東京倉庫</td>
+                                        </tr>
+                                        <tr>
+                                            <td>hour_meter</td>
+                                            <td>アワーメーター値</td>
+                                            <td>1250.5</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ownership_type</td>
+                                            <td>所有形態（owned/leased）</td>
+                                            <td>owned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>notes</td>
+                                            <td>備考</td>
+                                            <td>バッテリー交換予定</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="{{ url_for('static', filename='samples/forklift_sample.csv') }}" class="btn btn-sm btn-outline-secondary mt-2">サンプルCSVダウンロード</a>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="facility" role="tabpanel" aria-labelledby="facility-tab">
+                            <h6>倉庫施設CSVフォーマット</h6>
+                            <p>以下のヘッダーを含むCSVファイルを準備してください。<strong>asset_id</strong>は必須です。</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>ヘッダー</th>
+                                            <th>説明</th>
+                                            <th>例</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>asset_id</td>
+                                            <td>資産ID（必須）</td>
+                                            <td>WH-001</td>
+                                        </tr>
+                                        <tr>
+                                            <td>name</td>
+                                            <td>名称</td>
+                                            <td>東京第一倉庫</td>
+                                        </tr>
+                                        <tr>
+                                            <td>location</td>
+                                            <td>所在地</td>
+                                            <td>東京都江東区</td>
+                                        </tr>
+                                        <tr>
+                                            <td>area</td>
+                                            <td>面積（㎡）</td>
+                                            <td>5000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>construction_date</td>
+                                            <td>建設日（YYYY-MM-DD）</td>
+                                            <td>2015-06-15</td>
+                                        </tr>
+                                        <tr>
+                                            <td>status</td>
+                                            <td>ステータス（active/inactive/under_repair）</td>
+                                            <td>active</td>
+                                        </tr>
+                                        <tr>
+                                            <td>ownership_type</td>
+                                            <td>所有形態（owned/leased）</td>
+                                            <td>owned</td>
+                                        </tr>
+                                        <tr>
+                                            <td>notes</td>
+                                            <td>備考</td>
+                                            <td>冷蔵設備あり</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="{{ url_for('static', filename='samples/facility_sample.csv') }}" class="btn btn-sm btn-outline-secondary mt-2">サンプルCSVダウンロード</a>
+                        </div>
+                        
+                        <div class="tab-pane fade" id="repair" role="tabpanel" aria-labelledby="repair-tab">
+                            <h6>修繕履歴CSVフォーマット</h6>
+                            <p>以下のヘッダーを含むCSVファイルを準備してください。<strong>target_name</strong>と<strong>repair_date</strong>は必須です。</p>
+                            <div class="table-responsive">
+                                <table class="table table-sm table-bordered">
+                                    <thead>
+                                        <tr>
+                                            <th>ヘッダー</th>
+                                            <th>説明</th>
+                                            <th>例</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr>
+                                            <td>target_name</td>
+                                            <td>修繕対象名（必須）</td>
+                                            <td>フォークリフト1号機</td>
+                                        </tr>
+                                        <tr>
+                                            <td>repair_date</td>
+                                            <td>修繕日（YYYY-MM-DD）（必須）</td>
+                                            <td>2023-05-20</td>
+                                        </tr>
+                                        <tr>
+                                            <td>category</td>
+                                            <td>カテゴリ</td>
+                                            <td>タイヤ交換</td>
+                                        </tr>
+                                        <tr>
+                                            <td>repair_cost</td>
+                                            <td>修繕費用（円）</td>
+                                            <td>25000</td>
+                                        </tr>
+                                        <tr>
+                                            <td>contractor</td>
+                                            <td>業者</td>
+                                            <td>株式会社修繕サービス</td>
+                                        </tr>
+                                        <tr>
+                                            <td>notes</td>
+                                            <td>備考</td>
+                                            <td>ドライブタイヤの摩耗による交換</td>
+                                        </tr>
+                                        <tr>
+                                            <td>operator</td>
+                                            <td>作業者</td>
+                                            <td>山田太郎</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <a href="{{ url_for('static', filename='samples/repair_sample.csv') }}" class="btn btn-sm btn-outline-secondary mt-2">サンプルCSVダウンロード</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
