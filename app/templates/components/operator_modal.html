@@ -1,0 +1,152 @@
+<!-- 操作者選択モーダル -->
+<div class="modal fade" id="operatorModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="operatorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="operatorModalLabel">操作者名を選択または入力してください</h5>
+            </div>
+            <div class="modal-body">
+                <div class="mb-3">
+                    <label for="operatorSelect" class="form-label">登録済み操作者から選択</label>
+                    <select class="form-select" id="operatorSelect">
+                        <option value="">-- 選択してください --</option>
+                        <!-- APIから動的に読み込み -->
+                    </select>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="operatorInput" class="form-label">または新しい操作者名を入力</label>
+                    <input type="text" class="form-control" id="operatorInput" placeholder="例：山田太郎">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary" id="setOperatorBtn">設定する</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const operatorModal = document.getElementById('operatorModal');
+        const operatorSelect = document.getElementById('operatorSelect');
+        const operatorInput = document.getElementById('operatorInput');
+        const setOperatorBtn = document.getElementById('setOperatorBtn');
+        
+        // モーダルが表示されたときに操作者リストを読み込む
+        operatorModal.addEventListener('show.bs.modal', function() {
+            // 既存の選択肢をクリア
+            while (operatorSelect.options.length > 1) {
+                operatorSelect.remove(1);
+            }
+            
+            // APIから操作者リストを取得
+            fetch('/operator/api/list')
+                .then(response => response.json())
+                .then(data => {
+                    data.forEach(operator => {
+                        const option = document.createElement('option');
+                        option.value = operator.id;
+                        option.textContent = `${operator.name} (${operator.employee_id})`;
+                        operatorSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('操作者リストの取得に失敗しました:', error));
+            
+            // 現在の操作者情報を取得
+            fetch('/operator/api/get_current')
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // セッションに保存されている操作者がいれば選択
+                        for (let i = 0; i < operatorSelect.options.length; i++) {
+                            if (operatorSelect.options[i].value == data.operator_id) {
+                                operatorSelect.selectedIndex = i;
+                                break;
+                            }
+                        }
+                    }
+                })
+                .catch(error => console.error('現在の操作者情報の取得に失敗しました:', error));
+        });
+        
+        // 操作者選択時に入力フィールドをクリア
+        operatorSelect.addEventListener('change', function() {
+            if (this.value) {
+                operatorInput.value = '';
+            }
+        });
+        
+        // 操作者入力時に選択をクリア
+        operatorInput.addEventListener('input', function() {
+            if (this.value) {
+                operatorSelect.selectedIndex = 0;
+            }
+        });
+        
+        // 操作者設定ボタンクリック時の処理
+        setOperatorBtn.addEventListener('click', function() {
+            let operatorId = null;
+            let operatorName = null;
+            
+            if (operatorSelect.value) {
+                operatorId = operatorSelect.value;
+                operatorName = operatorSelect.options[operatorSelect.selectedIndex].textContent.split(' (')[0];
+            } else if (operatorInput.value.trim()) {
+                operatorName = operatorInput.value.trim();
+            } else {
+                alert('操作者を選択または入力してください');
+                return;
+            }
+            
+            // APIに操作者情報を送信
+            fetch('/operator/api/set_current', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    operator_id: operatorId,
+                    operator_name: operatorName
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // ローカルストレージに保存
+                    localStorage.setItem('operatorName', data.name);
+                    
+                    // グローバル操作者名表示を更新
+                    const globalOperatorName = document.getElementById('global-operator-name');
+                    if (globalOperatorName) {
+                        globalOperatorName.value = data.name;
+                    }
+                    
+                    // モーダルを閉じる
+                    const modal = bootstrap.Modal.getInstance(operatorModal);
+                    modal.hide();
+                    
+                    // ページをリロード
+                    location.reload();
+                } else {
+                    alert('操作者の設定に失敗しました: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('操作者の設定に失敗しました:', error);
+                alert('操作者の設定に失敗しました。もう一度お試しください。');
+            });
+        });
+        
+        // ページ読み込み時に操作者が設定されていなければモーダルを表示
+        fetch('/operator/api/get_current')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    const modal = new bootstrap.Modal(operatorModal);
+                    modal.show();
+                }
+            })
+            .catch(error => console.error('現在の操作者情報の取得に失敗しました:', error));
+    });
+</script>
