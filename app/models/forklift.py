@@ -148,6 +148,7 @@ class ForkliftPrediction(db.Model):
     updated_by = db.Column(db.String(100))
     annual_inspection_status = db.Column(db.String(20))  # passed, failed, pending
     annual_inspection_notes = db.Column(db.Text)
+    annual_inspection_report = db.Column(db.String(255))  # 年次点検レポートのPDFパス
     
     # リレーションシップ
     forklift = db.relationship('Forklift')
@@ -165,5 +166,8 @@ class ForkliftPrediction(db.Model):
             'next_battery_replacement_date': self.next_battery_replacement_date.strftime('%Y-%m-%d') if self.next_battery_replacement_date else None,
             'tire_replacement_date': self.tire_replacement_date.strftime('%Y-%m-%d') if self.tire_replacement_date else None,
             'tire_type': self.tire_type,
-            'next_tire_replacement_date': self.next_tire_replacement_date.strftime('%Y-%m-%d') if self.next_tire_replacement_date else None
+            'next_tire_replacement_date': self.next_tire_replacement_date.strftime('%Y-%m-%d') if self.next_tire_replacement_date else None,
+            'annual_inspection_status': self.annual_inspection_status,
+            'annual_inspection_notes': self.annual_inspection_notes,
+            'annual_inspection_report': self.annual_inspection_report
         }

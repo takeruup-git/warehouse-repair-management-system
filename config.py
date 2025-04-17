@@ -24,12 +24,13 @@ class Config:
     LOG_FILE = os.path.join(os.getcwd(), 'app.log')
     
     # アプリケーション固有の設定
-    ASSET_TYPES = ['forklift', 'facility', 'elevator', 'other']
+    ASSET_TYPES = ['forklift', 'facility', 'elevator', 'other', 'annual_inspection']
     ASSET_TYPE_NAMES = {
         'forklift': 'フォークリフト',
         'facility': '倉庫施設',
         'elevator': '昇降機',
-        'other': 'その他'
+        'other': 'その他',
+        'annual_inspection': '年次点検'
     }
     
     # フォークリフト設定

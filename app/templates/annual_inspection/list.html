@@ -1,0 +1,73 @@
+{% extends "base.html" %}
+
+{% block title %}年次点検一覧 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>年次点検一覧</h1>
+    <div>
+        <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> ダッシュボードに戻る
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="card-title mb-0">年次点検予定</h5>
+    </div>
+    <div class="card-body">
+        {% if upcoming_inspections %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>管理番号</th>
+                        <th>メーカー</th>
+                        <th>機種</th>
+                        <th>前回点検日</th>
+                        <th>次回点検予定日</th>
+                        <th>点検結果</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forklift, prediction in upcoming_inspections %}
+                    <tr>
+                        <td>{{ forklift.management_number }}</td>
+                        <td>{{ forklift.manufacturer }}</td>
+                        <td>{{ forklift.model }}</td>
+                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction.annual_inspection_date else '-' }}</td>
+                        <td>{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction.next_annual_inspection_date else '-' }}</td>
+                        <td>
+                            {% if prediction.annual_inspection_status == 'passed' %}
+                            <span class="badge bg-success">合格</span>
+                            {% elif prediction.annual_inspection_status == 'failed' %}
+                            <span class="badge bg-danger">不合格</span>
+                            {% elif prediction.annual_inspection_status == 'pending' %}
+                            <span class="badge bg-warning">保留</span>
+                            {% else %}
+                            <span class="badge bg-secondary">未設定</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> 点検管理
+                                </a>
+                                <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i> 詳細
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center my-3">年次点検予定はありません。</p>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

@@ -51,10 +51,12 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('inspection') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('inspection') or request.endpoint.startswith('annual_inspection') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-clipboard-check"></i> 点検報告書
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('annual_inspection.list_annual_inspections') }}">年次点検一覧</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.battery_fluid') }}">バッテリー液量点検表</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.periodic_self') }}">定期自主検査記録表</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.pre_shift') }}">始業前点検報告書</a></li>
