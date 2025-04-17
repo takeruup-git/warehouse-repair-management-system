@@ -1,0 +1,122 @@
+{% extends "base.html" %}
+
+{% block title %}年次点検管理 - {{ forklift.management_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>年次点検管理</h1>
+    <div>
+        <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> フォークリフト詳細に戻る
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">フォークリフト情報</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>管理番号:</strong> {{ forklift.management_number }}</p>
+                <p><strong>メーカー:</strong> {{ forklift.manufacturer }}</p>
+                <p><strong>機種:</strong> {{ forklift.model }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>製造年月日:</strong> {{ forklift.manufacture_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>経過年数:</strong> {{ "%.1f"|format(forklift.elapsed_years) }}年</p>
+                <p><strong>配置倉庫:</strong> {{ forklift.warehouse_group }} {{ forklift.warehouse_number }} {{ forklift.floor }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">年次点検情報</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data">
+            <div class="row mb-3">
+                <div class="col-md-6">
+                    <label for="inspection_date" class="form-label">点検実施日</label>
+                    <input type="date" class="form-control" id="inspection_date" name="inspection_date" 
+                           value="{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction.annual_inspection_date else '' }}">
+                </div>
+                <div class="col-md-6">
+                    <label for="inspection_status" class="form-label">点検結果</label>
+                    <select class="form-select" id="inspection_status" name="inspection_status">
+                        <option value="">選択してください</option>
+                        <option value="passed" {% if prediction.annual_inspection_status == 'passed' %}selected{% endif %}>合格</option>
+                        <option value="failed" {% if prediction.annual_inspection_status == 'failed' %}selected{% endif %}>不合格</option>
+                        <option value="pending" {% if prediction.annual_inspection_status == 'pending' %}selected{% endif %}>保留</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="inspection_notes" class="form-label">点検備考</label>
+                <textarea class="form-control" id="inspection_notes" name="inspection_notes" rows="3">{{ prediction.annual_inspection_notes or '' }}</textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="inspection_report" class="form-label">点検レポート (PDF)</label>
+                <input type="file" class="form-control" id="inspection_report" name="inspection_report" accept=".pdf">
+                {% if prediction.annual_inspection_report %}
+                <div class="mt-2">
+                    <a href="{{ url_for('static', filename=prediction.annual_inspection_report.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-info">
+                        <i class="bi bi-file-earmark-pdf"></i> 現在のレポートを表示
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+            
+            <div class="mb-3">
+                <label for="operator" class="form-label">操作者</label>
+                <input type="text" class="form-control" id="operator" name="operator" required value="{{ current_user.username }}">
+            </div>
+            
+            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 保存
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if prediction.annual_inspection_date %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">点検履歴</h5>
+    </div>
+    <div class="card-body">
+        <table class="table table-bordered">
+            <tr>
+                <th style="width: 30%">前回点検日</th>
+                <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') }}</td>
+            </tr>
+            <tr>
+                <th>次回点検予定日</th>
+                <td>{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction.next_annual_inspection_date else '未設定' }}</td>
+            </tr>
+            <tr>
+                <th>点検結果</th>
+                <td>
+                    {% if prediction.annual_inspection_status == 'passed' %}
+                    <span class="badge bg-success">合格</span>
+                    {% elif prediction.annual_inspection_status == 'failed' %}
+                    <span class="badge bg-danger">不合格</span>
+                    {% elif prediction.annual_inspection_status == 'pending' %}
+                    <span class="badge bg-warning">保留</span>
+                    {% else %}
+                    <span class="badge bg-secondary">未設定</span>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
