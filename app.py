@@ -12,4 +12,4 @@ if __name__ == '__main__':
         db.create_all()
     
     # アプリケーション起動
-    app.run(host='0.0.0.0', port=51021, debug=True)
+    app.run(host='0.0.0.0', port=50327, debug=True)

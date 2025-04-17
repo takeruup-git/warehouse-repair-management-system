@@ -6,12 +6,23 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>フォークリフト詳細</h1>
     <div>
-        <a href="{{ url_for('forklift.edit', id=forklift.id) }}" class="btn btn-primary">
+        <a href="{{ url_for('forklift.edit', id=forklift.id) }}" class="btn btn-primary me-2">
             <i class="bi bi-pencil"></i> 編集
         </a>
-        <a href="{{ url_for('forklift.index') }}" class="btn btn-secondary">
+        <a href="{{ url_for('forklift.index') }}" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i> 一覧に戻る
         </a>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-success dropdown-toggle" type="button" id="pdfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-pdf"></i> PDF生成
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="pdfDropdown">
+                {% if forklift.repairs %}
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_repair_pdf', asset_type='forklift', repair_id=forklift.repairs[0].id) }}">最新の修繕報告書</a></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('report.vehicle_history') }}?forklift_id={{ forklift.id }}&export_format=pdf">修繕履歴レポート</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
