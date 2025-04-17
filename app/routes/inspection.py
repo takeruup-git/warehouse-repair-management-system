@@ -387,8 +387,96 @@ def periodic_self():
     inspections = PeriodicSelfInspection.query.order_by(PeriodicSelfInspection.inspection_date.desc()).all()
     return render_template('inspection/periodic_self/index.html', inspections=inspections)
 
+@inspection_bp.route('/periodic_self/<int:id>')
+def view_periodic_self(id):
+    inspection = PeriodicSelfInspection.query.get_or_404(id)
+    return render_template('inspection/periodic_self/view.html', inspection=inspection)
+
 @inspection_bp.route('/periodic_self/create', methods=['GET', 'POST'])
 def create_periodic_self():
+    if request.method == 'POST':
+        try:
+            # フォームからデータを取得
+            inspection_date = datetime.strptime(request.form['inspection_date'], '%Y-%m-%d').date()
+            management_number = request.form['management_number']
+            hour_meter = request.form['hour_meter']
+            travel_system_ok = 'travel_system_ok' in request.form
+            loading_device_ok = 'loading_device_ok' in request.form
+            electrical_system_ok = 'electrical_system_ok' in request.form
+            brake_system_ok = 'brake_system_ok' in request.form
+            steering_system_ok = 'steering_system_ok' in request.form
+            inspector = request.form['inspector']
+            notes = request.form['notes']
+            operator = request.form['operator']
+            
+            # 定期自主検査記録表を作成
+            inspection = PeriodicSelfInspection(
+                inspection_date=inspection_date,
+                management_number=management_number,
+                hour_meter=hour_meter,
+                travel_system_ok=travel_system_ok,
+                loading_device_ok=loading_device_ok,
+                electrical_system_ok=electrical_system_ok,
+                brake_system_ok=brake_system_ok,
+                steering_system_ok=steering_system_ok,
+                inspector=inspector,
+                notes=notes,
+                operator=operator
+            )
+            
+            db.session.add(inspection)
+            db.session.commit()
+            
+            # 監査ログに記録
+            log = AuditLog(
+                action='create',
+                entity_type='periodic_self_inspection',
+                entity_id=inspection.id,
+                operator=operator,
+                details=f'定期自主検査記録表を作成しました。管理番号: {management_number}'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            flash('定期自主検査記録表が作成されました', 'success')
+            return redirect(url_for('inspection.periodic_self'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'作成中にエラーが発生しました: {str(e)}', 'danger')
+    
+    # フォークリフト一覧を取得
+    forklifts = Forklift.query.all()
+    
+    return render_template('inspection/periodic_self/create.html',
+                          forklifts=forklifts,
+                          inspection_results=Config.INSPECTION_RESULT_NAMES)
+
+@inspection_bp.route('/periodic_self/<int:id>/delete', methods=['POST'])
+def delete_periodic_self(id):
+    inspection = PeriodicSelfInspection.query.get_or_404(id)
+    
+    try:
+        db.session.delete(inspection)
+        db.session.commit()
+        
+        # 監査ログに記録
+        log = AuditLog(
+            action='delete',
+            entity_type='periodic_self_inspection',
+            entity_id=id,
+            operator=request.form.get('operator_name', 'システム'),
+            details=f'定期自主検査記録表を削除しました。管理番号: {inspection.management_number}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        flash('定期自主検査記録表が削除されました', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'削除中にエラーが発生しました: {str(e)}', 'danger')
+    
+    return redirect(url_for('inspection.periodic_self'))
     if request.method == 'POST':
         try:
             # フォームからデータを取得
@@ -457,8 +545,106 @@ def pre_shift():
     inspections = PreShiftInspection.query.order_by(PreShiftInspection.inspection_date.desc()).all()
     return render_template('inspection/pre_shift/index.html', inspections=inspections)
 
+@inspection_bp.route('/pre_shift/<int:id>')
+def view_pre_shift(id):
+    inspection = PreShiftInspection.query.get_or_404(id)
+    return render_template('inspection/pre_shift/view.html', inspection=inspection)
+
 @inspection_bp.route('/pre_shift/create', methods=['GET', 'POST'])
 def create_pre_shift():
+    if request.method == 'POST':
+        try:
+            # フォームからデータを取得
+            inspection_date = datetime.strptime(request.form['inspection_date'], '%Y-%m-%d').date()
+            management_number = request.form['management_number']
+            tire_ok = 'tire_ok' in request.form
+            brake_ok = 'brake_ok' in request.form
+            battery_ok = 'battery_ok' in request.form
+            oil_ok = 'oil_ok' in request.form
+            fork_ok = 'fork_ok' in request.form
+            chain_ok = 'chain_ok' in request.form
+            mast_ok = 'mast_ok' in request.form
+            warning_light_ok = 'warning_light_ok' in request.form
+            horn_ok = 'horn_ok' in request.form
+            inspector = request.form['inspector']
+            notes = request.form['notes']
+            operator = request.form['operator']
+            
+            # 始業前点検報告書を作成
+            inspection = PreShiftInspection(
+                inspection_date=inspection_date,
+                management_number=management_number,
+                tire_ok=tire_ok,
+                brake_ok=brake_ok,
+                battery_ok=battery_ok,
+                oil_ok=oil_ok,
+                fork_ok=fork_ok,
+                chain_ok=chain_ok,
+                mast_ok=mast_ok,
+                warning_light_ok=warning_light_ok,
+                horn_ok=horn_ok,
+                inspector=inspector,
+                notes=notes,
+                operator=operator
+            )
+            
+            db.session.add(inspection)
+            db.session.commit()
+            
+            # 監査ログに記録
+            log = AuditLog(
+                action='create',
+                entity_type='pre_shift_inspection',
+                entity_id=inspection.id,
+                operator=operator,
+                details=f'始業前点検報告書を作成しました。管理番号: {management_number}'
+            )
+            db.session.add(log)
+            db.session.commit()
+            
+            flash('始業前点検報告書が作成されました', 'success')
+            return redirect(url_for('inspection.pre_shift'))
+            
+        except Exception as e:
+            db.session.rollback()
+            flash(f'作成中にエラーが発生しました: {str(e)}', 'danger')
+    
+    # フォークリフト一覧を取得
+    forklifts = Forklift.query.all()
+    
+    # 従業員一覧を取得
+    employees = Employee.query.all() if 'Employee' in globals() else []
+    
+    return render_template('inspection/pre_shift/create.html',
+                          forklifts=forklifts,
+                          employees=employees,
+                          inspection_results=Config.INSPECTION_RESULT_NAMES)
+
+@inspection_bp.route('/pre_shift/<int:id>/delete', methods=['POST'])
+def delete_pre_shift(id):
+    inspection = PreShiftInspection.query.get_or_404(id)
+    
+    try:
+        db.session.delete(inspection)
+        db.session.commit()
+        
+        # 監査ログに記録
+        log = AuditLog(
+            action='delete',
+            entity_type='pre_shift_inspection',
+            entity_id=id,
+            operator=request.form.get('operator_name', 'システム'),
+            details=f'始業前点検報告書を削除しました。管理番号: {inspection.management_number}'
+        )
+        db.session.add(log)
+        db.session.commit()
+        
+        flash('始業前点検報告書が削除されました', 'success')
+    except Exception as e:
+        db.session.rollback()
+        flash(f'削除中にエラーが発生しました: {str(e)}', 'danger')
+    
+    return redirect(url_for('inspection.pre_shift'))
     if request.method == 'POST':
         try:
             # フォームからデータを取得

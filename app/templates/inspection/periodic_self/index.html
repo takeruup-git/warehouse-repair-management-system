@@ -43,15 +43,35 @@
                         <td>{{ inspection.inspector }}</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="#" class="btn btn-outline-primary">
+                                <a href="{{ url_for('inspection.view_periodic_self', id=inspection.id) }}" class="btn btn-outline-primary">
                                     <i class="bi bi-eye"></i>
                                 </a>
-                                <a href="#" class="btn btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
-                                </a>
-                                <button type="button" class="btn btn-outline-danger">
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ inspection.id }}">
                                     <i class="bi bi-trash"></i>
                                 </button>
+                            </div>
+                            
+                            <!-- 削除確認モーダル -->
+                            <div class="modal fade" id="deleteModal{{ inspection.id }}" tabindex="-1" aria-hidden="true">
+                                <div class="modal-dialog">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">削除確認</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <p>この定期自主検査記録表を削除しますか？</p>
+                                            <p class="text-danger">この操作は取り消せません。</p>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <form action="{{ url_for('inspection.delete_periodic_self', id=inspection.id) }}" method="post">
+                                                <input type="hidden" name="operator_name" id="operator_name{{ inspection.id }}">
+                                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                                                <button type="submit" class="btn btn-danger delete-confirm" data-id="{{ inspection.id }}">削除</button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </td>
                     </tr>
@@ -67,9 +87,25 @@
     </div>
 </div>
 
-<div class="mt-4">
-    <p>
-        <strong>注意:</strong> このページは開発中です。現在、詳細表示、編集、削除機能はまだ実装されていません。
-    </p>
-</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 削除ボタンクリック時に操作者名を設定
+        const deleteButtons = document.querySelectorAll('.delete-confirm');
+        deleteButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const id = this.getAttribute('data-id');
+                const operatorField = document.getElementById('operator_name' + id);
+                const globalOperator = document.getElementById('global-operator-name').value;
+                
+                if (operatorField && globalOperator) {
+                    operatorField.value = globalOperator;
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}
