@@ -126,6 +126,12 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost'
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'tests', 'uploads')
+    
+class TestConfig(TestingConfig):
+    """Configuration for running integration tests"""
+    pass
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
