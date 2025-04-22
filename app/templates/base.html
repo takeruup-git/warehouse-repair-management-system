@@ -19,12 +19,12 @@
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('main') %}active{% endif %}" href="{{ url_for('main.index') }}">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('main') %}active{% endif %}" href="{{ url_for('main.index') }}">
                             <i class="bi bi-speedometer2"></i> ダッシュボード
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('forklift') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('forklift') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-truck"></i> フォークリフト
                         </a>
                         <ul class="dropdown-menu">
@@ -33,7 +33,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('facility') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('facility') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-building"></i> 倉庫施設
                         </a>
                         <ul class="dropdown-menu">
@@ -42,7 +42,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('repair') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('repair') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-tools"></i> 修繕履歴
                         </a>
                         <ul class="dropdown-menu">
@@ -51,7 +51,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('inspection') or request.endpoint.startswith('annual_inspection') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('inspection') or request.endpoint.startswith('annual_inspection')) %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-clipboard-check"></i> 点検報告書
                         </a>
                         <ul class="dropdown-menu">
@@ -63,7 +63,7 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('report') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('report') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-file-earmark-bar-graph"></i> レポート
                         </a>
                         <ul class="dropdown-menu">
@@ -74,12 +74,12 @@
                         </ul>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint.startswith('csv_upload') %}active{% endif %}" href="{{ url_for('csv_upload.upload_csv') }}">
+                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('csv_upload') %}active{% endif %}" href="{{ url_for('csv_upload.upload_csv') }}">
                             <i class="bi bi-file-earmark-arrow-up"></i> CSVアップロード
                         </a>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('pdf_management') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('pdf_management') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-file-earmark-pdf"></i> PDF管理
                         </a>
                         <ul class="dropdown-menu">

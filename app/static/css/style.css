@@ -2,6 +2,27 @@
 body {
     font-family: "MS Gothic", "Yu Gothic", sans-serif;
     background-color: #f8f9fa;
+    padding-top: 0;
+    margin: 0;
+}
+
+/* Bootstrap 5 互換性修正 */
+.navbar {
+    padding: 0.5rem 1rem;
+}
+
+.navbar-brand {
+    padding-top: 0.3125rem;
+    padding-bottom: 0.3125rem;
+    margin-right: 1rem;
+}
+
+.navbar-nav {
+    display: flex;
+    flex-direction: row;
+    padding-left: 0;
+    margin-bottom: 0;
+    list-style: none;
 }
 
 /* ナビゲーションバー */

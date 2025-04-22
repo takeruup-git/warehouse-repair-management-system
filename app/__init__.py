@@ -1,5 +1,5 @@
 import os
-from flask import Flask, render_template, request, jsonify, url_for
+from flask import Flask, render_template, request, jsonify, url_for, redirect
 from app.models import db, AuditLog, login_manager
 import logging
 from logging.handlers import RotatingFileHandler
@@ -7,6 +7,7 @@ from datetime import datetime
 from config import config
 import jinja2
 from flask_login import current_user
+from flask_wtf.csrf import CSRFProtect
 
 # ユーティリティ関数
 def nl2br(value):
@@ -30,6 +31,10 @@ def create_app(config_name='default'):
     
     # データベース初期化
     db.init_app(app)
+    
+    # CSRF保護の初期化
+    csrf = CSRFProtect()
+    csrf.init_app(app)
     
     # ログイン管理の初期化
     login_manager.init_app(app)
@@ -94,6 +99,11 @@ def create_app(config_name='default'):
     app.register_blueprint(annual_inspection_bp, url_prefix='/annual-inspection')
     app.register_blueprint(operator_bp, url_prefix='/operator')
     app.register_blueprint(pdf_management_bp, url_prefix='/pdf-management')
+    
+    # 管理者ページのリダイレクト
+    @app.route('/admin/users')
+    def admin_users_redirect():
+        return redirect(url_for('auth.user_list'))
     
     # エラーハンドラー
     @app.errorhandler(404)
