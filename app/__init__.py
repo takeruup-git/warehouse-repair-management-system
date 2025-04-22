@@ -79,6 +79,7 @@ def create_app(config_name='default'):
     from app.routes.auth import auth_bp
     from app.routes.annual_inspection import annual_inspection_bp
     from app.routes.operator import operator_bp
+    from app.routes.pdf_management import pdf_management_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(forklift_bp, url_prefix='/forklift')
@@ -90,6 +91,7 @@ def create_app(config_name='default'):
     app.register_blueprint(auth_bp, url_prefix='/auth')
     app.register_blueprint(annual_inspection_bp, url_prefix='/annual-inspection')
     app.register_blueprint(operator_bp, url_prefix='/operator')
+    app.register_blueprint(pdf_management_bp, url_prefix='/pdf-management')
     
     # エラーハンドラー
     @app.errorhandler(404)
