@@ -6,7 +6,7 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>フォークリフト一覧</h1>
     <div>
-        <a href="{{ url_for('forklift.generate_inspection_format') }}?operator_name=" class="btn btn-success me-2" id="generate-format-btn">
+        <a href="{{ url_for('forklift.generate_inspection_format_route') }}?operator_name=" class="btn btn-success me-2" id="generate-format-btn">
             <i class="bi bi-file-earmark-excel"></i> 定期自主検査記録表フォーマット出力
         </a>
         <a href="{{ url_for('forklift.create') }}" class="btn btn-primary">
