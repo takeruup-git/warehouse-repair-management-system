@@ -51,10 +51,12 @@
                         </ul>
                     </li>
                     <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('inspection') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('inspection') or request.endpoint.startswith('annual_inspection') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-clipboard-check"></i> 点検報告書
                         </a>
                         <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('annual_inspection.list_annual_inspections') }}">年次点検一覧</a></li>
+                            <li><hr class="dropdown-divider"></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.battery_fluid') }}">バッテリー液量点検表</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.periodic_self') }}">定期自主検査記録表</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('inspection.pre_shift') }}">始業前点検報告書</a></li>
@@ -71,6 +73,11 @@
                             <li><a class="dropdown-item" href="{{ url_for('report.warehouse_history') }}">倉庫別修繕履歴</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('csv_upload') %}active{% endif %}" href="{{ url_for('csv_upload.upload_csv') }}">
+                            <i class="bi bi-file-earmark-arrow-up"></i> CSVアップロード
+                        </a>
+                    </li>
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle {% if request.endpoint.startswith('pdf_management') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
                             <i class="bi bi-file-earmark-pdf"></i> PDF管理
@@ -82,7 +89,16 @@
                         </ul>
                     </li>
                 </ul>
-                <div class="d-flex">
+                <div class="d-flex align-items-center">
+                    <!-- 操作者名表示 -->
+                    <div class="input-group me-2">
+                        <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
+                        <input type="text" class="form-control" id="global-operator-name" placeholder="操作者名を設定" readonly>
+                        <button class="btn btn-outline-secondary" type="button" data-bs-toggle="modal" data-bs-target="#operatorModal">
+                            <i class="bi bi-pencil"></i>
+                        </button>
+                    </div>
+                    
                     {% if current_user.is_authenticated %}
                     <div class="dropdown">
                         <button class="btn btn-light dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
@@ -92,6 +108,9 @@
                             {% if current_user.is_admin() %}
                             <li><a class="dropdown-item" href="{{ url_for('auth.user_list') }}">
                                 <i class="bi bi-people"></i> ユーザー管理
+                            </a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('operator.index') }}">
+                                <i class="bi bi-person-badge"></i> 操作者管理
                             </a></li>
                             <li><hr class="dropdown-divider"></li>
                             {% endif %}
@@ -134,6 +153,9 @@
         </div>
     </footer>
 
+    <!-- 操作者選択モーダル -->
+    {% include 'components/operator_modal.html' %}
+    
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script>

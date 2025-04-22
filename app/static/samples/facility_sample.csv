@@ -1,0 +1,3 @@
+asset_id,name,location,area,construction_date,status,ownership_type,notes
+WH-001,東京第一倉庫,東京都江東区,5000,2015-06-15,active,owned,冷蔵設備あり
+WH-002,大阪物流センター,大阪府茨木市,3500,2018-03-20,active,leased,

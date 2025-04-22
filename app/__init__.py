@@ -77,6 +77,9 @@ def create_app(config_name='default'):
     from app.routes.report import report_bp
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
+    from app.routes.csv_upload import csv_upload_bp
+    from app.routes.annual_inspection import annual_inspection_bp
+    from app.routes.operator import operator_bp
     from app.routes.pdf_management import pdf_management_bp
     
     app.register_blueprint(main_bp)
@@ -87,7 +90,10 @@ def create_app(config_name='default'):
     app.register_blueprint(report_bp, url_prefix='/report')
     app.register_blueprint(api_bp, url_prefix='/api')
     app.register_blueprint(auth_bp, url_prefix='/auth')
-    app.register_blueprint(pdf_management_bp, url_prefix='/pdf')
+    app.register_blueprint(csv_upload_bp, url_prefix='/csv')
+    app.register_blueprint(annual_inspection_bp, url_prefix='/annual-inspection')
+    app.register_blueprint(operator_bp, url_prefix='/operator')
+    app.register_blueprint(pdf_management_bp, url_prefix='/pdf-management')
     
     # エラーハンドラー
     @app.errorhandler(404)
@@ -122,6 +128,8 @@ def create_app(config_name='default'):
     # テンプレート用のグローバル変数
     @app.context_processor
     def inject_globals():
+        from flask import session
+        
         return {
             'current_year': datetime.now().year,
             'app_name': '倉庫修繕費管理システム',
@@ -135,7 +143,9 @@ def create_app(config_name='default'):
             'ownership_types': app.config['OWNERSHIP_TYPE_NAMES'],
             'inspection_results': app.config['INSPECTION_RESULT_NAMES'],
             'inspection_types': app.config['INSPECTION_TYPES'],
-            'current_user': current_user
+            'current_user': current_user,
+            'current_operator_name': session.get('current_operator_name', ''),
+            'now': datetime.now
         }
     
     return app
