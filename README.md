@@ -68,6 +68,14 @@ python init_db.py
 python -m flask db upgrade
 ```
 
+マイグレーションでエラーが発生した場合（"Can't locate revision identified by 'acbca60fe487'"など）は、以下の修正スクリプトを実行してください：
+
+```bash
+python fix_migration.py
+```
+
+このスクリプトは、マイグレーションの問題を修正し、不足しているテーブルを作成します。
+
 6. 初期管理者ユーザーを作成する
 
 ```bash
@@ -89,7 +97,7 @@ python app.py
 9. ブラウザで以下のURLにアクセスする
 
 ```
-http://localhost:51021
+http://localhost:53502
 ```
 
 10. 作成した管理者ユーザーでログインする
@@ -102,7 +110,7 @@ http://localhost:51021
 ローカルネットワーク内の他のコンピュータからアクセスするには、IPアドレスを使用します：
 
 ```
-http://[あなたのIPアドレス]:51021
+http://[あなたのIPアドレス]:53502
 ```
 
 ## ディレクトリ構造
