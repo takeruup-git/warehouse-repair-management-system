@@ -9,9 +9,20 @@
         <a href="{{ url_for('facility.index') }}" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i> 一覧に戻る
         </a>
-        <a href="{{ url_for('facility.edit', id=facility.id) }}" class="btn btn-primary">
+        <a href="{{ url_for('facility.edit', id=facility.id) }}" class="btn btn-primary me-2">
             <i class="bi bi-pencil"></i> 編集
         </a>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-success dropdown-toggle" type="button" id="pdfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-pdf"></i> PDF生成
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="pdfDropdown">
+                {% if facility.repairs %}
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_repair_pdf', asset_type='facility', repair_id=facility.repairs[0].id) }}">最新の修繕報告書</a></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('report.warehouse_history') }}?facility_id={{ facility.id }}&export_format=pdf">修繕履歴レポート</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 

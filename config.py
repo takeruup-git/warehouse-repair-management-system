@@ -24,12 +24,13 @@ class Config:
     LOG_FILE = os.path.join(os.getcwd(), 'app.log')
     
     # アプリケーション固有の設定
-    ASSET_TYPES = ['forklift', 'facility', 'elevator', 'other']
+    ASSET_TYPES = ['forklift', 'facility', 'elevator', 'other', 'annual_inspection']
     ASSET_TYPE_NAMES = {
         'forklift': 'フォークリフト',
         'facility': '倉庫施設',
         'elevator': '昇降機',
-        'other': 'その他'
+        'other': 'その他',
+        'annual_inspection': '年次点検'
     }
     
     # フォークリフト設定
@@ -126,6 +127,12 @@ class TestingConfig(Config):
     TESTING = True
     SQLALCHEMY_DATABASE_URI = 'sqlite:///:memory:'
     WTF_CSRF_ENABLED = False
+    SERVER_NAME = 'localhost'
+    UPLOAD_FOLDER = os.path.join(os.getcwd(), 'tests', 'uploads')
+    
+class TestConfig(TestingConfig):
+    """Configuration for running integration tests"""
+    pass
 
 class ProductionConfig(Config):
     SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL') or 'sqlite:///app.db'
@@ -134,5 +141,6 @@ config = {
     'development': DevelopmentConfig,
     'testing': TestingConfig,
     'production': ProductionConfig,
-    'default': DevelopmentConfig
+    'default': DevelopmentConfig,
+    TestConfig: TestConfig
 }

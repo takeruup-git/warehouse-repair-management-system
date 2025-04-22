@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+
+{% block title %}PDF検索{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">PDFファイル検索</h1>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>PDFファイルを検索</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('pdf_management.search') }}" method="post">
+                <div class="mb-3">
+                    <label for="search_term" class="form-label">検索キーワード</label>
+                    <input type="text" class="form-control" id="search_term" name="search_term" required>
+                    <div class="form-text">ファイル名に含まれるキーワードを入力してください。</div>
+                </div>
+                
+                <div class="d-flex justify-content-between">
+                    <a href="{{ url_for('pdf_management.index') }}" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left"></i> 戻る
+                    </a>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-search"></i> 検索
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>検索のヒント</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>検索はファイル名に対して行われます。</li>
+                <li>大文字・小文字は区別されません。</li>
+                <li>検索キーワードの例：
+                    <ul>
+                        <li>「forklift」：フォークリフト関連のPDFを検索</li>
+                        <li>「facility」：倉庫施設関連のPDFを検索</li>
+                        <li>「inspection」：点検報告書のPDFを検索</li>
+                        <li>「repair」：修繕報告書のPDFを検索</li>
+                        <li>「20250325」：2025年3月25日に生成されたPDFを検索</li>
+                    </ul>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}

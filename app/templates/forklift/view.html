@@ -6,12 +6,23 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>フォークリフト詳細</h1>
     <div>
-        <a href="{{ url_for('forklift.edit', id=forklift.id) }}" class="btn btn-primary">
+        <a href="{{ url_for('forklift.edit', id=forklift.id) }}" class="btn btn-primary me-2">
             <i class="bi bi-pencil"></i> 編集
         </a>
-        <a href="{{ url_for('forklift.index') }}" class="btn btn-secondary">
+        <a href="{{ url_for('forklift.index') }}" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i> 一覧に戻る
         </a>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-success dropdown-toggle" type="button" id="pdfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-pdf"></i> PDF生成
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="pdfDropdown">
+                {% if forklift.repairs %}
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_repair_pdf', asset_type='forklift', repair_id=forklift.repairs[0].id) }}">最新の修繕報告書</a></li>
+                {% endif %}
+                <li><a class="dropdown-item" href="{{ url_for('report.vehicle_history') }}?forklift_id={{ forklift.id }}&export_format=pdf">修繕履歴レポート</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 
@@ -146,6 +157,9 @@
                             <span class="text-muted">予定なし</span>
                             {% endif %}
                         </p>
+                        <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-tools"></i> 点検管理
+                        </a>
                     </div>
                 </div>
             </div>
@@ -187,6 +201,61 @@
         </div>
     </div>
 </div>
+
+{% if prediction.annual_inspection_date and prediction.annual_inspection_status %}
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">年次点検情報</h5>
+        <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
+            <i class="bi bi-pencil"></i> 編集
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <table class="table table-bordered">
+                    <tr>
+                        <th style="width: 40%">前回点検日</th>
+                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') }}</td>
+                    </tr>
+                    <tr>
+                        <th>次回点検予定日</th>
+                        <td>{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction.next_annual_inspection_date else '未設定' }}</td>
+                    </tr>
+                    <tr>
+                        <th>点検結果</th>
+                        <td>
+                            {% if prediction.annual_inspection_status == 'passed' %}
+                            <span class="badge bg-success">合格</span>
+                            {% elif prediction.annual_inspection_status == 'failed' %}
+                            <span class="badge bg-danger">不合格</span>
+                            {% elif prediction.annual_inspection_status == 'pending' %}
+                            <span class="badge bg-warning">保留</span>
+                            {% else %}
+                            <span class="badge bg-secondary">未設定</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                {% if prediction.annual_inspection_notes %}
+                <h6>点検備考:</h6>
+                <p>{{ prediction.annual_inspection_notes|nl2br }}</p>
+                {% endif %}
+                
+                {% if prediction.annual_inspection_report %}
+                <div class="mt-3">
+                    <a href="{{ url_for('static', filename=prediction.annual_inspection_report.replace('static/', '')) }}" target="_blank" class="btn btn-info">
+                        <i class="bi bi-file-earmark-pdf"></i> 点検レポートを表示
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 {% endif %}
 
 <div class="card mb-4">

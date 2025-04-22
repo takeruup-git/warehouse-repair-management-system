@@ -9,8 +9,11 @@
         <a href="{{ url_for('inspection.battery_fluid') }}" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i> 一覧に戻る
         </a>
-        <a href="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}" class="btn btn-primary">
+        <a href="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}" class="btn btn-primary me-2">
             <i class="bi bi-pencil"></i> 編集
+        </a>
+        <a href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=check.id, inspection_type='battery_fluid') }}" class="btn btn-success">
+            <i class="bi bi-file-earmark-pdf"></i> PDF生成
         </a>
     </div>
 </div>
