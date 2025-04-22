@@ -71,6 +71,11 @@
                             <li><a class="dropdown-item" href="{{ url_for('report.warehouse_history') }}">倉庫別修繕履歴</a></li>
                         </ul>
                     </li>
+                    <li class="nav-item">
+                        <a class="nav-link {% if request.endpoint.startswith('csv_upload') %}active{% endif %}" href="{{ url_for('csv_upload.upload_csv') }}">
+                            <i class="bi bi-file-earmark-arrow-up"></i> CSVアップロード
+                        </a>
+                    </li>
                 </ul>
                 <div class="d-flex">
                     {% if current_user.is_authenticated %}
