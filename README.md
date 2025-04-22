@@ -64,11 +64,31 @@ python init_db.py
 
 5. データベースマイグレーションを適用する
 
+#### Linux/Mac環境
 ```bash
 python -m flask db upgrade
 ```
 
-マイグレーションでエラーが発生した場合（"Can't locate revision identified by 'acbca60fe487'"など）は、以下の修正スクリプトを実行してください：
+#### Windows環境
+Windows環境では、以下の手順でマイグレーションを適用してください：
+
+```bash
+# 環境変数を設定
+set FLASK_APP=app.py
+
+# マイグレーションを実行
+python -m flask db upgrade
+```
+
+もし `Error: No such command 'db'` というエラーが表示される場合は、Flask-Migrateが正しくインストールされていない可能性があります。以下のコマンドで再インストールしてください：
+
+```bash
+pip install flask-migrate
+set FLASK_APP=app.py
+python -m flask db upgrade
+```
+
+それでも問題が解決しない場合や、マイグレーションでエラーが発生した場合（"Can't locate revision identified by 'acbca60fe487'"など）は、以下の修正スクリプトを実行してください：
 
 ```bash
 python fix_migration.py
