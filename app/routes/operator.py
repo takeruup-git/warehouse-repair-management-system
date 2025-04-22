@@ -3,6 +3,7 @@ from app.models import db
 from app.models.operator import Operator
 from datetime import datetime
 from flask_login import login_required
+from flask_wtf.csrf import CSRFProtect
 
 operator_bp = Blueprint('operator', __name__)
 
@@ -125,47 +126,70 @@ def api_list():
 @operator_bp.route('/api/set_current', methods=['POST'])
 def api_set_current():
     """現在の操作者をセッションに設定"""
-    data = request.get_json()
-    operator_id = data.get('operator_id')
-    operator_name = data.get('operator_name')
-    
-    if operator_id:
-        operator = Operator.query.get(operator_id)
-        if operator:
-            session['current_operator_id'] = operator.id
-            session['current_operator_name'] = operator.name
+    try:
+        data = request.get_json()
+        if not data:
+            print("ERROR: リクエストデータがJSONではありません")
+            return jsonify({'success': False, 'error': 'リクエストデータが不正です'}), 400
             
-            # 最終使用日時を更新
-            operator.updated_at = datetime.utcnow()
-            db.session.commit()
-            
-            return jsonify({'success': True, 'name': operator.name})
-    elif operator_name:
-        # 新規操作者名の場合は登録
-        existing = Operator.query.filter_by(name=operator_name).first()
-        if existing:
-            session['current_operator_id'] = existing.id
-            session['current_operator_name'] = existing.name
-            
-            # 最終使用日時を更新
-            existing.updated_at = datetime.utcnow()
-            db.session.commit()
-        else:
-            # 新規作成（簡易登録）
-            new_operator = Operator(
-                employee_id=f"TEMP-{datetime.utcnow().strftime('%Y%m%d%H%M%S')}",
-                name=operator_name,
-                updated_by='システム（自動登録）'
-            )
-            db.session.add(new_operator)
-            db.session.commit()
-            
-            session['current_operator_id'] = new_operator.id
-            session['current_operator_name'] = new_operator.name
+        operator_id = data.get('operator_id')
+        operator_name = data.get('operator_name')
         
-        return jsonify({'success': True, 'name': operator_name})
-    
-    return jsonify({'success': False, 'error': '操作者情報が不正です'}), 400
+        print(f"DEBUG: operator_id={operator_id}, operator_name={operator_name}")
+        
+        if operator_id:
+            operator = Operator.query.get(operator_id)
+            if operator:
+                session['current_operator_id'] = operator.id
+                session['current_operator_name'] = operator.name
+                
+                # 最終使用日時を更新
+                operator.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                return jsonify({'success': True, 'name': operator.name})
+        elif operator_name:
+            # 新規操作者名の場合は登録
+            existing = Operator.query.filter_by(name=operator_name).first()
+            if existing:
+                session['current_operator_id'] = existing.id
+                session['current_operator_name'] = existing.name
+                
+                # 最終使用日時を更新
+                existing.updated_at = datetime.utcnow()
+                db.session.commit()
+                
+                return jsonify({'success': True, 'name': existing.name})
+            else:
+                try:
+                    # 新規作成（簡易登録）- 一意性を確保するためにミリ秒とランダム文字列を追加
+                    import random
+                    import string
+                    random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
+                    temp_id = f"TEMP-{timestamp}-{random_str}"
+                    
+                    new_operator = Operator(
+                        employee_id=temp_id,
+                        name=operator_name,
+                        updated_by='システム（自動登録）'
+                    )
+                    db.session.add(new_operator)
+                    db.session.commit()
+                    
+                    session['current_operator_id'] = new_operator.id
+                    session['current_operator_name'] = new_operator.name
+                    
+                    return jsonify({'success': True, 'name': operator_name})
+                except Exception as e:
+                    db.session.rollback()
+                    print(f"ERROR: 操作者登録エラー: {str(e)}")
+                    return jsonify({'success': False, 'error': f'操作者登録エラー: {str(e)}'}), 500
+        
+        return jsonify({'success': False, 'error': '操作者情報が不正です'}), 400
+    except Exception as e:
+        print(f"ERROR: 予期せぬエラー: {str(e)}")
+        return jsonify({'success': False, 'error': f'予期せぬエラー: {str(e)}'}), 500
 
 @operator_bp.route('/api/get_current')
 def api_get_current():

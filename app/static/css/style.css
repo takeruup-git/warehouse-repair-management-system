@@ -1,9 +1,11 @@
 /* 全体のスタイル */
 body {
-    font-family: "MS Gothic", "Yu Gothic", sans-serif;
+    font-family: "Meiryo", "Hiragino Kaku Gothic Pro", "MS Gothic", "Yu Gothic", sans-serif;
     background-color: #f8f9fa;
     padding-top: 0;
     margin: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
 }
 
 /* Bootstrap 5 互換性修正 */
@@ -28,6 +30,24 @@ body {
 /* ナビゲーションバー */
 .navbar-brand {
     font-weight: bold;
+    white-space: nowrap;
+}
+
+/* ナビゲーションメニュー項目 */
+.navbar-nav .nav-link {
+    white-space: nowrap;
+}
+
+/* ドロップダウンメニュー項目 */
+.dropdown-menu .dropdown-item {
+    white-space: nowrap;
+}
+
+/* 操作者名表示 */
+#global-operator-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* カード */

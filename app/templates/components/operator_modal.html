@@ -18,6 +18,9 @@
                     <label for="operatorInput" class="form-label">または新しい操作者名を入力</label>
                     <input type="text" class="form-control" id="operatorInput" placeholder="例：山田太郎">
                 </div>
+                
+                <!-- エラーメッセージ表示エリア -->
+                <div class="alert alert-danger d-none" id="operatorErrorMessage"></div>
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-primary" id="setOperatorBtn">設定する</button>
@@ -84,8 +87,26 @@
             }
         });
         
+        // エラーメッセージ表示エリア
+        const errorMessageArea = document.getElementById('operatorErrorMessage');
+        
+        // エラーメッセージを表示する関数
+        function showErrorMessage(message) {
+            errorMessageArea.textContent = message;
+            errorMessageArea.classList.remove('d-none');
+        }
+        
+        // エラーメッセージを非表示にする関数
+        function hideErrorMessage() {
+            errorMessageArea.classList.add('d-none');
+            errorMessageArea.textContent = '';
+        }
+        
         // 操作者設定ボタンクリック時の処理
         setOperatorBtn.addEventListener('click', function() {
+            // エラーメッセージをクリア
+            hideErrorMessage();
+            
             let operatorId = null;
             let operatorName = null;
             
@@ -95,22 +116,36 @@
             } else if (operatorInput.value.trim()) {
                 operatorName = operatorInput.value.trim();
             } else {
-                alert('操作者を選択または入力してください');
+                showErrorMessage('操作者を選択または入力してください');
                 return;
             }
             
+            // ボタンを無効化して二重送信を防止
+            setOperatorBtn.disabled = true;
+            setOperatorBtn.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> 処理中...';
+            
             // APIに操作者情報を送信
+            // CSRFトークンを取得
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
+            
             fetch('/operator/api/set_current', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
+                    'X-CSRFToken': csrfToken
                 },
                 body: JSON.stringify({
                     operator_id: operatorId,
                     operator_name: operatorName
                 }),
+                credentials: 'same-origin'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`サーバーエラー: ${response.status}`);
+                }
+                return response.json();
+            })
             .then(data => {
                 if (data.success) {
                     // ローカルストレージに保存
@@ -129,12 +164,18 @@
                     // ページをリロード
                     location.reload();
                 } else {
-                    alert('操作者の設定に失敗しました: ' + data.error);
+                    showErrorMessage('操作者の設定に失敗しました: ' + (data.error || '不明なエラー'));
+                    // ボタンを再度有効化
+                    setOperatorBtn.disabled = false;
+                    setOperatorBtn.textContent = '設定する';
                 }
             })
             .catch(error => {
                 console.error('操作者の設定に失敗しました:', error);
-                alert('操作者の設定に失敗しました。もう一度お試しください。');
+                showErrorMessage('操作者の設定に失敗しました: ' + error.message);
+                // ボタンを再度有効化
+                setOperatorBtn.disabled = false;
+                setOperatorBtn.textContent = '設定する';
             });
         });
         

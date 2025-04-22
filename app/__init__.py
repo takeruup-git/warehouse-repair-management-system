@@ -36,6 +36,13 @@ def create_app(config_name='default'):
     csrf = CSRFProtect()
     csrf.init_app(app)
     
+    # API エンドポイントは CSRF 保護から除外
+    @csrf.exempt
+    def csrf_exempt_api():
+        if request.path.startswith('/api/') or request.path.startswith('/operator/api/'):
+            return True
+        return False
+    
     # ログイン管理の初期化
     login_manager.init_app(app)
     login_manager.login_view = 'auth.login'
