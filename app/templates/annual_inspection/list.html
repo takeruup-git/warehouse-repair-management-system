@@ -37,14 +37,14 @@
                         <td>{{ forklift.management_number }}</td>
                         <td>{{ forklift.manufacturer }}</td>
                         <td>{{ forklift.model }}</td>
-                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction.annual_inspection_date else '-' }}</td>
-                        <td>{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction.next_annual_inspection_date else '-' }}</td>
+                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction and prediction.annual_inspection_date else '-' }}</td>
+                        <td>{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction and prediction.next_annual_inspection_date else '-' }}</td>
                         <td>
-                            {% if prediction.annual_inspection_status == 'passed' %}
+                            {% if prediction and prediction.annual_inspection_status == 'passed' %}
                             <span class="badge bg-success">合格</span>
-                            {% elif prediction.annual_inspection_status == 'failed' %}
+                            {% elif prediction and prediction.annual_inspection_status == 'failed' %}
                             <span class="badge bg-danger">不合格</span>
-                            {% elif prediction.annual_inspection_status == 'pending' %}
+                            {% elif prediction and prediction.annual_inspection_status == 'pending' %}
                             <span class="badge bg-warning">保留</span>
                             {% else %}
                             <span class="badge bg-secondary">未設定</span>

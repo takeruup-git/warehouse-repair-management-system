@@ -78,16 +78,26 @@ def manage_annual_inspection(forklift_id):
 @annual_inspection_bp.route('/annual-inspection/list')
 @login_required
 def list_annual_inspections():
-    # 年次点検予定のフォークリフト一覧を取得
-    upcoming_inspections = db.session.query(
-        Forklift, ForkliftPrediction
-    ).join(
-        ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
-    ).filter(
-        ForkliftPrediction.next_annual_inspection_date != None
-    ).order_by(
-        ForkliftPrediction.next_annual_inspection_date
-    ).all()
-    
-    return render_template('annual_inspection/list.html', 
-                          upcoming_inspections=upcoming_inspections)
+    try:
+        # 年次点検予定のフォークリフト一覧を取得
+        # LEFT OUTER JOINを使用して、予測データがないフォークリフトも含める
+        upcoming_inspections = db.session.query(
+            Forklift, ForkliftPrediction
+        ).outerjoin(
+            ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
+        ).filter(
+            # アクティブなフォークリフトのみ表示
+            Forklift.asset_status == 'active'
+        ).order_by(
+            # 次回点検日がある場合はその順、ない場合は管理番号順
+            ForkliftPrediction.next_annual_inspection_date.asc().nullslast(),
+            Forklift.management_number
+        ).all()
+        
+        return render_template('annual_inspection/list.html', 
+                              upcoming_inspections=upcoming_inspections)
+    except Exception as e:
+        # エラーログを記録
+        current_app.logger.error(f"年次点検一覧取得エラー: {str(e)}")
+        flash(f"年次点検一覧の取得中にエラーが発生しました: {str(e)}", "danger")
+        return redirect(url_for('main.index'))
