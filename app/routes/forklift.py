@@ -152,14 +152,25 @@ def create():
 
 @forklift_bp.route('/<int:id>')
 def view(id):
-    forklift = Forklift.query.get_or_404(id)
-    repairs = ForkliftRepair.query.filter_by(forklift_id=id).order_by(ForkliftRepair.repair_date.desc()).all()
-    prediction = ForkliftPrediction.query.filter_by(forklift_id=id).first()
-    
-    return render_template('forklift/view.html',
-                          forklift=forklift,
-                          repairs=repairs,
-                          prediction=prediction)
+    try:
+        forklift = Forklift.query.get_or_404(id)
+        repairs = ForkliftRepair.query.filter_by(forklift_id=id).order_by(ForkliftRepair.repair_date.desc()).all()
+        
+        # 予測データがない場合は新規作成
+        prediction = ForkliftPrediction.query.filter_by(forklift_id=id).first()
+        if not prediction:
+            prediction = ForkliftPrediction(forklift_id=id)
+            db.session.add(prediction)
+            db.session.commit()
+        
+        return render_template('forklift/view.html',
+                              forklift=forklift,
+                              repairs=repairs,
+                              prediction=prediction)
+    except Exception as e:
+        current_app.logger.error(f"フォークリフト詳細表示エラー: {str(e)}")
+        flash(f"フォークリフト詳細の表示中にエラーが発生しました: {str(e)}", "danger")
+        return redirect(url_for('forklift.index'))
 
 @forklift_bp.route('/<int:id>/edit', methods=['GET', 'POST'])
 def edit(id):
