@@ -269,7 +269,7 @@
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">修繕履歴</h5>
-        <a href="{{ url_for('forklift.add_repair', id=forklift.id) }}" class="btn btn-sm btn-primary">
+        <a href="{{ url_for('repair.create_forklift_repair', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
             <i class="bi bi-plus-circle"></i> 修繕履歴追加
         </a>
     </div>

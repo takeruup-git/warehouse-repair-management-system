@@ -119,7 +119,7 @@
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">修繕履歴</h5>
-        <a href="{{ url_for('facility.add_repair', id=facility.id) }}" class="btn btn-primary btn-sm">
+        <a href="{{ url_for('repair.create_facility_repair', facility_id=facility.id) }}" class="btn btn-primary btn-sm">
             <i class="bi bi-plus-circle"></i> 修繕履歴追加
         </a>
     </div>
