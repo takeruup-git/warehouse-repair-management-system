@@ -112,6 +112,11 @@
                     </div>
                     
                     <div class="mb-3">
+                        <label for="vehicle_id_number" class="form-label">車体番号</label>
+                        <input type="text" class="form-control" id="vehicle_id_number" name="vehicle_id_number" value="{{ forklift.vehicle_id_number }}">
+                    </div>
+                    
+                    <div class="mb-3">
                         <label for="load_capacity" class="form-label">積載量 (kg) <span class="text-danger">*</span></label>
                         <input type="number" class="form-control" id="load_capacity" name="load_capacity" value="{{ forklift.load_capacity }}" required>
                     </div>
