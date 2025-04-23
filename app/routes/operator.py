@@ -45,13 +45,14 @@ def create():
                 return redirect(url_for('operator.create'))
         
         # 新規操作者を作成
+        from flask_login import current_user
         operator = Operator(
             employee_id=employee_id,
             name=name,
             department=department,
             license_number=license_number,
             license_expiry=license_expiry_date,
-            updated_by=request.form.get('operator_name', 'システム')
+            updated_by=current_user.full_name or current_user.username
         )
         
         db.session.add(operator)
@@ -95,7 +96,8 @@ def edit(id):
         operator.license_expiry = license_expiry_date
         if status:
             operator.status = status
-        operator.updated_by = request.form.get('operator_name', 'システム')
+        from flask_login import current_user
+        operator.updated_by = current_user.full_name or current_user.username
         operator.updated_at = datetime.utcnow()
         
         db.session.commit()
@@ -125,68 +127,18 @@ def api_list():
 
 @operator_bp.route('/api/set_current', methods=['POST'])
 def api_set_current():
-    """現在の操作者をセッションに設定"""
+    """現在の操作者をセッションに設定 (ログインユーザーを使用)"""
     try:
-        data = request.get_json()
-        if not data:
-            print("ERROR: リクエストデータがJSONではありません")
-            return jsonify({'success': False, 'error': 'リクエストデータが不正です'}), 400
+        from flask_login import current_user
+        
+        if not current_user.is_authenticated:
+            return jsonify({'success': False, 'error': 'ユーザーがログインしていません'}), 401
             
-        operator_id = data.get('operator_id')
-        operator_name = data.get('operator_name')
+        # ログインユーザーを操作者として設定
+        session['current_operator_id'] = current_user.id
+        session['current_operator_name'] = current_user.full_name or current_user.username
         
-        print(f"DEBUG: operator_id={operator_id}, operator_name={operator_name}")
-        
-        if operator_id:
-            operator = Operator.query.get(operator_id)
-            if operator:
-                session['current_operator_id'] = operator.id
-                session['current_operator_name'] = operator.name
-                
-                # 最終使用日時を更新
-                operator.updated_at = datetime.utcnow()
-                db.session.commit()
-                
-                return jsonify({'success': True, 'name': operator.name})
-        elif operator_name:
-            # 新規操作者名の場合は登録
-            existing = Operator.query.filter_by(name=operator_name).first()
-            if existing:
-                session['current_operator_id'] = existing.id
-                session['current_operator_name'] = existing.name
-                
-                # 最終使用日時を更新
-                existing.updated_at = datetime.utcnow()
-                db.session.commit()
-                
-                return jsonify({'success': True, 'name': existing.name})
-            else:
-                try:
-                    # 新規作成（簡易登録）- 一意性を確保するためにミリ秒とランダム文字列を追加
-                    import random
-                    import string
-                    random_str = ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
-                    timestamp = datetime.utcnow().strftime('%Y%m%d%H%M%S%f')
-                    temp_id = f"TEMP-{timestamp}-{random_str}"
-                    
-                    new_operator = Operator(
-                        employee_id=temp_id,
-                        name=operator_name,
-                        updated_by='システム（自動登録）'
-                    )
-                    db.session.add(new_operator)
-                    db.session.commit()
-                    
-                    session['current_operator_id'] = new_operator.id
-                    session['current_operator_name'] = new_operator.name
-                    
-                    return jsonify({'success': True, 'name': operator_name})
-                except Exception as e:
-                    db.session.rollback()
-                    print(f"ERROR: 操作者登録エラー: {str(e)}")
-                    return jsonify({'success': False, 'error': f'操作者登録エラー: {str(e)}'}), 500
-        
-        return jsonify({'success': False, 'error': '操作者情報が不正です'}), 400
+        return jsonify({'success': True, 'name': session['current_operator_name']})
     except Exception as e:
         print(f"ERROR: 予期せぬエラー: {str(e)}")
         return jsonify({'success': False, 'error': f'予期せぬエラー: {str(e)}'}), 500
@@ -194,14 +146,20 @@ def api_set_current():
 @operator_bp.route('/api/get_current')
 def api_get_current():
     """現在の操作者をJSON形式で返す"""
-    operator_id = session.get('current_operator_id')
-    operator_name = session.get('current_operator_name')
+    from flask_login import current_user
     
-    if operator_id and operator_name:
+    if current_user.is_authenticated:
+        operator_id = current_user.id
+        operator_name = current_user.full_name or current_user.username
+        
+        # セッションにも保存
+        session['current_operator_id'] = operator_id
+        session['current_operator_name'] = operator_name
+        
         return jsonify({
             'success': True,
             'operator_id': operator_id,
             'operator_name': operator_name
         })
     
-    return jsonify({'success': False})
+    return jsonify({'success': False, 'error': 'ユーザーがログインしていません'})
