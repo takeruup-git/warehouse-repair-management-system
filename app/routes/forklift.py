@@ -81,6 +81,7 @@ def create():
             power_source = request.form['power_source']
             model = request.form['model']
             serial_number = request.form['serial_number']
+            vehicle_id_number = request.form.get('vehicle_id_number', '')
             load_capacity = int(request.form['load_capacity'])
             manufacture_date = datetime.strptime(request.form['manufacture_date'], '%Y-%m-%d').date()
             lift_height = int(request.form['lift_height'])
@@ -106,6 +107,7 @@ def create():
                 power_source=power_source,
                 model=model,
                 serial_number=serial_number,
+                vehicle_id_number=vehicle_id_number if vehicle_id_number else None,
                 load_capacity=load_capacity,
                 manufacture_date=manufacture_date,
                 lift_height=lift_height,
@@ -187,6 +189,7 @@ def edit(id):
             forklift.power_source = request.form['power_source']
             forklift.model = request.form['model']
             forklift.serial_number = request.form['serial_number']
+            forklift.vehicle_id_number = request.form.get('vehicle_id_number', '') or None
             forklift.load_capacity = int(request.form['load_capacity'])
             forklift.manufacture_date = datetime.strptime(request.form['manufacture_date'], '%Y-%m-%d').date()
             forklift.lift_height = int(request.form['lift_height'])

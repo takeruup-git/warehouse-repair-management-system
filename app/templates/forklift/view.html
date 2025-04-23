@@ -107,6 +107,10 @@
                         <td>{{ forklift.serial_number }}</td>
                     </tr>
                     <tr>
+                        <th>車体番号</th>
+                        <td>{{ forklift.vehicle_id_number or '未登録' }}</td>
+                    </tr>
+                    <tr>
                         <th>積載量</th>
                         <td>{{ "{:,}".format(forklift.load_capacity) }}kg</td>
                     </tr>
