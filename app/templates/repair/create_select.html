@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}修繕履歴登録 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>修繕履歴登録</h1>
+    <a href="{{ url_for('repair.index') }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="row">
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="bi bi-truck display-1 text-primary mb-3"></i>
+                <h3>フォークリフト修繕</h3>
+                <p>フォークリフトの修繕履歴を登録します。</p>
+                <a href="{{ url_for('repair.create_forklift_repair_select') }}" class="btn btn-primary">
+                    <i class="bi bi-plus-circle"></i> フォークリフト修繕登録
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="bi bi-building display-1 text-success mb-3"></i>
+                <h3>倉庫施設修繕</h3>
+                <p>倉庫施設の修繕履歴を登録します。</p>
+                <a href="{{ url_for('repair.create_facility_repair_select') }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> 倉庫施設修繕登録
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-body text-center">
+                <i class="bi bi-tools display-1 text-warning mb-3"></i>
+                <h3>その他修繕</h3>
+                <p>その他の修繕履歴を登録します。</p>
+                <a href="{{ url_for('repair.create_other_repair') }}" class="btn btn-warning">
+                    <i class="bi bi-plus-circle"></i> その他修繕登録
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

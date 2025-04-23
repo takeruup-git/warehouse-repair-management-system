@@ -5,9 +5,60 @@
 {% block content %}
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>修繕履歴一覧</h1>
-    <a href="{{ url_for('repair.create_other_repair') }}" class="btn btn-primary">
-        <i class="bi bi-plus-circle"></i> その他修繕登録
-    </a>
+    <div>
+        <a href="{{ url_for('repair.create_select') }}" class="btn btn-primary">
+            <i class="bi bi-plus-circle"></i> 新規修繕登録
+        </a>
+    </div>
+</div>
+
+<!-- 検索フォーム -->
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">検索条件</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" action="{{ url_for('repair.index') }}" class="row g-3">
+            <div class="col-md-3">
+                <label for="type" class="form-label">修繕対象</label>
+                <select class="form-select" id="type" name="type">
+                    <option value="all" {% if search_type == 'all' %}selected{% endif %}>すべて</option>
+                    <option value="forklift" {% if search_type == 'forklift' %}selected{% endif %}>フォークリフト</option>
+                    <option value="facility" {% if search_type == 'facility' %}selected{% endif %}>倉庫施設</option>
+                    <option value="other" {% if search_type == 'other' %}selected{% endif %}>その他</option>
+                </select>
+            </div>
+            <div class="col-md-3">
+                <label for="keyword" class="form-label">キーワード</label>
+                <input type="text" class="form-control" id="keyword" name="keyword" value="{{ search_keyword }}" placeholder="修繕項目、管理番号など">
+            </div>
+            <div class="col-md-2">
+                <label for="date_from" class="form-label">修繕日（開始）</label>
+                <input type="date" class="form-control" id="date_from" name="date_from" value="{{ search_date_from }}">
+            </div>
+            <div class="col-md-2">
+                <label for="date_to" class="form-label">修繕日（終了）</label>
+                <input type="date" class="form-control" id="date_to" name="date_to" value="{{ search_date_to }}">
+            </div>
+            <div class="col-md-2">
+                <label for="reason" class="form-label">修繕理由</label>
+                <select class="form-select" id="reason" name="reason">
+                    <option value="">すべて</option>
+                    {% for reason_key, reason_name in repair_reasons.items() %}
+                    <option value="{{ reason_key }}" {% if search_reason == reason_key %}selected{% endif %}>{{ reason_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 text-end">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-search"></i> 検索
+                </button>
+                <a href="{{ url_for('repair.index') }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> クリア
+                </a>
+            </div>
+        </form>
+    </div>
 </div>
 
 <div class="card mb-4">
