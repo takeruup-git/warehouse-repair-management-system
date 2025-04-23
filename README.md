@@ -19,21 +19,22 @@
 
 ## 技術スタック
 
-- バックエンド: Python 3.9+ / Flask 2.3.2
+- バックエンド: Python 3.12+ / Flask 2.3.2
 - データベース: SQLite / SQLAlchemy 2.0.20
 - フロントエンド: HTML / CSS / JavaScript / Bootstrap 5
 - レポート生成: pandas 2.0+ / reportlab 4.0.4
 - PDF管理: reportlab 4.0.4 / Pillow 10.0.0
 - Excel操作: openpyxl 3.1.2 / xlsxwriter 3.1.0
-- テスト: pytest 7.4.0 / pytest-flask 1.2.0 / pytest-cov 4.1.0
+- テスト: pytest 7.4.0 / pytest-flask 1.2.0 / pytest-cov 4.1.0 / selenium 4.11.2
 - ユーザー認証: Flask-Login 0.6.2 / Flask-Session 0.5.0
 - フォーム処理: Flask-WTF 1.1.1 / WTForms 3.0.1
+- デプロイ: gunicorn 21.2.0
 
 ## セットアップ手順
 
 ### 前提条件
 
-- Python 3.9以上がインストールされていること
+- Python 3.12以上がインストールされていること
 - pipがインストールされていること
 
 ### インストール手順
@@ -126,7 +127,7 @@ python app.py
 9. ブラウザで以下のURLにアクセスする
 
 ```
-http://localhost:52755
+http://localhost:51873
 ```
 
 10. 作成した管理者ユーザーでログインする
@@ -139,7 +140,7 @@ http://localhost:52755
 ローカルネットワーク内の他のコンピュータからアクセスするには、IPアドレスを使用します：
 
 ```
-http://[あなたのIPアドレス]:52755
+http://[あなたのIPアドレス]:51873
 ```
 
 ## ディレクトリ構造
@@ -226,3 +227,14 @@ PDF管理機能の詳細については、[PDF管理ドキュメント](pdf_mana
 ## ライセンス
 
 [MIT License](LICENSE)
+
+## 動作環境
+
+- OS: Windows 10/11, macOS, Linux
+- ブラウザ: Chrome, Firefox, Edge (最新版推奨)
+- メモリ: 4GB以上推奨
+- ディスク容量: 500MB以上の空き容量
+
+## 更新履歴
+
+- 2025-04-23: READMEを更新、Python 3.12対応を明記、ポート番号を修正
