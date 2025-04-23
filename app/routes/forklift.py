@@ -283,43 +283,67 @@ def add_repair(id):
             
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
-                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(id))
+                filename = secure_filename(photo.filename)
+                
+                # 日付とタイプを含むサブディレクトリを作成して一意性を確保
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                file_type = 'photo'
+                unique_dir = os.path.join('forklift', str(id), f"{date_str}_{file_type}")
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
+                
                 photo_path = os.path.join(upload_dir, filename)
                 photo.save(photo_path)
-                photo_path = f"/static/uploads/forklift/{id}/{filename}"
+                photo_path = f"/static/uploads/{unique_dir}/{filename}"
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
-                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(id))
+                filename = secure_filename(quotation.filename)
+                
+                # 日付とタイプを含むサブディレクトリを作成して一意性を確保
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                file_type = 'quotation'
+                unique_dir = os.path.join('forklift', str(id), f"{date_str}_{file_type}")
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
+                
                 quotation_path = os.path.join(upload_dir, filename)
                 quotation.save(quotation_path)
-                quotation_path = f"/static/uploads/forklift/{id}/{filename}"
+                quotation_path = f"/static/uploads/{unique_dir}/{filename}"
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_approval_{approval_document.filename}")
-                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(id))
+                filename = secure_filename(approval_document.filename)
+                
+                # 日付とタイプを含むサブディレクトリを作成して一意性を確保
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                file_type = 'approval'
+                unique_dir = os.path.join('forklift', str(id), f"{date_str}_{file_type}")
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
+                
                 approval_document_path = os.path.join(upload_dir, filename)
                 approval_document.save(approval_document_path)
-                approval_document_path = f"/static/uploads/forklift/{id}/{filename}"
+                approval_document_path = f"/static/uploads/{unique_dir}/{filename}"
             
             if 'completion_report' in request.files and request.files['completion_report'].filename:
                 completion_report = request.files['completion_report']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_completion_{completion_report.filename}")
-                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(id))
+                filename = secure_filename(completion_report.filename)
+                
+                # 日付とタイプを含むサブディレクトリを作成して一意性を確保
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                file_type = 'completion'
+                unique_dir = os.path.join('forklift', str(id), f"{date_str}_{file_type}")
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
+                
                 completion_report_path = os.path.join(upload_dir, filename)
                 completion_report.save(completion_report_path)
-                completion_report_path = f"/static/uploads/forklift/{id}/{filename}"
+                completion_report_path = f"/static/uploads/{unique_dir}/{filename}"
             
             # 修繕履歴を作成
             repair = ForkliftRepair(

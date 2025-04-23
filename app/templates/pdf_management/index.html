@@ -66,10 +66,10 @@
                                     <td>{{ file.modified_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
-                                            <a href="{{ url_for('pdf_management.view_pdf', filename=file.filename) }}" class="btn btn-sm btn-primary" target="_blank">
+                                            <a href="{{ url_for('pdf_management.view_pdf', filepath=file.path) }}" class="btn btn-sm btn-primary" target="_blank">
                                                 <i class="fas fa-eye"></i> 表示
                                             </a>
-                                            <a href="{{ url_for('pdf_management.download_pdf', filename=file.filename) }}" class="btn btn-sm btn-success">
+                                            <a href="{{ url_for('pdf_management.download_pdf', filepath=file.path) }}" class="btn btn-sm btn-success">
                                                 <i class="fas fa-download"></i> ダウンロード
                                             </a>
                                             <button type="button" class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
@@ -91,7 +91,7 @@
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                                                        <form action="{{ url_for('pdf_management.delete_pdf', filename=file.filename) }}" method="post">
+                                                        <form action="{{ url_for('pdf_management.delete_pdf', filepath=file.path) }}" method="post">
                                                             <button type="submit" class="btn btn-danger">削除</button>
                                                         </form>
                                                     </div>
