@@ -206,21 +206,22 @@
     </div>
 </div>
 
-{% if prediction.annual_inspection_date and prediction.annual_inspection_status %}
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
         <h5 class="card-title mb-0">年次点検情報</h5>
         <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
-            <i class="bi bi-pencil"></i> 編集
+            <i class="bi bi-pencil"></i> {% if prediction and prediction.annual_inspection_date %}編集{% else %}登録{% endif %}
         </a>
     </div>
+    
+    {% if prediction and prediction.annual_inspection_date and prediction.annual_inspection_status %}
     <div class="card-body">
         <div class="row">
             <div class="col-md-6">
                 <table class="table table-bordered">
                     <tr>
                         <th style="width: 40%">前回点検日</th>
-                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction.annual_inspection_date else '未設定' }}</td>
                     </tr>
                     <tr>
                         <th>次回点検予定日</th>
@@ -258,9 +259,12 @@
             </div>
         </div>
     </div>
+    {% else %}
+    <div class="card-body">
+        <p class="text-center">年次点検情報はまだ登録されていません。「登録」ボタンをクリックして情報を追加してください。</p>
+    </div>
+    {% endif %}
 </div>
-{% endif %}
-{% endif %}
 
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
