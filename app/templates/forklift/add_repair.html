@@ -38,6 +38,7 @@
     </div>
     <div class="card-body">
         <form method="post" action="{{ url_for('forklift.add_repair', id=forklift.id) }}" enctype="multipart/form-data">
+            {% include 'includes/csrf_token.html' %}
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">

@@ -42,6 +42,14 @@ def create_app(config_name='default'):
         if request.path.startswith('/api/') or request.path.startswith('/operator/api/'):
             return True
         return False
+        
+    # CSRF エラーハンドラー
+    @app.errorhandler(400)
+    def handle_csrf_error(e):
+        if 'CSRF token is missing' in str(e) or 'CSRF token validation failed' in str(e):
+            app.logger.error(f"CSRF エラー: {str(e)} - パス: {request.path}")
+            return render_template('errors/csrf_error.html'), 400
+        return e
     
     # ログイン管理の初期化
     login_manager.init_app(app)

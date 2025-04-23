@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+
+{% block title %}セキュリティエラー - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-danger text-white">
+                    <h4 class="mb-0">セキュリティエラー</h4>
+                </div>
+                <div class="card-body">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-exclamation text-danger" style="font-size: 4rem;"></i>
+                    </div>
+                    <h5 class="text-center mb-3">CSRFトークンが不足しているか無効です</h5>
+                    <p class="text-center">
+                        セキュリティ上の理由により、このリクエストは処理できませんでした。<br>
+                        以下の操作をお試しください：
+                    </p>
+                    <ul class="list-group list-group-flush mb-4">
+                        <li class="list-group-item">ページを再読み込みしてから再試行してください</li>
+                        <li class="list-group-item">ブラウザのキャッシュをクリアしてみてください</li>
+                        <li class="list-group-item">別のブラウザで試してみてください</li>
+                        <li class="list-group-item">長時間操作がない場合は、再度ログインしてください</li>
+                    </ul>
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                        <a href="javascript:history.back()" class="btn btn-secondary me-md-2">
+                            <i class="bi bi-arrow-left"></i> 前のページに戻る
+                        </a>
+                        <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                            <i class="bi bi-house"></i> ホームに戻る
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
