@@ -42,6 +42,11 @@ def login():
             user.last_login = datetime.utcnow()
             db.session.commit()
             
+            # ログインユーザーを操作者として設定
+            from flask import session
+            session['current_operator_id'] = user.id
+            session['current_operator_name'] = user.full_name or user.username
+            
             next_page = request.args.get('next')
             if not next_page or not next_page.startswith('/'):
                 next_page = url_for('main.index')
@@ -56,6 +61,11 @@ def login():
 @auth_bp.route('/logout')
 @login_required
 def logout():
+    # 操作者情報をクリア
+    from flask import session
+    session.pop('current_operator_id', None)
+    session.pop('current_operator_name', None)
+    
     logout_user()
     flash('ログアウトしました。', 'info')
     return redirect(url_for('auth.login'))
