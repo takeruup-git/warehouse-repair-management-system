@@ -45,16 +45,24 @@ def index():
     pdf_dir = ensure_pdf_directory()
     pdf_files = []
     
-    for filename in os.listdir(pdf_dir):
-        if filename.endswith('.pdf'):
-            file_path = os.path.join(pdf_dir, filename)
-            file_stats = os.stat(file_path)
-            pdf_files.append({
-                'filename': filename,
-                'size': file_stats.st_size,
-                'created_at': datetime.fromtimestamp(file_stats.st_ctime),
-                'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
-            })
+    # メインディレクトリとサブディレクトリの両方を検索
+    for root, dirs, files in os.walk(pdf_dir):
+        for filename in files:
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(root, filename)
+                file_stats = os.stat(file_path)
+                
+                # ファイルパスからrelative_pathを作成
+                relative_path = os.path.relpath(file_path, os.path.join(current_app.root_path, 'static', 'uploads'))
+                display_path = os.path.join('static', 'uploads', relative_path)
+                
+                pdf_files.append({
+                    'filename': filename,
+                    'path': display_path,
+                    'size': file_stats.st_size,
+                    'created_at': datetime.fromtimestamp(file_stats.st_ctime),
+                    'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
+                })
     
     # 修正日時の降順でソート
     pdf_files.sort(key=lambda x: x['modified_at'], reverse=True)
@@ -78,19 +86,18 @@ def upload():
         
         # ファイルが許可された拡張子を持つか確認
         if file and allowed_file(file.filename):
-            # ファイル名を安全に保存
+            # オリジナルのファイル名を保持
             filename = secure_filename(file.filename)
             
-            # 重複を避けるためにUUIDを付加
-            if '.' in filename:
-                name, ext = filename.rsplit('.', 1)
-                filename = f"{name}_{uuid.uuid4().hex}.{ext}"
-            else:
-                filename = f"{filename}_{uuid.uuid4().hex}.pdf"
+            # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
+            date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+            unique_dir = os.path.join('pdf', date_str)
+            upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
+            if not os.path.exists(upload_dir):
+                os.makedirs(upload_dir)
             
             # ファイルを保存
-            pdf_dir = ensure_pdf_directory()
-            file_path = os.path.join(pdf_dir, filename)
+            file_path = os.path.join(upload_dir, filename)
             file.save(file_path)
             
             flash('PDFファイルがアップロードされました', 'success')
@@ -101,36 +108,57 @@ def upload():
     
     return render_template('pdf_management/upload.html')
 
-@pdf_management_bp.route('/view/<filename>')
-def view_pdf(filename):
-    pdf_dir = ensure_pdf_directory()
-    file_path = os.path.join(pdf_dir, secure_filename(filename))
+@pdf_management_bp.route('/view/<path:filepath>')
+def view_pdf(filepath):
+    # ファイルパスを安全に処理
+    safe_path = os.path.normpath(filepath)
+    if safe_path.startswith('..') or safe_path.startswith('/'):
+        abort(404)
     
-    if not os.path.exists(file_path):
+    file_path = os.path.join(current_app.root_path, safe_path)
+    
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
         abort(404)
     
     return send_file(file_path, mimetype='application/pdf')
 
-@pdf_management_bp.route('/download/<filename>')
-def download_pdf(filename):
-    pdf_dir = ensure_pdf_directory()
-    file_path = os.path.join(pdf_dir, secure_filename(filename))
-    
-    if not os.path.exists(file_path):
+@pdf_management_bp.route('/download/<path:filepath>')
+def download_pdf(filepath):
+    # ファイルパスを安全に処理
+    safe_path = os.path.normpath(filepath)
+    if safe_path.startswith('..') or safe_path.startswith('/'):
         abort(404)
+    
+    file_path = os.path.join(current_app.root_path, safe_path)
+    
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        abort(404)
+    
+    # オリジナルのファイル名を取得
+    filename = os.path.basename(file_path)
     
     return send_file(file_path, as_attachment=True, download_name=filename)
 
-@pdf_management_bp.route('/delete/<filename>', methods=['POST'])
-def delete_pdf(filename):
-    pdf_dir = ensure_pdf_directory()
-    file_path = os.path.join(pdf_dir, secure_filename(filename))
+@pdf_management_bp.route('/delete/<path:filepath>', methods=['POST'])
+def delete_pdf(filepath):
+    # ファイルパスを安全に処理
+    safe_path = os.path.normpath(filepath)
+    if safe_path.startswith('..') or safe_path.startswith('/'):
+        abort(404)
     
-    if not os.path.exists(file_path):
+    file_path = os.path.join(current_app.root_path, safe_path)
+    
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
         abort(404)
     
     try:
         os.remove(file_path)
+        
+        # 空のディレクトリを削除
+        dir_path = os.path.dirname(file_path)
+        if os.path.exists(dir_path) and not os.listdir(dir_path):
+            os.rmdir(dir_path)
+            
         flash('PDFファイルが削除されました', 'success')
     except Exception as e:
         flash(f'ファイル削除中にエラーが発生しました: {str(e)}', 'danger')
@@ -470,16 +498,24 @@ def search():
         pdf_dir = ensure_pdf_directory()
         pdf_files = []
         
-        for filename in os.listdir(pdf_dir):
-            if filename.endswith('.pdf') and search_term.lower() in filename.lower():
-                file_path = os.path.join(pdf_dir, filename)
-                file_stats = os.stat(file_path)
-                pdf_files.append({
-                    'filename': filename,
-                    'size': file_stats.st_size,
-                    'created_at': datetime.fromtimestamp(file_stats.st_ctime),
-                    'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
-                })
+        # メインディレクトリとサブディレクトリの両方を検索
+        for root, dirs, files in os.walk(pdf_dir):
+            for filename in files:
+                if filename.endswith('.pdf') and search_term.lower() in filename.lower():
+                    file_path = os.path.join(root, filename)
+                    file_stats = os.stat(file_path)
+                    
+                    # ファイルパスからrelative_pathを作成
+                    relative_path = os.path.relpath(file_path, os.path.join(current_app.root_path, 'static', 'uploads'))
+                    display_path = os.path.join('static', 'uploads', relative_path)
+                    
+                    pdf_files.append({
+                        'filename': filename,
+                        'path': display_path,
+                        'size': file_stats.st_size,
+                        'created_at': datetime.fromtimestamp(file_stats.st_ctime),
+                        'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
+                    })
         
         # 修正日時の降順でソート
         pdf_files.sort(key=lambda x: x['modified_at'], reverse=True)

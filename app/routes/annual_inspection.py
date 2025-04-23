@@ -50,21 +50,22 @@ def manage_annual_inspection(forklift_id):
                     if os.path.exists(old_file_path):
                         os.remove(old_file_path)
                 
-                # 新しいファイル名を生成（一意性を確保）
+                # オリジナルのファイル名を保持しつつ、一意性を確保するためのディレクトリ構造を使用
                 filename = secure_filename(file.filename)
-                unique_filename = f"{uuid.uuid4().hex}_{filename}"
                 
-                # 保存先ディレクトリを確保
-                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'annual_inspection')
+                # フォークリフトIDと日付を含むディレクトリを作成して一意性を確保
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                unique_dir = os.path.join('annual_inspection', str(forklift_id), date_str)
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
                 
                 # ファイルを保存
-                file_path = os.path.join(upload_dir, unique_filename)
+                file_path = os.path.join(upload_dir, filename)
                 file.save(file_path)
                 
                 # 相対パスをDBに保存
-                relative_path = os.path.join('static', 'uploads', 'annual_inspection', unique_filename)
+                relative_path = os.path.join('static', 'uploads', unique_dir, filename)
                 prediction.annual_inspection_report = relative_path
         
         db.session.commit()
