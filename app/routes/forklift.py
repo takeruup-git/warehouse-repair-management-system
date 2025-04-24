@@ -7,7 +7,7 @@ import os
 from werkzeug.utils import secure_filename
 from sqlalchemy.exc import IntegrityError
 from config import Config
-from app.utils.excel_generator import generate_inspection_format
+
 
 forklift_bp = Blueprint('forklift', __name__)
 
@@ -17,49 +17,7 @@ def index():
     forklifts = Forklift.query.all()
     return render_template('forklift/index.html', forklifts=forklifts)
 
-@forklift_bp.route('/generate_inspection_format')
-def generate_inspection_format_route():
-    """
-    稼働中のフォークリフト全てに対する定期自主検査記録表のExcelファイルを生成する
-    """
-    try:
-        # 全フォークリフトを取得
-        forklifts = Forklift.query.filter_by(asset_status='active').all()
-        
-        if not forklifts:
-            flash('稼働中のフォークリフトが見つかりません。', 'warning')
-            return redirect(url_for('forklift.index'))
-        
-        # Excelファイルを生成
-        file_path = generate_inspection_format(forklifts)
-        
-        # 監査ログを記録
-        audit_log = AuditLog(
-            action='generate',
-            entity_type='inspection_format',
-            operator=request.args.get('operator_name', 'システム'),
-            details=f'定期自主検査記録表フォーマットを生成（{len(forklifts)}台）'
-        )
-        db.session.add(audit_log)
-        db.session.commit()
-        
-        # 成功メッセージを表示
-        flash(f'定期自主検査記録表フォーマットが正常に生成されました。（{len(forklifts)}台）', 'success')
-        
-        # ファイルのフルパスを取得
-        full_path = os.path.join(current_app.root_path, file_path)
-        
-        # ファイルをダウンロード
-        return send_file(
-            full_path,
-            as_attachment=True,
-            download_name=f'forklift_inspection_{datetime.now().strftime("%Y%m%d")}.xlsx',
-            mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-        )
-        
-    except Exception as e:
-        flash(f'フォーマット生成中にエラーが発生しました: {str(e)}', 'danger')
-        return redirect(url_for('forklift.index'))
+
 
 @forklift_bp.route('/create', methods=['GET', 'POST'])
 def create():

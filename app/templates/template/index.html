@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+
+{% block title %}フォームテンプレート管理 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>フォームテンプレート管理</h1>
+  
+  <div class="mb-3">
+    <a href="{{ url_for('template.upload') }}" class="btn btn-primary">
+      <i class="bi bi-upload"></i> 新規テンプレートアップロード
+    </a>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <table class="table table-striped">
+        <thead>
+          <tr>
+            <th>名前</th>
+            <th>フォーム種類</th>
+            <th>説明</th>
+            <th>状態</th>
+            <th>作成日</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for template in templates %}
+          <tr>
+            <td>{{ template.name }}</td>
+            <td>
+              {% if template.form_type == 'periodic' %}
+                定期自主検査記録表
+              {% elif template.form_type == 'battery' %}
+                バッテリー液量点検表
+              {% elif template.form_type == 'preshift' %}
+                始業前点検報告書
+              {% else %}
+                {{ template.form_type }}
+              {% endif %}
+            </td>
+            <td>{{ template.description }}</td>
+            <td>
+              {% if template.is_active %}
+                <span class="badge bg-success">有効</span>
+              {% else %}
+                <span class="badge bg-secondary">無効</span>
+              {% endif %}
+            </td>
+            <td>{{ template.created_at }}</td>
+            <td>
+              <div class="btn-group">
+                <a href="{{ url_for('template.edit', id=template.id) }}" class="btn btn-sm btn-outline-primary">
+                  <i class="bi bi-pencil"></i> 編集
+                </a>
+                <a href="{{ url_for('template.mapping', id=template.id) }}" class="btn btn-sm btn-outline-info">
+                  <i class="bi bi-map"></i> マッピング
+                </a>
+                <a href="{{ url_for('static', filename=template.file_path) }}" class="btn btn-sm btn-outline-success" target="_blank">
+                  <i class="bi bi-download"></i> ダウンロード
+                </a>
+                <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ template.id }}">
+                  <i class="bi bi-trash"></i> 削除
+                </button>
+              </div>
+              
+              <!-- 削除確認モーダル -->
+              <div class="modal fade" id="deleteModal{{ template.id }}" tabindex="-1" aria-hidden="true">
+                <div class="modal-dialog">
+                  <div class="modal-content">
+                    <div class="modal-header">
+                      <h5 class="modal-title">テンプレート削除の確認</h5>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                      <p>テンプレート「{{ template.name }}」を削除してもよろしいですか？</p>
+                    </div>
+                    <div class="modal-footer">
+                      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                      <form action="{{ url_for('template.delete', id=template.id) }}" method="post">
+                        <input type="hidden" name="operator" id="operator_{{ template.id }}" value="{{ current_user.full_name or current_user.username }}">
+                        <button type="submit" class="btn btn-danger">削除</button>
+                      </form>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+{% endblock %}

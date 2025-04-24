@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}テンプレートマッピング - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>テンプレートマッピング設定</h1>
+  <h4>{{ template.name }}</h4>
+  
+  <div class="alert alert-info">
+    <p>フォークリフト情報をテンプレートのどのセルに配置するかを設定します。</p>
+    <p>セル参照は「A1」「B5」のような形式で入力してください。空欄の場合はその項目は出力されません。</p>
+  </div>
+  
+  <div class="card">
+    <div class="card-body">
+      <form method="POST">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>フィールド</th>
+              <th>説明</th>
+              <th>セル参照</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for field, label in forklift_fields %}
+            <tr>
+              <td>{{ field }}</td>
+              <td>{{ label }}</td>
+              <td>
+                <input type="text" class="form-control" name="cell_{{ field }}" 
+                       value="{{ current_mapping.get(field, '') }}" 
+                       placeholder="例: A1">
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        
+        <div class="mb-3">
+          <input type="hidden" name="operator" value="{{ current_user.full_name or current_user.username }}">
+        </div>
+        
+        <div class="d-flex justify-content-between mt-3">
+          <a href="{{ url_for('template.index') }}" class="btn btn-secondary">キャンセル</a>
+          <button type="submit" class="btn btn-primary">保存</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

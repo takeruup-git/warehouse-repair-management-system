@@ -1,7 +1,116 @@
 import os
+import json
 import openpyxl
 from datetime import datetime
+from flask import current_app
 from app.utils.excel_template import create_inspection_template
+
+def generate_form_from_uploaded_template(template_id, forklifts=None, blank=False):
+    """
+    アップロードされたExcelテンプレートを使用してフォームを生成する
+    
+    Args:
+        template_id: FormTemplateのID
+        forklifts: フォークリフトのリスト（Noneの場合は全台）
+        blank: Trueの場合、空欄のフォームを生成
+        
+    Returns:
+        生成されたExcelファイルのパス
+    """
+    from app.models.template import FormTemplate
+    from app.models.forklift import Forklift
+    
+    # テンプレートを取得
+    template = FormTemplate.query.get_or_404(template_id)
+    template_path = os.path.join(current_app.root_path, template.file_path)
+    
+    # テンプレートが存在しない場合はエラー
+    if not os.path.exists(template_path):
+        raise FileNotFoundError(f"Template file not found: {template_path}")
+    
+    # 出力ファイルのパスを設定
+    output_dir = os.path.join(current_app.root_path, 'static', 'generated')
+    if not os.path.exists(output_dir):
+        os.makedirs(output_dir)
+    
+    timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+    output_path = os.path.join(output_dir, f'{template.form_type}_form_{timestamp}.xlsx')
+    
+    # テンプレートを読み込む
+    wb = openpyxl.load_workbook(template_path)
+    
+    # 空欄フォームの場合はそのまま保存
+    if blank:
+        wb.save(output_path)
+        return os.path.join('static', 'generated', os.path.basename(output_path))
+    
+    # フォークリフトが指定されていない場合は全台取得
+    if forklifts is None:
+        forklifts = Forklift.query.filter_by(asset_status='active').all()
+    
+    # セルマッピングを取得
+    cell_mapping = {}
+    if template.cell_mapping:
+        try:
+            cell_mapping = json.loads(template.cell_mapping)
+        except:
+            pass
+    
+    # フォークリフトごとにシートを作成または更新
+    for i, forklift in enumerate(forklifts):
+        if i == 0:
+            # 最初のフォークリフトは既存のシートを使用
+            ws = wb.active
+        else:
+            # 2台目以降は新しいシートをコピーして作成
+            source = wb.active
+            target = wb.copy_worksheet(source)
+            target.title = f"{forklift.management_number}"
+            ws = target
+        
+        # フォークリフトデータをマッピングに従って埋め込む
+        for field, cell in cell_mapping.items():
+            if not cell:  # セルが指定されていない場合はスキップ
+                continue
+                
+            value = None
+            # ネストされた属性にアクセス（例: forklift.to_dict()['power_source_name']）
+            if '.' in field:
+                parts = field.split('.')
+                obj = forklift
+                for part in parts[:-1]:
+                    if hasattr(obj, part):
+                        obj = getattr(obj, part)
+                    else:
+                        break
+                if hasattr(obj, parts[-1]):
+                    value = getattr(obj, parts[-1])
+            else:
+                # 通常の属性アクセス
+                if hasattr(forklift, field):
+                    value = getattr(forklift, field)
+                elif field in forklift.to_dict():
+                    value = forklift.to_dict()[field]
+            
+            if value is not None:
+                if isinstance(value, datetime.date):
+                    value = value.strftime('%Y-%m-%d')
+                elif isinstance(value, (int, float)) and field in ['load_capacity', 'lift_height']:
+                    # 単位を追加
+                    unit = 'kg' if field == 'load_capacity' else 'mm'
+                    value = f"{value}{unit}"
+                
+                try:
+                    ws[cell] = value
+                except:
+                    # セル参照が無効な場合はスキップ
+                    pass
+    
+    # ファイルを保存
+    wb.save(output_path)
+    
+    # 相対パスを返す（静的ファイルとしてアクセスするため）
+    return os.path.join('static', 'generated', os.path.basename(output_path))
 
 def generate_inspection_format(forklifts):
     """

@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block title %}テンプレートアップロード - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+  <h1>テンプレートアップロード</h1>
+  
+  <div class="card">
+    <div class="card-body">
+      <form method="POST" enctype="multipart/form-data">
+        <div class="mb-3">
+          <label for="name" class="form-label">テンプレート名 <span class="text-danger">*</span></label>
+          <input type="text" class="form-control" id="name" name="name" required>
+        </div>
+        
+        <div class="mb-3">
+          <label for="form_type" class="form-label">フォーム種類 <span class="text-danger">*</span></label>
+          <select class="form-select" id="form_type" name="form_type" required>
+            <option value="">選択してください</option>
+            <option value="periodic">定期自主検査記録表</option>
+            <option value="battery">バッテリー液量点検表</option>
+            <option value="preshift">始業前点検報告書</option>
+          </select>
+        </div>
+        
+        <div class="mb-3">
+          <label for="description" class="form-label">説明</label>
+          <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+        </div>
+        
+        <div class="mb-3">
+          <label for="template_file" class="form-label">テンプレートファイル <span class="text-danger">*</span></label>
+          <input type="file" class="form-control" id="template_file" name="template_file" accept=".xlsx,.xls" required>
+          <div class="form-text">Excel形式(.xlsx, .xls)のファイルをアップロードしてください。</div>
+        </div>
+        
+        <div class="mb-3">
+          <input type="hidden" name="operator" value="{{ current_user.full_name or current_user.username }}">
+        </div>
+        
+        <div class="d-flex justify-content-between">
+          <a href="{{ url_for('template.index') }}" class="btn btn-secondary">キャンセル</a>
+          <button type="submit" class="btn btn-primary">アップロード</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -74,6 +74,8 @@
                             <li><a class="dropdown-item" href="{{ url_for('report.vehicle_history') }}">車両別修繕履歴</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('report.repair_target_summary') }}">修繕対象種別実績一覧</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('report.warehouse_history') }}">倉庫別修繕履歴</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="{{ url_for('report.form_generator') }}">フォーム生成</a></li>
                         </ul>
                     </li>
                     <li class="nav-item">
@@ -89,6 +91,15 @@
                             <li><a class="dropdown-item" href="{{ url_for('pdf_management.index') }}">PDF一覧</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('pdf_management.upload') }}">PDFアップロード</a></li>
                             <li><a class="dropdown-item" href="{{ url_for('pdf_management.search') }}">PDF検索</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and request.endpoint.startswith('template') %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-file-earmark-excel"></i> テンプレート管理
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('template.index') }}">テンプレート一覧</a></li>
+                            <li><a class="dropdown-item" href="{{ url_for('template.upload') }}">テンプレートアップロード</a></li>
                         </ul>
                     </li>
                 </ul>

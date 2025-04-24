@@ -1,9 +1,11 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
-from app.models import db
+from app.models import db, AuditLog
 from app.models.forklift import Forklift, ForkliftRepair
 from app.models.facility import Facility, FacilityRepair
 from app.models.other_repair import OtherRepair
 from app.models.master import Budget
+from app.models.template import FormTemplate
+from app.utils.excel_generator import generate_form_from_uploaded_template
 from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 import pandas as pd
@@ -14,6 +16,7 @@ from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.lib.units import mm
 from config import Config
+import os
 
 report_bp = Blueprint('report', __name__)
 
@@ -27,6 +30,76 @@ except:
 @report_bp.route('/')
 def index():
     return render_template('report/index.html')
+
+@report_bp.route('/form_generator', methods=['GET', 'POST'])
+def form_generator():
+    templates = FormTemplate.query.filter_by(is_active=True).all()
+    forklifts = Forklift.query.filter_by(asset_status='active').all()
+    
+    if request.method == 'POST':
+        template_id = request.form.get('template_id')
+        output_type = request.form.get('output_type', 'all')
+        operator = request.form.get('operator', 'システム')
+        
+        if not template_id:
+            flash('テンプレートを選択してください', 'danger')
+            return redirect(url_for('report.form_generator'))
+        
+        try:
+            template = FormTemplate.query.get_or_404(int(template_id))
+            
+            # 出力タイプに応じてフォークリフトを選択
+            selected_forklifts = None
+            if output_type == 'blank':
+                # 空欄フォーム
+                file_path = generate_form_from_uploaded_template(template_id, None, True)
+                detail_message = f'空欄フォーム「{template.name}」を生成'
+            elif output_type == 'selected':
+                # 選択したフォークリフト
+                forklift_ids = request.form.getlist('forklift_ids')
+                if not forklift_ids:
+                    flash('フォークリフトを選択してください', 'danger')
+                    return redirect(url_for('report.form_generator'))
+                
+                selected_forklifts = Forklift.query.filter(Forklift.id.in_(forklift_ids)).all()
+                file_path = generate_form_from_uploaded_template(template_id, selected_forklifts)
+                detail_message = f'フォーム「{template.name}」を生成（{len(selected_forklifts)}台）'
+            else:
+                # 全台
+                all_forklifts = Forklift.query.filter_by(asset_status='active').all()
+                file_path = generate_form_from_uploaded_template(template_id, all_forklifts)
+                detail_message = f'フォーム「{template.name}」を生成（全{len(all_forklifts)}台）'
+            
+            # 監査ログを記録
+            audit_log = AuditLog(
+                action='generate',
+                entity_type='form_template',
+                entity_id=template.id,
+                operator=operator,
+                details=detail_message
+            )
+            db.session.add(audit_log)
+            db.session.commit()
+            
+            # 成功メッセージを表示
+            flash(f'フォームが正常に生成されました。', 'success')
+            
+            # ファイルのフルパスを取得
+            full_path = os.path.join(current_app.root_path, file_path)
+            
+            # ファイルをダウンロード
+            return send_file(
+                full_path,
+                as_attachment=True,
+                download_name=f'{template.form_type}_form_{datetime.now().strftime("%Y%m%d")}.xlsx',
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            
+        except Exception as e:
+            flash(f'フォーム生成中にエラーが発生しました: {str(e)}', 'danger')
+            return redirect(url_for('report.form_generator'))
+    
+    return render_template('report/form_generator.html', templates=templates, forklifts=forklifts)
 
 @report_bp.route('/monthly_cost', methods=['GET', 'POST'])
 def monthly_cost():
