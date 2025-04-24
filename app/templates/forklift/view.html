@@ -161,9 +161,14 @@
                             <span class="text-muted">予定なし</span>
                             {% endif %}
                         </p>
-                        <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
-                            <i class="bi bi-tools"></i> 点検管理
-                        </a>
+                        <div class="btn-group btn-group-sm">
+                            <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-primary">
+                                <i class="bi bi-tools"></i> 点検管理
+                            </a>
+                            <a href="{{ url_for('annual_inspection.manage_battery_tire', forklift_id=forklift.id) }}" class="btn btn-success">
+                                <i class="bi bi-battery-charging"></i> 交換管理
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>

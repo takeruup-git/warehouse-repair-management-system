@@ -1,0 +1,132 @@
+{% extends "base.html" %}
+
+{% block title %}バッテリー・タイヤ交換管理 - {{ forklift.management_number }}{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>バッテリー・タイヤ交換管理</h1>
+    <div>
+        <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> フォークリフト詳細に戻る
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">フォークリフト情報</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>管理番号:</strong> {{ forklift.management_number }}</p>
+                <p><strong>メーカー:</strong> {{ forklift.manufacturer }}</p>
+                <p><strong>機種:</strong> {{ forklift.model }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>製造年月日:</strong> {{ forklift.manufacture_date.strftime('%Y-%m-%d') }}</p>
+                <p><strong>経過年数:</strong> {{ "%.1f"|format(forklift.elapsed_years) }}年</p>
+                <p><strong>配置倉庫:</strong> {{ forklift.warehouse_group }} {{ forklift.warehouse_number }} {{ forklift.floor }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<form method="post">
+    {% include 'includes/csrf_token.html' %}
+    <div class="row">
+        <!-- バッテリー交換情報 -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="card-title mb-0">バッテリー交換情報</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="battery_replacement_date" class="form-label">前回交換日</label>
+                        <input type="date" class="form-control" id="battery_replacement_date" name="battery_replacement_date" 
+                               value="{{ prediction.battery_replacement_date.strftime('%Y-%m-%d') if prediction.battery_replacement_date else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="next_battery_replacement_date" class="form-label">次回交換予定日</label>
+                        <input type="date" class="form-control" id="next_battery_replacement_date" name="next_battery_replacement_date" 
+                               value="{{ prediction.next_battery_replacement_date.strftime('%Y-%m-%d') if prediction.next_battery_replacement_date else '' }}">
+                    </div>
+                    
+                    {% if prediction.battery_replacement_date %}
+                    <div class="alert alert-info">
+                        <p><strong>前回交換日:</strong> {{ prediction.battery_replacement_date.strftime('%Y-%m-%d') }}</p>
+                        {% if prediction.next_battery_replacement_date %}
+                        <p><strong>次回交換予定日:</strong> {{ prediction.next_battery_replacement_date.strftime('%Y-%m-%d') }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- タイヤ交換情報 -->
+        <div class="col-md-6">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">
+                    <h5 class="card-title mb-0">タイヤ交換情報</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label for="tire_replacement_date" class="form-label">前回交換日</label>
+                        <input type="date" class="form-control" id="tire_replacement_date" name="tire_replacement_date" 
+                               value="{{ prediction.tire_replacement_date.strftime('%Y-%m-%d') if prediction.tire_replacement_date else '' }}">
+                    </div>
+                    <div class="mb-3">
+                        <label for="tire_type" class="form-label">タイヤタイプ</label>
+                        <select class="form-select" id="tire_type" name="tire_type">
+                            <option value="">選択してください</option>
+                            <option value="drive" {% if prediction.tire_type == 'drive' %}selected{% endif %}>ドライブタイヤ</option>
+                            <option value="caster" {% if prediction.tire_type == 'caster' %}selected{% endif %}>キャスタータイヤ</option>
+                            <option value="both" {% if prediction.tire_type == 'both' %}selected{% endif %}>両方</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="next_tire_replacement_date" class="form-label">次回交換予定日</label>
+                        <input type="date" class="form-control" id="next_tire_replacement_date" name="next_tire_replacement_date" 
+                               value="{{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') if prediction.next_tire_replacement_date else '' }}">
+                    </div>
+                    
+                    {% if prediction.tire_replacement_date %}
+                    <div class="alert alert-info">
+                        <p><strong>前回交換日:</strong> {{ prediction.tire_replacement_date.strftime('%Y-%m-%d') }}</p>
+                        {% if prediction.tire_type %}
+                        <p><strong>タイヤタイプ:</strong> 
+                            {% if prediction.tire_type == 'drive' %}
+                                ドライブタイヤ
+                            {% elif prediction.tire_type == 'caster' %}
+                                キャスタータイヤ
+                            {% elif prediction.tire_type == 'both' %}
+                                両方
+                            {% else %}
+                                {{ prediction.tire_type }}
+                            {% endif %}
+                        </p>
+                        {% endif %}
+                        {% if prediction.next_tire_replacement_date %}
+                        <p><strong>次回交換予定日:</strong> {{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') }}</p>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="mb-3">
+        <label for="operator_name" class="form-label">操作者</label>
+        <input type="text" class="form-control" id="operator_name" name="operator_name" required value="{{ current_user.username }}">
+    </div>
+    
+    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+        <button type="submit" class="btn btn-primary">
+            <i class="bi bi-save"></i> 保存
+        </button>
+    </div>
+</form>
+{% endblock %}

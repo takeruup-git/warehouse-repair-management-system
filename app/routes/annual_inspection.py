@@ -1,7 +1,7 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app
+from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from app.models import db
 from app.models.forklift import Forklift, ForkliftPrediction
-from flask_login import login_required
+from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
@@ -101,4 +101,90 @@ def list_annual_inspections():
         # エラーログを記録
         current_app.logger.error(f"年次点検一覧取得エラー: {str(e)}")
         flash(f"年次点検一覧の取得中にエラーが発生しました: {str(e)}", "danger")
+        return redirect(url_for('main.index'))
+
+@annual_inspection_bp.route('/forklift/<int:forklift_id>/battery-tire', methods=['GET', 'POST'])
+@login_required
+def manage_battery_tire(forklift_id):
+    """バッテリーとタイヤの交換時期を管理するルート"""
+    forklift = Forklift.query.get_or_404(forklift_id)
+    prediction = ForkliftPrediction.query.filter_by(forklift_id=forklift_id).first()
+    
+    if not prediction:
+        prediction = ForkliftPrediction(forklift_id=forklift_id)
+        db.session.add(prediction)
+        db.session.commit()
+    
+    if request.method == 'POST':
+        # バッテリー交換情報
+        battery_replacement_date = request.form.get('battery_replacement_date')
+        next_battery_replacement_date = request.form.get('next_battery_replacement_date')
+        
+        # タイヤ交換情報
+        tire_replacement_date = request.form.get('tire_replacement_date')
+        tire_type = request.form.get('tire_type')
+        next_tire_replacement_date = request.form.get('next_tire_replacement_date')
+        
+        operator = request.form.get('operator_name', current_user.username)
+        
+        # 日付の変換
+        if battery_replacement_date:
+            prediction.battery_replacement_date = datetime.strptime(battery_replacement_date, '%Y-%m-%d').date()
+        
+        if next_battery_replacement_date:
+            prediction.next_battery_replacement_date = datetime.strptime(next_battery_replacement_date, '%Y-%m-%d').date()
+        
+        if tire_replacement_date:
+            prediction.tire_replacement_date = datetime.strptime(tire_replacement_date, '%Y-%m-%d').date()
+        
+        prediction.tire_type = tire_type
+        
+        if next_tire_replacement_date:
+            prediction.next_tire_replacement_date = datetime.strptime(next_tire_replacement_date, '%Y-%m-%d').date()
+        
+        prediction.updated_by = operator
+        db.session.commit()
+        
+        flash('バッテリー・タイヤ交換情報が更新されました。', 'success')
+        return redirect(url_for('forklift.view', id=forklift_id))
+    
+    return render_template('annual_inspection/manage_battery_tire.html', 
+                          forklift=forklift, 
+                          prediction=prediction)
+
+@annual_inspection_bp.route('/battery-tire/list')
+@login_required
+def list_battery_tire():
+    """バッテリーとタイヤの交換予定一覧を表示するルート"""
+    try:
+        # 交換予定のフォークリフト一覧を取得
+        # LEFT OUTER JOINを使用して、予測データがないフォークリフトも含める
+        upcoming_replacements = db.session.query(
+            Forklift, ForkliftPrediction
+        ).outerjoin(
+            ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
+        ).filter(
+            # アクティブなフォークリフトのみ表示
+            Forklift.asset_status == 'active'
+        ).all()
+        
+        # バッテリー交換予定日でソート
+        battery_replacements = sorted(
+            [item for item in upcoming_replacements if item[1] and item[1].next_battery_replacement_date],
+            key=lambda x: x[1].next_battery_replacement_date
+        )
+        
+        # タイヤ交換予定日でソート
+        tire_replacements = sorted(
+            [item for item in upcoming_replacements if item[1] and item[1].next_tire_replacement_date],
+            key=lambda x: x[1].next_tire_replacement_date
+        )
+        
+        return render_template('annual_inspection/battery_tire_list.html', 
+                              battery_replacements=battery_replacements,
+                              tire_replacements=tire_replacements)
+    except Exception as e:
+        # エラーログを記録
+        current_app.logger.error(f"バッテリー・タイヤ交換一覧取得エラー: {str(e)}")
+        flash(f"バッテリー・タイヤ交換一覧の取得中にエラーが発生しました: {str(e)}", "danger")
         return redirect(url_for('main.index'))

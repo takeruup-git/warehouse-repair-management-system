@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from app.models import db, AuditLog
-from app.models.forklift import Forklift, ForkliftRepair
+from app.models.forklift import Forklift, ForkliftRepair, ForkliftPrediction
 from app.models.facility import Facility, FacilityRepair
 from app.models.other_repair import OtherRepair
 from app.models.master import WarehouseGroup
@@ -262,6 +262,47 @@ def create_forklift_repair(forklift_id):
             
             db.session.add(repair)
             db.session.commit()
+            
+            # バッテリーまたはタイヤの交換情報を更新
+            if repair_target_type == 'battery':
+                # バッテリー交換情報を更新
+                prediction = ForkliftPrediction.query.filter_by(forklift_id=forklift.id).first()
+                if not prediction:
+                    prediction = ForkliftPrediction(forklift_id=forklift.id)
+                    db.session.add(prediction)
+                
+                prediction.battery_replacement_date = repair_date
+                # 次回交換予定日は2年後に設定（バッテリーの標準的な寿命を2年と仮定）
+                prediction.next_battery_replacement_date = datetime(
+                    repair_date.year + 2, repair_date.month, repair_date.day
+                ).date()
+                prediction.updated_by = request.form.get('operator_name', 'システム')
+                db.session.commit()
+                
+                flash('バッテリー交換情報が自動的に更新されました。', 'info')
+            
+            elif repair_target_type in ['drive_tire', 'caster_tire']:
+                # タイヤ交換情報を更新
+                prediction = ForkliftPrediction.query.filter_by(forklift_id=forklift.id).first()
+                if not prediction:
+                    prediction = ForkliftPrediction(forklift_id=forklift.id)
+                    db.session.add(prediction)
+                
+                prediction.tire_replacement_date = repair_date
+                # タイヤタイプを設定
+                if repair_target_type == 'drive_tire':
+                    prediction.tire_type = 'drive'
+                elif repair_target_type == 'caster_tire':
+                    prediction.tire_type = 'caster'
+                
+                # 次回交換予定日は1年後に設定（タイヤの標準的な寿命を1年と仮定）
+                prediction.next_tire_replacement_date = datetime(
+                    repair_date.year + 1, repair_date.month, repair_date.day
+                ).date()
+                prediction.updated_by = request.form.get('operator_name', 'システム')
+                db.session.commit()
+                
+                flash('タイヤ交換情報が自動的に更新されました。', 'info')
             
             # 監査ログを記録
             audit_log = AuditLog(
