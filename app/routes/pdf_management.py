@@ -72,38 +72,136 @@ def index():
 @pdf_management_bp.route('/upload', methods=['GET', 'POST'])
 def upload():
     if request.method == 'POST':
-        # ファイルが存在するか確認
-        if 'pdf_file' not in request.files:
-            flash('ファイルが選択されていません', 'danger')
-            return redirect(request.url)
-        
-        file = request.files['pdf_file']
-        
-        # ファイル名が空でないか確認
-        if file.filename == '':
-            flash('ファイルが選択されていません', 'danger')
-            return redirect(request.url)
-        
-        # ファイルが許可された拡張子を持つか確認
-        if file and allowed_file(file.filename):
-            # オリジナルのファイル名を保持
-            filename = secure_filename(file.filename)
+        # PDFファイルのアップロード
+        if 'pdf_file' in request.files:
+            file = request.files['pdf_file']
             
-            # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
-            date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
-            unique_dir = os.path.join('pdf', date_str)
-            upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
-            if not os.path.exists(upload_dir):
-                os.makedirs(upload_dir)
+            # ファイル名が空でないか確認
+            if file.filename == '':
+                flash('ファイルが選択されていません', 'danger')
+                return redirect(request.url)
             
-            # ファイルを保存
-            file_path = os.path.join(upload_dir, filename)
-            file.save(file_path)
+            # ファイルが許可された拡張子を持つか確認
+            if file and allowed_file(file.filename):
+                # オリジナルのファイル名を保持
+                filename = secure_filename(file.filename)
+                
+                # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                
+                # アセットタイプとIDが指定されている場合はそれを含める
+                asset_type = request.form.get('asset_type', '')
+                asset_id = request.form.get('asset_id', '')
+                description = request.form.get('description', '')
+                
+                if asset_type and asset_id:
+                    unique_dir = os.path.join('pdf', asset_type, str(asset_id), date_str)
+                else:
+                    unique_dir = os.path.join('pdf', date_str)
+                
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
+                
+                # ファイルを保存
+                file_path = os.path.join(upload_dir, filename)
+                file.save(file_path)
+                
+                # 監査ログを記録
+                operator = request.form.get('operator_name', 'システム')
+                log_details = f'PDFファイル {filename} をアップロード'
+                if description:
+                    log_details += f' (説明: {description})'
+                
+                audit_log = AuditLog(
+                    action='upload',
+                    entity_type='pdf',
+                    entity_id=asset_id if asset_id else None,
+                    operator=operator,
+                    details=log_details
+                )
+                db.session.add(audit_log)
+                db.session.commit()
+                
+                flash('PDFファイルがアップロードされました', 'success')
+                
+                # リダイレクト先を決定
+                if asset_type == 'forklift' and asset_id:
+                    return redirect(url_for('forklift.view', id=asset_id))
+                elif asset_type == 'facility' and asset_id:
+                    return redirect(url_for('facility.view', id=asset_id))
+                else:
+                    return redirect(url_for('pdf_management.index'))
+            else:
+                flash('許可されていないファイル形式です。PDFファイルのみアップロード可能です。', 'danger')
+                return redirect(request.url)
+        
+        # 画像ファイルのアップロード
+        elif 'image_file' in request.files:
+            file = request.files['image_file']
             
-            flash('PDFファイルがアップロードされました', 'success')
-            return redirect(url_for('pdf_management.index'))
+            # ファイル名が空でないか確認
+            if file.filename == '':
+                flash('ファイルが選択されていません', 'danger')
+                return redirect(request.url)
+            
+            # 画像ファイルの拡張子を確認
+            allowed_image_extensions = {'png', 'jpg', 'jpeg', 'gif'}
+            if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_image_extensions:
+                # オリジナルのファイル名を保持
+                filename = secure_filename(file.filename)
+                
+                # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
+                
+                # アセットタイプとIDが指定されている場合はそれを含める
+                asset_type = request.form.get('asset_type', '')
+                asset_id = request.form.get('asset_id', '')
+                description = request.form.get('description', '')
+                
+                if asset_type and asset_id:
+                    unique_dir = os.path.join('images', asset_type, str(asset_id), date_str)
+                else:
+                    unique_dir = os.path.join('images', date_str)
+                
+                upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], unique_dir)
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
+                
+                # ファイルを保存
+                file_path = os.path.join(upload_dir, filename)
+                file.save(file_path)
+                
+                # 監査ログを記録
+                operator = request.form.get('operator_name', 'システム')
+                log_details = f'画像ファイル {filename} をアップロード'
+                if description:
+                    log_details += f' (説明: {description})'
+                
+                audit_log = AuditLog(
+                    action='upload',
+                    entity_type='image',
+                    entity_id=asset_id if asset_id else None,
+                    operator=operator,
+                    details=log_details
+                )
+                db.session.add(audit_log)
+                db.session.commit()
+                
+                flash('画像ファイルがアップロードされました', 'success')
+                
+                # リダイレクト先を決定
+                if asset_type == 'forklift' and asset_id:
+                    return redirect(url_for('forklift.view', id=asset_id))
+                elif asset_type == 'facility' and asset_id:
+                    return redirect(url_for('facility.view', id=asset_id))
+                else:
+                    return redirect(url_for('pdf_management.index'))
+            else:
+                flash('許可されていない画像形式です。PNG, JPG, JPEG, GIF形式のみアップロード可能です。', 'danger')
+                return redirect(request.url)
         else:
-            flash('許可されていないファイル形式です。PDFファイルのみアップロード可能です。', 'danger')
+            flash('ファイルが選択されていません', 'danger')
             return redirect(request.url)
     
     return render_template('pdf_management/upload.html')

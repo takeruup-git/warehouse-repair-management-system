@@ -18,32 +18,49 @@ def index():
     
     # 1. 月別修繕費推移データ
     current_year = Config.CURRENT_DATE.year
-    monthly_costs = db.session.query(
+    
+    # フォークリフト修繕費
+    monthly_costs_query = db.session.query(
         extract('month', ForkliftRepair.repair_date).label('month'),
         func.sum(ForkliftRepair.repair_cost).label('cost')
     ).filter(
         extract('year', ForkliftRepair.repair_date) == current_year
     ).group_by(
         extract('month', ForkliftRepair.repair_date)
-    ).all()
+    )
     
-    monthly_costs_facility = db.session.query(
+    # SQLを出力してデバッグ
+    print("フォークリフト修繕費クエリ:", str(monthly_costs_query))
+    monthly_costs = monthly_costs_query.all()
+    print("フォークリフト修繕費結果:", monthly_costs)
+    
+    # 倉庫施設修繕費
+    monthly_costs_facility_query = db.session.query(
         extract('month', FacilityRepair.repair_date).label('month'),
         func.sum(FacilityRepair.repair_cost).label('cost')
     ).filter(
         extract('year', FacilityRepair.repair_date) == current_year
     ).group_by(
         extract('month', FacilityRepair.repair_date)
-    ).all()
+    )
     
-    monthly_costs_other = db.session.query(
+    print("倉庫施設修繕費クエリ:", str(monthly_costs_facility_query))
+    monthly_costs_facility = monthly_costs_facility_query.all()
+    print("倉庫施設修繕費結果:", monthly_costs_facility)
+    
+    # その他修繕費
+    monthly_costs_other_query = db.session.query(
         extract('month', OtherRepair.repair_date).label('month'),
         func.sum(OtherRepair.repair_cost).label('cost')
     ).filter(
         extract('year', OtherRepair.repair_date) == current_year
     ).group_by(
         extract('month', OtherRepair.repair_date)
-    ).all()
+    )
+    
+    print("その他修繕費クエリ:", str(monthly_costs_other_query))
+    monthly_costs_other = monthly_costs_other_query.all()
+    print("その他修繕費結果:", monthly_costs_other)
     
     # 月別データを整形
     months = list(range(1, 13))
