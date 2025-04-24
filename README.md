@@ -73,14 +73,38 @@ python init_db.py
 
 5. データベースマイグレーションを適用する
 
-#### Linux/Mac環境
+#### 新しい統合マイグレーションスクリプトを使用する方法（推奨）
+
+Windows環境とLinux/Mac環境の両方で動作する統合マイグレーションスクリプトを用意しました。以下のコマンドで実行できます：
+
+```bash
+# すべての環境で共通
+python run_migration.py
+```
+
+#### Windows環境の場合は、バッチファイルも使用できます：
+
+```bash
+# Windowsのみ
+run_migration_windows.bat
+```
+
+このスクリプトは以下の機能を提供します：
+- 環境に応じた適切なコマンド実行
+- データベース接続の確認と再試行
+- マイグレーションエラーの自動修正
+- 詳細なログ出力（migration.log）
+
+詳細については、[Windows環境でのマイグレーション問題と解決策](docs/windows_migration.md)を参照してください。
+
+#### 従来の方法（非推奨）
+
+##### Linux/Mac環境
 ```bash
 python -m flask db upgrade
 ```
 
-#### Windows環境
-Windows環境では、以下の手順でマイグレーションを適用してください：
-
+##### Windows環境
 ```bash
 # 環境変数を設定
 set FLASK_APP=app.py
@@ -89,15 +113,7 @@ set FLASK_APP=app.py
 python -m flask db upgrade
 ```
 
-もし `Error: No such command 'db'` というエラーが表示される場合は、Flask-Migrateが正しくインストールされていない可能性があります。以下のコマンドで再インストールしてください：
-
-```bash
-pip install flask-migrate
-set FLASK_APP=app.py
-python -m flask db upgrade
-```
-
-それでも問題が解決しない場合や、マイグレーションでエラーが発生した場合（"Can't locate revision identified by 'acbca60fe487'"など）は、以下の修正スクリプトを実行してください：
+もし従来の方法でエラーが発生した場合は、以下の修正スクリプトを実行してください：
 
 ```bash
 python fix_migration.py
