@@ -18,7 +18,7 @@
         <form method="get" action="{{ url_for('repair.create_facility_repair_select') }}" class="row g-3">
             <div class="col-md-4">
                 <label for="keyword" class="form-label">キーワード</label>
-                <input type="text" class="form-control" id="keyword" name="keyword" value="{{ search_keyword }}" placeholder="施設名、住所など">
+                <input type="text" class="form-control" id="keyword" name="keyword" value="{{ search_keyword }}" placeholder="倉庫番号、住所など">
             </div>
             <div class="col-md-4">
                 <label for="warehouse_group" class="form-label">倉庫グループ</label>
@@ -51,20 +51,20 @@
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>施設名</th>
+                        <th>倉庫番号</th>
                         <th>倉庫グループ</th>
                         <th>住所</th>
-                        <th>建築年</th>
+                        <th>建築年月日</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for facility in facilities %}
                     <tr>
-                        <td>{{ facility.name }}</td>
+                        <td>{{ facility.warehouse_number }}</td>
                         <td>{{ facility.warehouse_group }}</td>
                         <td>{{ facility.address }}</td>
-                        <td>{{ facility.construction_year }}</td>
+                        <td>{{ facility.construction_date.strftime('%Y-%m-%d') if facility.construction_date else '-' }}</td>
                         <td>
                             <a href="{{ url_for('repair.create_facility_repair', facility_id=facility.id) }}" class="btn btn-sm btn-primary">
                                 <i class="bi bi-tools"></i> 修繕登録

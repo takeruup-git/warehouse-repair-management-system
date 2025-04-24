@@ -180,7 +180,7 @@ def create_facility_repair_select():
     # 検索条件の適用
     if search_keyword:
         query = query.filter(
-            (Facility.name.ilike(f'%{search_keyword}%')) |
+            (Facility.warehouse_number.ilike(f'%{search_keyword}%')) |
             (Facility.address.ilike(f'%{search_keyword}%'))
         )
     
@@ -188,7 +188,7 @@ def create_facility_repair_select():
         query = query.filter(Facility.warehouse_group == search_warehouse_group)
     
     # 結果の取得
-    facilities = query.order_by(Facility.name).all()
+    facilities = query.order_by(Facility.warehouse_number).all()
     
     # 倉庫グループの取得
     warehouse_groups = WarehouseGroup.query.filter_by(is_active=True).all()
@@ -346,7 +346,7 @@ def create_facility_repair(facility_id):
             # 修繕履歴を作成
             repair = FacilityRepair(
                 facility_id=facility.id,
-                facility_name=facility.name,
+                target_warehouse_number=facility.warehouse_number,
                 repair_date=repair_date,
                 floor=floor,
                 contractor=contractor,
@@ -397,7 +397,7 @@ def create_facility_repair(facility_id):
                 entity_type='facility_repair',
                 entity_id=repair.id,
                 operator=request.form.get('operator_name', 'システム'),
-                details=f'倉庫施設 {facility.name} の修繕履歴を登録'
+                details=f'倉庫施設 {facility.warehouse_number} の修繕履歴を登録'
             )
             db.session.add(audit_log)
             db.session.commit()

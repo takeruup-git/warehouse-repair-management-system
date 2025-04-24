@@ -19,8 +19,8 @@
             <div class="col-md-6">
                 <table class="table table-bordered">
                     <tr>
-                        <th style="width: 40%">施設名</th>
-                        <td>{{ facility.name }}</td>
+                        <th style="width: 40%">倉庫番号</th>
+                        <td>{{ facility.warehouse_number }}</td>
                     </tr>
                     <tr>
                         <th>倉庫グループ</th>
@@ -35,8 +35,8 @@
                         <td>{{ facility.address }}</td>
                     </tr>
                     <tr>
-                        <th>建築年</th>
-                        <td>{{ facility.construction_year }}年</td>
+                        <th>建築年月日</th>
+                        <td>{{ facility.construction_date.strftime('%Y-%m-%d') if facility.construction_date else '-' }}</td>
                     </tr>
                 </table>
             </div>
