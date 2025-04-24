@@ -44,10 +44,16 @@ body {
 }
 
 /* 操作者名表示 */
+.operator-name-container {
+    max-width: 200px;
+}
+
 #global-operator-name {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+    min-width: 100px;
+    max-width: 100%;
 }
 
 /* カード */
@@ -126,5 +132,23 @@ body {
 @media (max-width: 768px) {
     .table-responsive {
         font-size: 0.9rem;
+    }
+    
+    .operator-name-container {
+        max-width: 150px;
+    }
+    
+    #global-operator-name {
+        min-width: 80px;
+    }
+}
+
+@media (max-width: 576px) {
+    .operator-name-container {
+        max-width: 120px;
+    }
+    
+    #global-operator-name {
+        min-width: 60px;
     }
 }

@@ -95,7 +95,7 @@
                 <div class="d-flex align-items-center">
                     <!-- 操作者名表示 -->
                     {% if current_user.is_authenticated %}
-                    <div class="input-group me-2">
+                    <div class="input-group me-2 operator-name-container">
                         <span class="input-group-text"><i class="bi bi-person-badge"></i></span>
                         <input type="text" class="form-control" id="global-operator-name" value="{{ current_user.full_name or current_user.username }}" readonly>
                     </div>
@@ -167,6 +167,11 @@
         document.addEventListener('DOMContentLoaded', function() {
             const operatorInput = document.getElementById('global-operator-name');
             if (!operatorInput) return;
+            
+            // ツールチップを設定（長い名前の場合に全体を表示）
+            if (operatorInput.scrollWidth > operatorInput.clientWidth) {
+                operatorInput.title = operatorInput.value;
+            }
             
             // フォームに操作者名を自動設定
             const forms = document.querySelectorAll('form');
