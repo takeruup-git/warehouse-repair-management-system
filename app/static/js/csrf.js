@@ -1,9 +1,52 @@
 // CSRF保護のためのAjaxセットアップ
 document.addEventListener('DOMContentLoaded', function() {
-    // CSRFトークンを取得
+    // CSRFトークンを取得（メタタグまたはCookieから）
     function getCsrfToken() {
-        return document.querySelector('meta[name="csrf-token"]').getAttribute('content');
+        // まずメタタグから取得を試みる
+        const metaToken = document.querySelector('meta[name="csrf-token"]');
+        if (metaToken) {
+            return metaToken.getAttribute('content');
+        }
+        
+        // メタタグがない場合はCookieから取得
+        return getCsrfTokenFromCookie();
     }
+    
+    // CookieからCSRFトークンを取得
+    function getCsrfTokenFromCookie() {
+        const cookies = document.cookie.split(';');
+        for (let cookie of cookies) {
+            const [name, value] = cookie.trim().split('=');
+            if (name === 'csrf_token') {
+                return decodeURIComponent(value);
+            }
+        }
+        return '';
+    }
+    
+    // すべてのフォームにCSRFトークンを追加
+    function addCsrfTokenToForms() {
+        const token = getCsrfToken();
+        if (!token) return;
+        
+        const forms = document.querySelectorAll('form[method="post"], form[method="POST"]');
+        forms.forEach(form => {
+            // すでにCSRFトークンがある場合はスキップ
+            if (form.querySelector('input[name="csrf_token"]')) return;
+            
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = 'csrf_token';
+            csrfInput.value = token;
+            form.appendChild(csrfInput);
+        });
+    }
+    
+    // ページ読み込み時にすべてのフォームにCSRFトークンを追加
+    addCsrfTokenToForms();
+    
+    // 動的に追加されるフォームのために定期的にチェック
+    setInterval(addCsrfTokenToForms, 1000);
     
     // Ajaxリクエスト前にCSRFトークンをヘッダーに追加
     let oldXHROpen = window.XMLHttpRequest.prototype.open;

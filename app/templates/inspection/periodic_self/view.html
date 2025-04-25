@@ -114,7 +114,7 @@
             </div>
             <div class="modal-footer">
                 <form action="{{ url_for('inspection.delete_periodic_self', id=inspection.id) }}" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
                     <input type="hidden" name="operator_name" id="operator_name">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                     <button type="submit" class="btn btn-danger" id="delete-confirm">削除</button>

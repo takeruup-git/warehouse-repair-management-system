@@ -58,7 +58,7 @@
     </div>
     <div class="card-body">
         <form method="post" action="{{ url_for('repair.create_forklift_repair', forklift_id=forklift.id) }}" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
             <input type="hidden" name="operator_name" value="">
             
             <div class="row">

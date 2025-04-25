@@ -61,7 +61,7 @@
                                         </div>
                                         <div class="modal-footer">
                                             <form action="{{ url_for('inspection.delete_pre_shift', id=inspection.id) }}" method="post">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
                                                 <input type="hidden" name="operator_name" id="operator_name{{ inspection.id }}">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                 <button type="submit" class="btn btn-danger delete-confirm" data-id="{{ inspection.id }}">削除</button>

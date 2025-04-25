@@ -7,7 +7,7 @@ from datetime import datetime
 from config import config
 import jinja2
 from flask_login import current_user
-from flask_wtf.csrf import CSRFProtect
+from flask_wtf.csrf import CSRFProtect, generate_csrf
 
 # ユーティリティ関数
 def nl2br(value):
@@ -42,6 +42,12 @@ def create_app(config_name='default'):
         if request.path.startswith('/api/') or request.path.startswith('/operator/api/'):
             return True
         return False
+    
+    # すべてのリクエストにCSRFトークンを追加
+    @app.after_request
+    def add_csrf_header(response):
+        response.headers.set('X-CSRFToken', generate_csrf())
+        return response
         
     # CSRF エラーハンドラー
     @app.errorhandler(400)

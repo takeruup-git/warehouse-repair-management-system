@@ -50,7 +50,7 @@
     </div>
     <div class="card-body">
         <form method="post" action="{{ url_for('repair.create_facility_repair', facility_id=facility.id) }}" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
             <input type="hidden" name="operator_name" value="">
             
             <div class="row">

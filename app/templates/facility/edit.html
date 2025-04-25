@@ -13,7 +13,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" action="{{ url_for('facility.edit', id=facility.id) }}">
-    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    
             <input type="hidden" name="version" value="{{ facility.version }}">
             
             <div class="row">
