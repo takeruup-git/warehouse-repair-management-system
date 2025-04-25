@@ -136,6 +136,7 @@
                                                 </div>
                                                 <div class="modal-footer">
                                                     <form action="{{ url_for('repair.delete_forklift_repair', id=repair.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <input type="hidden" name="operator_name" id="operator_name_f{{ repair.id }}">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                         <button type="submit" class="btn btn-danger delete-confirm" data-id="f{{ repair.id }}">削除</button>
@@ -211,6 +212,7 @@
                                                 </div>
                                                 <div class="modal-footer">
                                                     <form action="{{ url_for('repair.delete_facility_repair', id=repair.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <input type="hidden" name="operator_name" id="operator_name_l{{ repair.id }}">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                         <button type="submit" class="btn btn-danger delete-confirm" data-id="l{{ repair.id }}">削除</button>
@@ -282,6 +284,7 @@
                                                 </div>
                                                 <div class="modal-footer">
                                                     <form action="{{ url_for('repair.delete_other_repair', id=repair.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                         <input type="hidden" name="operator_name" id="operator_name_o{{ repair.id }}">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                         <button type="submit" class="btn btn-danger delete-confirm" data-id="o{{ repair.id }}">削除</button>

@@ -332,6 +332,7 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                             <form action="{{ url_for('repair.delete_forklift_repair', id=repair.id) }}" method="post">
+    
                                                 <input type="hidden" name="operator_name" id="operator_name_repair_{{ repair.id }}">
                                                 {% include 'includes/csrf_token.html' %}
                                                 <button type="submit" class="btn btn-danger">削除</button>
@@ -359,6 +360,7 @@
     </div>
     <div class="card-body">
         <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data" class="mb-4">
+    
             {% include 'includes/csrf_token.html' %}
             <input type="hidden" name="asset_type" value="forklift">
             <input type="hidden" name="asset_id" value="{{ forklift.id }}">
@@ -382,6 +384,7 @@
         <hr>
         
         <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data">
+    
             {% include 'includes/csrf_token.html' %}
             <input type="hidden" name="asset_type" value="forklift">
             <input type="hidden" name="asset_id" value="{{ forklift.id }}">

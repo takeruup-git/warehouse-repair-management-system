@@ -16,6 +16,7 @@
     </div>
     <div class="card-body">
         <form action="{{ url_for('inspection.export_periodic_self') }}" method="post">
+    
             {% include 'includes/csrf_token.html' %}
             
             <div class="row mb-3">

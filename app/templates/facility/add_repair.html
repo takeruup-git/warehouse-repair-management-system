@@ -27,6 +27,7 @@
         </div>
         
         <form method="post" action="{{ url_for('facility.add_repair', id=facility.id) }}" enctype="multipart/form-data">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row">
                 <div class="col-md-6">
                     <div class="mb-3">

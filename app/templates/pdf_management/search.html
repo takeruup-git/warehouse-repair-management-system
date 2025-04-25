@@ -12,6 +12,7 @@
         </div>
         <div class="card-body">
             <form action="{{ url_for('pdf_management.search') }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                 <div class="mb-3">
                     <label for="search_term" class="form-label">検索キーワード</label>
                     <input type="text" class="form-control" id="search_term" name="search_term" required>

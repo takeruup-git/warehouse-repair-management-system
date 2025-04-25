@@ -168,6 +168,7 @@
     </div>
     <div class="card-body">
         <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data" class="mb-4">
+    
             {% include 'includes/csrf_token.html' %}
             <input type="hidden" name="asset_type" value="facility">
             <input type="hidden" name="asset_id" value="{{ facility.id }}">
@@ -191,6 +192,7 @@
         <hr>
         
         <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data">
+    
             {% include 'includes/csrf_token.html' %}
             <input type="hidden" name="asset_type" value="facility">
             <input type="hidden" name="asset_id" value="{{ facility.id }}">

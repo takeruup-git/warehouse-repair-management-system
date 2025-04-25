@@ -13,6 +13,7 @@
 <div class="card">
     <div class="card-body">
         <form method="post" action="{{ url_for('inspection.export_battery_fluid') }}">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
             <div class="row">
                 <div class="col-md-4">
                     <div class="mb-3">

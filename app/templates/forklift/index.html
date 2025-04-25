@@ -75,6 +75,7 @@
                                         <div class="modal-footer">
                                             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                             <form action="{{ url_for('forklift.delete', id=forklift.id) }}" method="post">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                 <input type="hidden" name="operator_name" id="operator_name_{{ forklift.id }}">
                                                 <button type="submit" class="btn btn-danger">削除</button>
                                             </form>
