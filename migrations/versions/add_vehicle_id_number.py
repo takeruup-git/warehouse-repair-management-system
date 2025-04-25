@@ -1,7 +1,7 @@
 """Add vehicle_id_number to forklift model
 
 Revision ID: add_vehicle_id_number
-Revises: 
+Revises: 003
 Create Date: 2025-04-23 01:00:00.000000
 
 """
@@ -11,7 +11,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision = 'add_vehicle_id_number'
-down_revision = None
+down_revision = '003'
 branch_labels = None
 depends_on = None
 
