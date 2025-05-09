@@ -9,9 +9,15 @@
         <a href="{{ url_for('inspection.periodic_self') }}" class="btn btn-secondary me-2">
             <i class="bi bi-arrow-left"></i> 一覧に戻る
         </a>
-        <a href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=inspection.id, inspection_type='periodic_self') }}" class="btn btn-success">
-            <i class="bi bi-file-earmark-pdf"></i> PDF生成
-        </a>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-success dropdown-toggle" type="button" id="pdfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-pdf"></i> PDF生成
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="pdfDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=inspection.id, inspection_type='periodic_self') }}">通常表示</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=inspection.id, inspection_type='periodic_self', show_empty='all') }}">空欄検査（すべて表示）</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 

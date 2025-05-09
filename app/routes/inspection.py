@@ -29,9 +29,33 @@ def index():
 
 @inspection_bp.route('/battery_fluid')
 def battery_fluid():
-    # バッテリー液量点検表の一覧を取得
-    checks = BatteryFluidCheck.query.order_by(BatteryFluidCheck.check_date.desc()).all()
-    return render_template('inspection/battery_fluid/index.html', checks=checks)
+    # バッテリー液量点検表一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'battery_fluid')
+    pdf_files = []
+    
+    # ディレクトリが存在するか確認
+    if os.path.exists(pdf_dir):
+        # PDFファイルを取得
+        for filename in os.listdir(pdf_dir):
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(pdf_dir, filename)
+                file_stat = os.stat(file_path)
+                
+                # ファイル情報を取得
+                pdf_files.append({
+                    'name': filename,
+                    'path': os.path.join('static', 'uploads', 'pdf', 'battery_fluid', filename),
+                    'size': file_stat.st_size,
+                    'created_at': datetime.fromtimestamp(file_stat.st_ctime)
+                })
+    else:
+        # ディレクトリが存在しない場合は作成
+        os.makedirs(pdf_dir, exist_ok=True)
+    
+    # 作成日時でソート
+    pdf_files.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    return render_template('inspection/battery_fluid/index.html', pdf_files=pdf_files)
 
 @inspection_bp.route('/battery_fluid/create', methods=['GET', 'POST'])
 def create_battery_fluid():
@@ -383,9 +407,33 @@ def export_battery_fluid():
 
 @inspection_bp.route('/periodic_self')
 def periodic_self():
-    # 定期自主検査記録表の一覧を取得
-    inspections = PeriodicSelfInspection.query.order_by(PeriodicSelfInspection.inspection_date.desc()).all()
-    return render_template('inspection/periodic_self/index.html', inspections=inspections)
+    # 定期自主検査記録表一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'periodic_self')
+    pdf_files = []
+    
+    # ディレクトリが存在するか確認
+    if os.path.exists(pdf_dir):
+        # PDFファイルを取得
+        for filename in os.listdir(pdf_dir):
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(pdf_dir, filename)
+                file_stat = os.stat(file_path)
+                
+                # ファイル情報を取得
+                pdf_files.append({
+                    'name': filename,
+                    'path': os.path.join('static', 'uploads', 'pdf', 'periodic_self', filename),
+                    'size': file_stat.st_size,
+                    'created_at': datetime.fromtimestamp(file_stat.st_ctime)
+                })
+    else:
+        # ディレクトリが存在しない場合は作成
+        os.makedirs(pdf_dir, exist_ok=True)
+    
+    # 作成日時でソート
+    pdf_files.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    return render_template('inspection/periodic_self/index.html', pdf_files=pdf_files)
 
 @inspection_bp.route('/periodic_self/export', methods=['GET', 'POST'])
 def export_periodic_self():
@@ -748,9 +796,33 @@ def delete_periodic_self(id):
 
 @inspection_bp.route('/pre_shift')
 def pre_shift():
-    # 始業前点検報告書の一覧を取得
-    inspections = PreShiftInspection.query.order_by(PreShiftInspection.inspection_date.desc()).all()
-    return render_template('inspection/pre_shift/index.html', inspections=inspections)
+    # 始業前点検報告書一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'pre_shift')
+    pdf_files = []
+    
+    # ディレクトリが存在するか確認
+    if os.path.exists(pdf_dir):
+        # PDFファイルを取得
+        for filename in os.listdir(pdf_dir):
+            if filename.endswith('.pdf'):
+                file_path = os.path.join(pdf_dir, filename)
+                file_stat = os.stat(file_path)
+                
+                # ファイル情報を取得
+                pdf_files.append({
+                    'name': filename,
+                    'path': os.path.join('static', 'uploads', 'pdf', 'pre_shift', filename),
+                    'size': file_stat.st_size,
+                    'created_at': datetime.fromtimestamp(file_stat.st_ctime)
+                })
+    else:
+        # ディレクトリが存在しない場合は作成
+        os.makedirs(pdf_dir, exist_ok=True)
+    
+    # 作成日時でソート
+    pdf_files.sort(key=lambda x: x['created_at'], reverse=True)
+    
+    return render_template('inspection/pre_shift/index.html', pdf_files=pdf_files)
 
 @inspection_bp.route('/pre_shift/<int:id>')
 def view_pre_shift(id):

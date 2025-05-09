@@ -220,6 +220,17 @@ def view_pdf(filepath):
     
     return send_file(file_path, mimetype='application/pdf')
 
+@pdf_management_bp.route('/view_by_name/<filename>')
+def view_pdf_by_name(filename):
+    # PDFディレクトリからファイルを取得
+    pdf_dir = ensure_pdf_directory()
+    file_path = os.path.join(pdf_dir, filename)
+    
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        abort(404)
+    
+    return send_file(file_path, mimetype='application/pdf')
+
 @pdf_management_bp.route('/download/<path:filepath>')
 def download_pdf(filepath):
     # ファイルパスを安全に処理
@@ -264,7 +275,8 @@ def delete_pdf(filepath):
     return redirect(url_for('pdf_management.index'))
 
 @pdf_management_bp.route('/generate/inspection/<int:inspection_id>/<inspection_type>')
-def generate_inspection_pdf(inspection_id, inspection_type):
+@pdf_management_bp.route('/generate/inspection/<int:inspection_id>/<inspection_type>/<show_empty>')
+def generate_inspection_pdf(inspection_id, inspection_type, show_empty=None):
     try:
         if inspection_type == 'battery_fluid':
             inspection = BatteryFluidCheck.query.get_or_404(inspection_id)
@@ -313,7 +325,7 @@ def generate_inspection_pdf(inspection_id, inspection_type):
             c.save()
             
             flash('点検報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
             
         elif inspection_type == 'periodic_self':
             inspection = PeriodicSelfInspection.query.get_or_404(inspection_id)
@@ -366,7 +378,7 @@ def generate_inspection_pdf(inspection_id, inspection_type):
             c.save()
             
             flash('点検報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
             
         elif inspection_type == 'pre_shift':
             inspection = PreShiftInspection.query.get_or_404(inspection_id)
@@ -422,7 +434,7 @@ def generate_inspection_pdf(inspection_id, inspection_type):
             c.save()
             
             flash('点検報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
         
         else:
             flash('無効な点検タイプです', 'danger')
@@ -483,7 +495,7 @@ def generate_repair_pdf(asset_type, repair_id):
             c.save()
             
             flash('修繕報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
             
         elif asset_type == 'facility':
             repair = FacilityRepair.query.get_or_404(repair_id)
@@ -533,7 +545,7 @@ def generate_repair_pdf(asset_type, repair_id):
             c.save()
             
             flash('修繕報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
             
         elif asset_type == 'other':
             repair = OtherRepair.query.get_or_404(repair_id)
@@ -578,7 +590,7 @@ def generate_repair_pdf(asset_type, repair_id):
             c.save()
             
             flash('修繕報告書PDFが生成されました', 'success')
-            return redirect(url_for('pdf_management.view_pdf', filename=filename))
+            return redirect(url_for('pdf_management.view_pdf_by_name', filename=filename))
             
         else:
             flash('無効な資産タイプです', 'danger')
@@ -621,3 +633,58 @@ def search():
         return render_template('pdf_management/search_results.html', pdf_files=pdf_files, search_term=search_term)
     
     return render_template('pdf_management/search.html')
+
+@pdf_management_bp.route('/upload/inspection/<inspection_type>', methods=['GET', 'POST'])
+def upload_inspection_pdf(inspection_type):
+    if request.method == 'POST':
+        # ファイルが存在するか確認
+        if 'pdf_file' not in request.files:
+            flash('ファイルが選択されていません', 'danger')
+            return redirect(request.url)
+        
+        file = request.files['pdf_file']
+        
+        # ファイル名が空でないか確認
+        if file.filename == '':
+            flash('ファイルが選択されていません', 'danger')
+            return redirect(request.url)
+        
+        # ファイル形式が正しいか確認
+        if file and allowed_file(file.filename):
+            # ファイル名を安全に保存
+            filename = secure_filename(file.filename)
+            
+            # 点検タイプに応じたディレクトリを確認・作成
+            pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', inspection_type)
+            if not os.path.exists(pdf_dir):
+                os.makedirs(pdf_dir)
+            
+            # ファイルを保存
+            file_path = os.path.join(pdf_dir, filename)
+            file.save(file_path)
+            
+            flash('PDFファイルがアップロードされました', 'success')
+            
+            # 点検タイプに応じたリダイレクト先を設定
+            if inspection_type == 'battery_fluid':
+                return redirect(url_for('inspection.battery_fluid'))
+            elif inspection_type == 'periodic_self':
+                return redirect(url_for('inspection.periodic_self'))
+            elif inspection_type == 'pre_shift':
+                return redirect(url_for('inspection.pre_shift'))
+            else:
+                return redirect(url_for('pdf_management.index'))
+        else:
+            flash('許可されていないファイル形式です。PDFファイルを選択してください。', 'danger')
+            return redirect(request.url)
+    
+    # 点検タイプに応じたタイトルを設定
+    title = ''
+    if inspection_type == 'battery_fluid':
+        title = 'バッテリー液量点検表'
+    elif inspection_type == 'periodic_self':
+        title = '定期自主検査記録表'
+    elif inspection_type == 'pre_shift':
+        title = '始業前点検報告書'
+    
+    return render_template('pdf_management/upload_inspection.html', inspection_type=inspection_type, title=title)

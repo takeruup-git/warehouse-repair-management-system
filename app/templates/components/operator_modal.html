@@ -48,15 +48,7 @@
             modal.hide();
         });
         
-        // ページ読み込み時に操作者が設定されていなければモーダルを表示
-        fetch('/operator/api/get_current')
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    const modal = new bootstrap.Modal(operatorModal);
-                    modal.show();
-                }
-            })
-            .catch(error => console.error('現在の操作者情報の取得に失敗しました:', error));
+        // システムの改善により、ログインユーザーが自動的に操作者として設定されるようになりました
+        // モーダルは表示しません
     });
 </script>

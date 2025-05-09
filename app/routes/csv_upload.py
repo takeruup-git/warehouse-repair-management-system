@@ -88,16 +88,16 @@ def process_forklift_csv(df):
         count = 0
         for _, row in df.iterrows():
             # 必須フィールドの存在確認
-            if 'asset_id' not in row or pd.isna(row['asset_id']):
+            if 'management_number' not in row or pd.isna(row['management_number']):
                 continue
                 
             # 既存のフォークリフトを検索
-            forklift = Forklift.query.filter_by(asset_id=row['asset_id']).first()
+            forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
             
             # 新規作成または更新
             if forklift is None:
                 forklift = Forklift()
-                forklift.asset_id = row['asset_id']
+                forklift.management_number = row['management_number']
             
             # 各フィールドを更新
             if 'name' in row and not pd.isna(row['name']):
@@ -141,16 +141,16 @@ def process_facility_csv(df):
         count = 0
         for _, row in df.iterrows():
             # 必須フィールドの存在確認
-            if 'asset_id' not in row or pd.isna(row['asset_id']):
+            if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
                 continue
                 
             # 既存の施設を検索
-            facility = Facility.query.filter_by(asset_id=row['asset_id']).first()
+            facility = Facility.query.filter_by(asset_management_number=row['asset_management_number']).first()
             
             # 新規作成または更新
             if facility is None:
                 facility = Facility()
-                facility.asset_id = row['asset_id']
+                facility.asset_management_number = row['asset_management_number']
             
             # 各フィールドを更新
             if 'name' in row and not pd.isna(row['name']):

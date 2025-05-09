@@ -38,8 +38,8 @@ def index():
     if search_keyword:
         forklift_query = forklift_query.filter(
             (ForkliftRepair.repair_item.ilike(f'%{search_keyword}%')) |
-            (ForkliftRepair.forklift_management_number.ilike(f'%{search_keyword}%')) |
-            (ForkliftRepair.vendor.ilike(f'%{search_keyword}%')) |
+            (ForkliftRepair.target_management_number.ilike(f'%{search_keyword}%')) |
+            (ForkliftRepair.contractor.ilike(f'%{search_keyword}%')) |
             (ForkliftRepair.notes.ilike(f'%{search_keyword}%'))
         )
     
@@ -218,13 +218,13 @@ def create_forklift_repair(forklift_id):
             # 修繕履歴を作成
             repair = ForkliftRepair(
                 forklift_id=forklift.id,
-                forklift_management_number=forklift.management_number,
+                target_management_number=forklift.management_number,
                 repair_date=repair_date,
                 repair_target_type=repair_target_type,
                 repair_item=repair_item,
                 repair_cost=repair_cost,
                 repair_reason=repair_reason,
-                vendor=vendor,
+                contractor=vendor,
                 notes=notes,
                 operator=request.form.get('operator_name', 'システム')
             )

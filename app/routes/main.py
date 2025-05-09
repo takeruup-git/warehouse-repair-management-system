@@ -68,14 +68,18 @@ def index():
     facility_costs = [0] * 12
     other_costs = [0] * 12
     
-    for month, cost in monthly_costs:
-        forklift_costs[int(month) - 1] = int(cost or 0)
+    # 結果がNoneの場合に対応
+    if monthly_costs:
+        for month, cost in monthly_costs:
+            forklift_costs[int(month) - 1] = int(cost or 0)
     
-    for month, cost in monthly_costs_facility:
-        facility_costs[int(month) - 1] = int(cost or 0)
+    if monthly_costs_facility:
+        for month, cost in monthly_costs_facility:
+            facility_costs[int(month) - 1] = int(cost or 0)
     
-    for month, cost in monthly_costs_other:
-        other_costs[int(month) - 1] = int(cost or 0)
+    if monthly_costs_other:
+        for month, cost in monthly_costs_other:
+            other_costs[int(month) - 1] = int(cost or 0)
     
     # 2. 修繕費上位5号車
     top_vehicles = db.session.query(

@@ -12,9 +12,15 @@
         <a href="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}" class="btn btn-primary me-2">
             <i class="bi bi-pencil"></i> 編集
         </a>
-        <a href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=check.id, inspection_type='battery_fluid') }}" class="btn btn-success">
-            <i class="bi bi-file-earmark-pdf"></i> PDF生成
-        </a>
+        <div class="dropdown d-inline-block">
+            <button class="btn btn-success dropdown-toggle" type="button" id="pdfDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="bi bi-file-earmark-pdf"></i> PDF生成
+            </button>
+            <ul class="dropdown-menu" aria-labelledby="pdfDropdown">
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=check.id, inspection_type='battery_fluid') }}">通常表示</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_inspection_pdf', inspection_id=check.id, inspection_type='battery_fluid', show_empty='all') }}">空欄検査（すべて表示）</a></li>
+            </ul>
+        </div>
     </div>
 </div>
 

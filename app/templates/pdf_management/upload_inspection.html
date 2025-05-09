@@ -1,0 +1,76 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ title }}PDFアップロード{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1>{{ title }}PDFアップロード</h1>
+        <div>
+            {% if inspection_type == 'battery_fluid' %}
+            <a href="{{ url_for('inspection.battery_fluid') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+            {% elif inspection_type == 'periodic_self' %}
+            <a href="{{ url_for('inspection.periodic_self') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+            {% elif inspection_type == 'pre_shift' %}
+            <a href="{{ url_for('inspection.pre_shift') }}" class="btn btn-secondary">
+                <i class="bi bi-arrow-left"></i> 一覧に戻る
+            </a>
+            {% endif %}
+        </div>
+    </div>
+    
+    <div class="card">
+        <div class="card-header">
+            <h5>PDFファイルをアップロード</h5>
+        </div>
+        <div class="card-body">
+            <form action="{{ url_for('pdf_management.upload_inspection_pdf', inspection_type=inspection_type) }}" method="post" enctype="multipart/form-data">
+                <input type="hidden" name="operator_name" id="operator_name">
+                
+                <div class="mb-3">
+                    <label for="pdf_file" class="form-label">PDFファイル</label>
+                    <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf" required>
+                    <div class="form-text">アップロードできるのはPDFファイルのみです。最大サイズ: 16MB</div>
+                </div>
+                
+                <div class="d-flex justify-content-end">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="bi bi-upload"></i> アップロード
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            <h5>アップロードのヒント</h5>
+        </div>
+        <div class="card-body">
+            <ul>
+                <li>ファイル名は自動的に安全な形式に変換されます。</li>
+                <li>アップロードしたPDFファイルは「{{ title }}一覧」ページから閲覧、ダウンロード、削除できます。</li>
+                <li>スキャンしたPDFファイルや、他のシステムで作成したPDFファイルをアップロードできます。</li>
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // 操作者名を自動設定
+        const operatorField = document.getElementById('operator_name');
+        const globalOperator = document.getElementById('global-operator-name');
+        
+        if (operatorField && globalOperator) {
+            operatorField.value = globalOperator.value;
+        }
+    });
+</script>
+{% endblock %}

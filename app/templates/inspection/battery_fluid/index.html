@@ -6,57 +6,46 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>バッテリー液量点検表一覧</h1>
     <div>
-        <a href="{{ url_for('inspection.export_battery_fluid') }}" class="btn btn-secondary me-2">
-            <i class="bi bi-file-earmark-excel"></i> エクスポート
-        </a>
-        <a href="{{ url_for('inspection.create_battery_fluid') }}" class="btn btn-primary">
-            <i class="bi bi-plus-circle"></i> 新規作成
+        <a href="{{ url_for('pdf_management.upload_inspection_pdf', inspection_type='battery_fluid') }}" class="btn btn-primary">
+            <i class="bi bi-upload"></i> PDFアップロード
         </a>
     </div>
 </div>
 
 <div class="card">
     <div class="card-body">
-        {% if checks %}
+        {% if pdf_files %}
         <div class="table-responsive">
             <table class="table table-striped table-hover">
                 <thead>
                     <tr>
-                        <th>点検日</th>
-                        <th>管理番号</th>
-                        <th>倉庫</th>
-                        <th>経過年数</th>
-                        <th>液量</th>
-                        <th>補充日</th>
-                        <th>点検責任者</th>
+                        <th>ファイル名</th>
+                        <th>アップロード日時</th>
+                        <th>サイズ</th>
                         <th>操作</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {% for check in checks %}
+                    {% for file in pdf_files %}
                     <tr>
-                        <td>{{ check.check_date.strftime('%Y-%m-%d') }}</td>
-                        <td>{{ check.management_number }}</td>
-                        <td>{{ check.warehouse }}</td>
-                        <td>{{ check.elapsed_years }}</td>
-                        <td>{{ check.fluid_level }}</td>
-                        <td>{{ check.refill_date.strftime('%Y-%m-%d') if check.refill_date else '-' }}</td>
-                        <td>{{ check.inspector }}</td>
+                        <td>{{ file.name }}</td>
+                        <td>{{ file.created_at.strftime('%Y-%m-%d %H:%M') }}</td>
+                        <td>{{ (file.size / 1024)|round(1) }} KB</td>
                         <td>
                             <div class="btn-group btn-group-sm">
-                                <a href="{{ url_for('inspection.view_battery_fluid', id=check.id) }}" class="btn btn-outline-primary">
-                                    <i class="bi bi-eye"></i>
+                                <a href="{{ url_for('pdf_management.view_pdf', filepath=file.path) }}" class="btn btn-outline-primary" target="_blank">
+                                    <i class="bi bi-eye"></i> 表示
                                 </a>
-                                <a href="{{ url_for('inspection.edit_battery_fluid', id=check.id) }}" class="btn btn-outline-secondary">
-                                    <i class="bi bi-pencil"></i>
+                                <a href="{{ url_for('pdf_management.download_pdf', filepath=file.path) }}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-download"></i> ダウンロード
                                 </a>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ check.id }}">
-                                    <i class="bi bi-trash"></i>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
+                                    <i class="bi bi-trash"></i> 削除
                                 </button>
                             </div>
                             
                             <!-- 削除確認モーダル -->
-                            <div class="modal fade" id="deleteModal{{ check.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-hidden="true">
                                 <div class="modal-dialog">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -64,15 +53,14 @@
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
-                                            <p>バッテリー液量点検表「{{ check.management_number }}（{{ check.check_date.strftime('%Y-%m-%d') }}）」を削除しますか？</p>
+                                            <p>PDFファイル「{{ file.name }}」を削除しますか？</p>
                                             <p class="text-danger">この操作は取り消せません。</p>
                                         </div>
                                         <div class="modal-footer">
-                                            <form action="{{ url_for('inspection.delete_battery_fluid', id=check.id) }}" method="post">
-    
-                                                <input type="hidden" name="operator_name" id="operator_name{{ check.id }}">
+                                            <form action="{{ url_for('pdf_management.delete_pdf', filepath=file.path) }}" method="post">
+                                                <input type="hidden" name="operator_name" id="operator_name{{ loop.index }}">
                                                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
-                                                <button type="submit" class="btn btn-danger delete-confirm" data-id="{{ check.id }}">削除</button>
+                                                <button type="submit" class="btn btn-danger delete-confirm" data-id="{{ loop.index }}">削除</button>
                                             </form>
                                         </div>
                                     </div>
@@ -86,7 +74,7 @@
         </div>
         {% else %}
         <div class="alert alert-info">
-            バッテリー液量点検表のデータがありません。
+            バッテリー液量点検表のPDFがありません。「PDFアップロード」ボタンからPDFをアップロードしてください。
         </div>
         {% endif %}
     </div>
