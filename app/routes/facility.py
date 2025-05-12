@@ -4,6 +4,7 @@ from app.models.facility import Facility, FacilityRepair
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
+from app.utils.file_utils import secure_filename_with_japanese
 from sqlalchemy.exc import IntegrityError
 from config import Config
 
@@ -194,7 +195,7 @@ def add_repair(id):
             
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(photo.filename)
+                filename = secure_filename_with_japanese(photo.filename)
                 
                 # 日付とタイプを含むサブディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -210,7 +211,7 @@ def add_repair(id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(quotation.filename)
+                filename = secure_filename_with_japanese(quotation.filename)
                 
                 # 日付とタイプを含むサブディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -226,7 +227,7 @@ def add_repair(id):
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(approval_document.filename)
+                filename = secure_filename_with_japanese(approval_document.filename)
                 
                 # 日付とタイプを含むサブディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -242,7 +243,7 @@ def add_repair(id):
             
             if 'completion_report' in request.files and request.files['completion_report'].filename:
                 completion_report = request.files['completion_report']
-                filename = secure_filename(completion_report.filename)
+                filename = secure_filename_with_japanese(completion_report.filename)
                 
                 # 日付とタイプを含むサブディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')

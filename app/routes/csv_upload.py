@@ -2,6 +2,7 @@ from flask import Blueprint, render_template, request, flash, redirect, url_for,
 import os
 import pandas as pd
 from werkzeug.utils import secure_filename
+from app.utils.file_utils import secure_filename_with_japanese
 from app.models import db
 from app.models.forklift import Forklift
 from app.models.facility import Facility
@@ -35,7 +36,7 @@ def upload_csv():
         # ファイル形式が正しいか確認
         if file and allowed_file(file.filename):
             # ファイル名を安全に保存
-            filename = secure_filename(file.filename)
+            filename = secure_filename_with_japanese(file.filename)
             
             # アップロードタイプを取得
             upload_type = request.form.get('upload_type')

@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 import os
 from werkzeug.utils import secure_filename
+from app.utils.file_utils import secure_filename_with_japanese
 import uuid
 
 annual_inspection_bp = Blueprint('annual_inspection', __name__)
@@ -51,7 +52,7 @@ def manage_annual_inspection(forklift_id):
                         os.remove(old_file_path)
                 
                 # オリジナルのファイル名を保持しつつ、一意性を確保するためのディレクトリ構造を使用
-                filename = secure_filename(file.filename)
+                filename = secure_filename_with_japanese(file.filename)
                 
                 # フォークリフトIDと日付を含むディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')

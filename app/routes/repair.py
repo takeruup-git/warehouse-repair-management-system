@@ -7,6 +7,7 @@ from app.models.master import WarehouseGroup
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
+from app.utils.file_utils import secure_filename_with_japanese
 from config import Config
 
 repair_bp = Blueprint('repair', __name__)
@@ -232,7 +233,7 @@ def create_forklift_repair(forklift_id):
             # ファイルアップロード処理
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(forklift.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -242,7 +243,7 @@ def create_forklift_repair(forklift_id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(forklift.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -252,7 +253,7 @@ def create_forklift_repair(forklift_id):
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{approval_document.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{approval_document.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(forklift.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -360,7 +361,7 @@ def create_facility_repair(facility_id):
             # ファイルアップロード処理
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(facility.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -370,7 +371,7 @@ def create_facility_repair(facility_id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(facility.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -380,7 +381,7 @@ def create_facility_repair(facility_id):
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{approval_document.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_{approval_document.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(facility.id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -444,7 +445,7 @@ def edit_forklift_repair(id):
             # ファイルアップロード処理
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(repair.forklift_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -454,7 +455,7 @@ def edit_forklift_repair(id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(repair.forklift_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -464,7 +465,7 @@ def edit_forklift_repair(id):
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_approval_{approval_document.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_approval_{approval_document.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(repair.forklift_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -474,7 +475,7 @@ def edit_forklift_repair(id):
             
             if 'completion_report' in request.files and request.files['completion_report'].filename:
                 completion_report = request.files['completion_report']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_completion_{completion_report.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_completion_{completion_report.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'forklift', str(repair.forklift_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -534,7 +535,7 @@ def edit_facility_repair(id):
             # ファイルアップロード処理
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(repair.facility_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -544,7 +545,7 @@ def edit_facility_repair(id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(repair.facility_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -554,7 +555,7 @@ def edit_facility_repair(id):
             
             if 'approval_document' in request.files and request.files['approval_document'].filename:
                 approval_document = request.files['approval_document']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_approval_{approval_document.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_approval_{approval_document.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(repair.facility_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -564,7 +565,7 @@ def edit_facility_repair(id):
             
             if 'completion_report' in request.files and request.files['completion_report'].filename:
                 completion_report = request.files['completion_report']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_completion_{completion_report.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_completion_{completion_report.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'facility', str(repair.facility_id))
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -618,7 +619,7 @@ def create_other_repair():
             
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'other')
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -628,7 +629,7 @@ def create_other_repair():
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'other')
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -694,7 +695,7 @@ def edit_other_repair(id):
             # ファイルアップロード処理
             if 'photo' in request.files and request.files['photo'].filename:
                 photo = request.files['photo']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_photo_{photo.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'other')
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
@@ -704,7 +705,7 @@ def edit_other_repair(id):
             
             if 'quotation' in request.files and request.files['quotation'].filename:
                 quotation = request.files['quotation']
-                filename = secure_filename(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
+                filename = secure_filename_with_japanese(f"{datetime.now().strftime('%Y%m%d_%H%M%S')}_quotation_{quotation.filename}")
                 upload_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'other')
                 if not os.path.exists(upload_dir):
                     os.makedirs(upload_dir)
