@@ -96,8 +96,8 @@
                     <!-- 操作者名とユーザー名表示（シンプル化） -->
                     {% if current_user.is_authenticated %}
                     <div class="input-group me-1 operator-name-container">
-                        <span class="input-group-text py-0 px-2"><i class="bi bi-person-badge"></i></span>
-                        <input type="text" class="form-control" id="global-operator-name" value="{{ current_user.full_name or current_user.username }}" readonly>
+                        <span class="input-group-text p-0 px-1"><i class="bi bi-person-badge"></i></span>
+                        <input type="text" class="form-control py-0" id="global-operator-name" value="{{ current_user.full_name or current_user.username }}" readonly>
                     </div>
                     
                     <div class="dropdown">

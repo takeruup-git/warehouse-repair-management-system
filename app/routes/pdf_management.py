@@ -83,8 +83,14 @@ def upload():
             
             # ファイルが許可された拡張子を持つか確認
             if file and allowed_file(file.filename):
-                # オリジナルのファイル名を保持
-                filename = secure_filename(file.filename)
+                # オリジナルのファイル名を保持（日本語対応）
+                original_filename = file.filename
+                # 日本語ファイル名の場合はUUIDを使用
+                if any(ord(c) > 127 for c in original_filename):
+                    ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
+                    filename = f"{uuid.uuid4().hex}.{ext}"
+                else:
+                    filename = secure_filename(original_filename)
                 
                 # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -148,8 +154,14 @@ def upload():
             # 画像ファイルの拡張子を確認
             allowed_image_extensions = {'png', 'jpg', 'jpeg', 'gif'}
             if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in allowed_image_extensions:
-                # オリジナルのファイル名を保持
-                filename = secure_filename(file.filename)
+                # オリジナルのファイル名を保持（日本語対応）
+                original_filename = file.filename
+                # 日本語ファイル名の場合はUUIDを使用
+                if any(ord(c) > 127 for c in original_filename):
+                    ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'jpg'
+                    filename = f"{uuid.uuid4().hex}.{ext}"
+                else:
+                    filename = secure_filename(original_filename)
                 
                 # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
