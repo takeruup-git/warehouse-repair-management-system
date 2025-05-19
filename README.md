@@ -120,31 +120,41 @@ python fix_migration.py
 
 このスクリプトは、マイグレーションの問題を修正し、不足しているテーブルを作成します。
 
-6. 初期管理者ユーザーを作成する
+6. データベーススキーマの更新（必須）
+
+CSVアップロード機能を正常に動作させるために、以下のコマンドを実行してデータベーススキーマを更新します：
+
+```bash
+python add_vehicle_id_column.py
+```
+
+このスクリプトは、フォークリフトテーブルに必要なカラムを追加します。
+
+7. 初期管理者ユーザーを作成する
 
 ```bash
 python add_admin_user.py admin admin@example.com password123
 ```
 
-7. サンプルデータを追加する（オプション）
+8. サンプルデータを追加する（オプション）
 
 ```bash
 python add_sample_data.py
 ```
 
-8. アプリケーションを起動する
+9. アプリケーションを起動する
 
 ```bash
 python app.py
 ```
 
-9. ブラウザで以下のURLにアクセスする
+10. ブラウザで以下のURLにアクセスする
 
 ```
 http://localhost:54763
 ```
 
-10. 作成した管理者ユーザーでログインする
+11. 作成した管理者ユーザーでログインする
 
 ```
 ユーザー名: admin
@@ -180,7 +190,9 @@ warehouse-repair-management-system/
 │   ├── static/          # 静的ファイル（CSS、JS、アップロードファイル）
 │   │   ├── css/         # CSSファイル
 │   │   ├── js/          # JavaScriptファイル
+│   │   ├── samples/     # サンプルCSVファイル
 │   │   └── uploads/     # アップロードされたファイル
+│   │       └── temp/    # 一時ファイル保存用ディレクトリ
 │   ├── templates/       # HTMLテンプレート
 │   │   ├── annual_inspection/    # 年次点検関連テンプレート
 │   │   ├── auth/                 # 認証関連テンプレート
@@ -207,6 +219,7 @@ warehouse-repair-management-system/
 ├── init_db.py           # データベース初期化スクリプト
 ├── add_sample_data.py   # サンプルデータ追加スクリプト
 ├── add_admin_user.py    # 管理者ユーザー作成スクリプト
+├── add_vehicle_id_column.py # データベーススキーマ更新スクリプト
 ├── fix_migration.py     # マイグレーション修正スクリプト
 ├── pdf_management.md    # PDF管理機能説明
 ├── pytest.ini           # pytestの設定ファイル
@@ -231,7 +244,7 @@ warehouse-repair-management-system/
 7. 「年次点検」からフォークリフトの年次点検記録を管理
 8. 「PDF管理」から点検報告書や修繕報告書のPDFを生成・アップロード・閲覧・ダウンロード
 9. 「レポート」から各種レポートを生成・出力
-10. 「CSVアップロード」からデータをインポート
+10. 「CSVアップロード」からデータをインポート（フォークリフト、倉庫施設、修繕履歴のCSVファイルをアップロード可能）
 11. 管理者は「ユーザー管理」からユーザーの追加・編集・削除が可能
 12. 「操作者管理」から操作者情報を管理
 
