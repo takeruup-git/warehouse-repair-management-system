@@ -88,16 +88,34 @@ def process_forklift_csv(df):
         count = 0
         for _, row in df.iterrows():
             # 必須フィールドの存在確認
-            if 'management_number' not in row or pd.isna(row['management_number']):
+            if 'asset_id' not in row or pd.isna(row['asset_id']):
                 continue
                 
             # 既存のフォークリフトを検索
-            forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
+            forklift = Forklift.query.filter_by(management_number=row['asset_id']).first()
             
             # 新規作成または更新
             if forklift is None:
                 forklift = Forklift()
-                forklift.management_number = row['management_number']
+                forklift.management_number = row['asset_id']
+                
+                # 必須フィールドのデフォルト値を設定
+                forklift.asset_management_number = row['asset_id']
+                forklift.department = row.get('department', '不明')
+                forklift.asset_type = 'forklift'
+                forklift.acquisition_date = pd.to_datetime('2023-01-01').date()
+                forklift.useful_life = 10
+                forklift.depreciation_rate = 0.1
+                forklift.acquisition_cost = 0
+                forklift.residual_value = 0
+                forklift.asset_status = 'active'
+                forklift.serial_number = row.get('serial_number', '不明')
+                forklift.vehicle_id_number = row.get('vehicle_id_number', '')
+                forklift.warehouse_group = row.get('warehouse_group', '不明')
+                forklift.warehouse_number = row.get('warehouse_number', '不明')
+                forklift.floor = row.get('floor', '1F')
+                forklift.manufacture_date = pd.to_datetime('2023-01-01').date()
+                forklift.lift_height = 0
             
             # 各フィールドを更新
             if 'name' in row and not pd.isna(row['name']):
@@ -111,18 +129,21 @@ def process_forklift_csv(df):
             if 'power_source' in row and not pd.isna(row['power_source']):
                 forklift.power_source = row['power_source']
             if 'max_load' in row and not pd.isna(row['max_load']):
-                forklift.max_load = float(row['max_load'])
+                forklift.load_capacity = int(float(row['max_load']))
             if 'purchase_date' in row and not pd.isna(row['purchase_date']):
-                forklift.purchase_date = pd.to_datetime(row['purchase_date']).date()
+                forklift.acquisition_date = pd.to_datetime(row['purchase_date']).date()
+                forklift.manufacture_date = pd.to_datetime(row['purchase_date']).date()
             if 'status' in row and not pd.isna(row['status']):
-                forklift.status = row['status']
+                forklift.asset_status = row['status']
             if 'location' in row and not pd.isna(row['location']):
-                forklift.location = row['location']
-            if 'hour_meter' in row and not pd.isna(row['hour_meter']):
-                forklift.hour_meter = float(row['hour_meter'])
+                forklift.warehouse_group = row['location']
             if 'ownership_type' in row and not pd.isna(row['ownership_type']):
-                forklift.ownership_type = row['ownership_type']
-            if 'notes' in row and not pd.isna(row['notes']):
+                # フォークリフトモデルには所有形態フィールドがないため、notesに追記
+                if 'notes' in row and not pd.isna(row['notes']):
+                    forklift.notes = f"{row['notes']} (所有形態: {row['ownership_type']})"
+                else:
+                    forklift.notes = f"所有形態: {row['ownership_type']}"
+            elif 'notes' in row and not pd.isna(row['notes']):
                 forklift.notes = row['notes']
             
             db.session.add(forklift)
@@ -141,28 +162,41 @@ def process_facility_csv(df):
         count = 0
         for _, row in df.iterrows():
             # 必須フィールドの存在確認
-            if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
+            if 'asset_id' not in row or pd.isna(row['asset_id']):
                 continue
                 
             # 既存の施設を検索
-            facility = Facility.query.filter_by(asset_management_number=row['asset_management_number']).first()
+            facility = Facility.query.filter_by(asset_management_number=row['asset_id']).first()
             
             # 新規作成または更新
             if facility is None:
                 facility = Facility()
-                facility.asset_management_number = row['asset_management_number']
+                facility.asset_management_number = row['asset_id']
+                facility.warehouse_number = row['asset_id']
+                
+                # 必須フィールドのデフォルト値を設定
+                facility.department = row.get('department', '不明')
+                facility.asset_type = 'facility'
+                facility.acquisition_date = pd.to_datetime('2023-01-01').date()
+                facility.useful_life = 20
+                facility.depreciation_rate = 0.05
+                facility.acquisition_cost = 0
+                facility.residual_value = 0
+                facility.asset_status = 'active'
+                facility.main_structure = row.get('main_structure', 'RC造')
+                facility.floor_count = row.get('floor_count', 1)
+                facility.construction_date = pd.to_datetime('2023-01-01').date()
             
             # 各フィールドを更新
             if 'name' in row and not pd.isna(row['name']):
                 facility.name = row['name']
             if 'location' in row and not pd.isna(row['location']):
                 facility.location = row['location']
-            if 'area' in row and not pd.isna(row['area']):
-                facility.area = float(row['area'])
             if 'construction_date' in row and not pd.isna(row['construction_date']):
                 facility.construction_date = pd.to_datetime(row['construction_date']).date()
+                facility.acquisition_date = pd.to_datetime(row['construction_date']).date()
             if 'status' in row and not pd.isna(row['status']):
-                facility.status = row['status']
+                facility.asset_status = row['status']
             if 'ownership_type' in row and not pd.isna(row['ownership_type']):
                 facility.ownership_type = row['ownership_type']
             if 'notes' in row and not pd.isna(row['notes']):
