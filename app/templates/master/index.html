@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}マスターデータ管理 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>マスターデータ管理</h1>
+    <div>
+        <form method="post" action="{{ url_for('master.initialize') }}" class="d-inline">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <input type="hidden" name="operator_name" id="operator_name_init">
+            <button type="submit" class="btn btn-warning" onclick="return confirm('設定ファイルからマスターデータを初期化しますか？既存のデータは保持されます。')">
+                <i class="bi bi-arrow-repeat"></i> 初期化
+            </button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    {% for category in categories %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <div class="card-header">
+                <h5 class="mb-0">{{ category.name }}</h5>
+            </div>
+            <div class="card-body">
+                <p>登録データ数: {{ category.count }}</p>
+                <p class="text-muted">カテゴリID: {{ category.id }}</p>
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('master.category', category=category.id) }}" class="btn btn-primary">
+                    <i class="bi bi-list"></i> 一覧表示
+                </a>
+                <a href="{{ url_for('master.create', category=category.id) }}" class="btn btn-success">
+                    <i class="bi bi-plus-circle"></i> 新規作成
+                </a>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <div class="alert alert-info">
+            マスターデータがありません。初期化ボタンをクリックして、設定ファイルからデータを読み込んでください。
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // フォーム送信時に操作者名を設定
+        const operatorFieldInit = document.getElementById('operator_name_init');
+        const globalOperator = document.getElementById('global-operator-name').value;
+        
+        if (operatorFieldInit && globalOperator) {
+            operatorFieldInit.value = globalOperator;
+        }
+    });
+</script>
+{% endblock %}

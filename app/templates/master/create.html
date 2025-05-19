@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category_name }}マスターデータ作成 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>{{ category_name }}マスターデータ作成</h1>
+    <a href="{{ url_for('master.category', category=category) }}" class="btn btn-secondary">
+        <i class="bi bi-arrow-left"></i> 一覧に戻る
+    </a>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <form method="post" action="{{ url_for('master.create', category=category) }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="mb-3">
+                <label for="key" class="form-label">キー <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="key" name="key" required>
+                <div class="form-text">システム内部で使用される識別子です。英数字とアンダースコアのみ使用してください。</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="value" class="form-label">値 <span class="text-danger">*</span></label>
+                <input type="text" class="form-control" id="value" name="value" required>
+                <div class="form-text">画面に表示される名称です。</div>
+            </div>
+            
+            <div class="mb-3">
+                <label for="description" class="form-label">説明</label>
+                <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+            </div>
+            
+            <div class="mb-3">
+                <label for="sort_order" class="form-label">表示順</label>
+                <input type="number" class="form-control" id="sort_order" name="sort_order" value="0">
+                <div class="form-text">小さい数字ほど先頭に表示されます。</div>
+            </div>
+            
+            <input type="hidden" name="operator_name" id="operator_name">
+            
+            <div class="text-center mt-4">
+                <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-save"></i> 登録
+                </button>
+                <a href="{{ url_for('master.category', category=category) }}" class="btn btn-secondary">
+                    <i class="bi bi-x-circle"></i> キャンセル
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // フォーム送信時に操作者名を設定
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function() {
+            const operatorField = document.getElementById('operator_name');
+            const globalOperator = document.getElementById('global-operator-name').value;
+            
+            if (operatorField && globalOperator) {
+                operatorField.value = globalOperator;
+            }
+        });
+    });
+</script>
+{% endblock %}

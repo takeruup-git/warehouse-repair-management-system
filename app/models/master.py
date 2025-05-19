@@ -24,6 +24,37 @@ class Employee(db.Model):
             'is_active': self.is_active
         }
 
+class MasterItem(db.Model):
+    __tablename__ = 'master_items'
+    
+    id = db.Column(db.Integer, primary_key=True)
+    category = db.Column(db.String(50), nullable=False)  # forklift_type, power_source, warehouse_group, etc.
+    key = db.Column(db.String(50), nullable=False)
+    value = db.Column(db.String(100), nullable=False)
+    description = db.Column(db.Text)
+    sort_order = db.Column(db.Integer, default=0)
+    is_active = db.Column(db.Boolean, default=True)
+    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
+    
+    __table_args__ = (
+        db.UniqueConstraint('category', 'key', name='uix_category_key'),
+    )
+    
+    def __repr__(self):
+        return f'<MasterItem {self.category}:{self.key}={self.value}>'
+    
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'category': self.category,
+            'key': self.key,
+            'value': self.value,
+            'description': self.description,
+            'sort_order': self.sort_order,
+            'is_active': self.is_active
+        }
+
 class Contractor(db.Model):
     __tablename__ = 'contractors'
     

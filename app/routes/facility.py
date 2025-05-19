@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app
 from app.models import db, AuditLog
 from app.models.facility import Facility, FacilityRepair
+from app.models.master import MasterItem
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -77,9 +78,17 @@ def create():
             db.session.rollback()
             flash(f'エラーが発生しました: {str(e)}', 'danger')
     
+    # マスターアイテムからデータを取得
+    ownership_types_db = MasterItem.query.filter_by(category='ownership_type', is_active=True).order_by(MasterItem.sort_order).all()
+    asset_statuses_db = MasterItem.query.filter_by(category='asset_status', is_active=True).order_by(MasterItem.sort_order).all()
+    
+    # マスターアイテムがない場合は設定ファイルから取得
+    ownership_types = {item.key: item.value for item in ownership_types_db} if ownership_types_db else Config.OWNERSHIP_TYPE_NAMES
+    asset_statuses = {item.key: item.value for item in asset_statuses_db} if asset_statuses_db else Config.ASSET_STATUS_NAMES
+    
     return render_template('facility/create.html',
-                          ownership_types=Config.OWNERSHIP_TYPE_NAMES,
-                          asset_statuses=Config.ASSET_STATUS_NAMES)
+                          ownership_types=ownership_types,
+                          asset_statuses=asset_statuses)
 
 @facility_bp.route('/<int:id>')
 def view(id):
@@ -139,10 +148,18 @@ def edit(id):
             db.session.rollback()
             flash(f'エラーが発生しました: {str(e)}', 'danger')
     
+    # マスターアイテムからデータを取得
+    ownership_types_db = MasterItem.query.filter_by(category='ownership_type', is_active=True).order_by(MasterItem.sort_order).all()
+    asset_statuses_db = MasterItem.query.filter_by(category='asset_status', is_active=True).order_by(MasterItem.sort_order).all()
+    
+    # マスターアイテムがない場合は設定ファイルから取得
+    ownership_types = {item.key: item.value for item in ownership_types_db} if ownership_types_db else Config.OWNERSHIP_TYPE_NAMES
+    asset_statuses = {item.key: item.value for item in asset_statuses_db} if asset_statuses_db else Config.ASSET_STATUS_NAMES
+    
     return render_template('facility/edit.html',
                           facility=facility,
-                          ownership_types=Config.OWNERSHIP_TYPE_NAMES,
-                          asset_statuses=Config.ASSET_STATUS_NAMES)
+                          ownership_types=ownership_types,
+                          asset_statuses=asset_statuses)
 
 @facility_bp.route('/<int:id>/delete', methods=['POST'])
 def delete(id):
