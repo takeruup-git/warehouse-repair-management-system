@@ -1,9 +1,10 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file, abort
-from app.models import db
+from app.models import db, AuditLog
 from app.models.forklift import Forklift, ForkliftRepair
 from app.models.facility import Facility, FacilityRepair
 from app.models.inspection import BatteryFluidCheck, PeriodicSelfInspection, PreShiftInspection
 from app.models.other_repair import OtherRepair
+from app.models.file import FileMetadata
 from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 import os
@@ -45,6 +46,12 @@ def index():
     pdf_dir = ensure_pdf_directory()
     pdf_files = []
     
+    # データベースからファイルメタデータを取得
+    file_metadata_dict = {}
+    file_metadata_records = FileMetadata.query.filter_by(file_type='pdf').all()
+    for record in file_metadata_records:
+        file_metadata_dict[record.file_path] = record
+    
     # メインディレクトリとサブディレクトリの両方を検索
     for root, dirs, files in os.walk(pdf_dir):
         for filename in files:
@@ -56,12 +63,27 @@ def index():
                 relative_path = os.path.relpath(file_path, os.path.join(current_app.root_path, 'static', 'uploads'))
                 display_path = os.path.join('static', 'uploads', relative_path)
                 
+                # ファイルメタデータから元のファイル名を取得
+                relative_path_for_db = os.path.relpath(file_path, os.path.join(current_app.config['UPLOAD_FOLDER']))
+                display_filename = filename
+                description = None
+                created_by = None
+                
+                if relative_path_for_db in file_metadata_dict:
+                    metadata = file_metadata_dict[relative_path_for_db]
+                    display_filename = metadata.original_filename
+                    description = metadata.description
+                    created_by = metadata.created_by
+                
                 pdf_files.append({
                     'filename': filename,
+                    'display_filename': display_filename,
                     'path': display_path,
                     'size': file_stats.st_size,
                     'created_at': datetime.fromtimestamp(file_stats.st_ctime),
-                    'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
+                    'modified_at': datetime.fromtimestamp(file_stats.st_mtime),
+                    'description': description,
+                    'created_by': created_by
                 })
     
     # 修正日時の降順でソート
@@ -85,12 +107,11 @@ def upload():
             if file and allowed_file(file.filename):
                 # オリジナルのファイル名を保持（日本語対応）
                 original_filename = file.filename
-                # 日本語ファイル名の場合はUUIDを使用
-                if any(ord(c) > 127 for c in original_filename):
-                    ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
-                    filename = f"{uuid.uuid4().hex}.{ext}"
-                else:
-                    filename = secure_filename(original_filename)
+                # 保存用のファイル名を生成（UUIDを使用）
+                ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                # オリジナルのファイル名も保存するための情報
+                display_filename = original_filename
                 
                 # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -113,11 +134,29 @@ def upload():
                 file_path = os.path.join(upload_dir, filename)
                 file.save(file_path)
                 
-                # 監査ログを記録
+                # ファイルメタデータを保存
                 operator = request.form.get('operator_name', 'システム')
-                log_details = f'PDFファイル {filename} をアップロード'
-                if description:
-                    log_details += f' (説明: {description})'
+                description_text = request.form.get('description', '')
+                
+                # 相対パスを保存
+                relative_path = os.path.join(unique_dir, filename)
+                
+                # ファイルメタデータを作成
+                file_metadata = FileMetadata(
+                    file_path=relative_path,
+                    original_filename=display_filename,
+                    file_type='pdf',
+                    entity_type=asset_type if asset_type else None,
+                    entity_id=asset_id if asset_id else None,
+                    description=description_text,
+                    created_by=operator
+                )
+                db.session.add(file_metadata)
+                
+                # 監査ログを記録
+                log_details = f'PDFファイル {display_filename} をアップロード'
+                if description_text:
+                    log_details += f' (説明: {description_text})'
                 
                 audit_log = AuditLog(
                     action='upload',
@@ -258,7 +297,16 @@ def download_pdf(filepath):
     # オリジナルのファイル名を取得
     filename = os.path.basename(file_path)
     
-    return send_file(file_path, as_attachment=True, download_name=filename)
+    # ファイルメタデータから元のファイル名を取得
+    relative_path = os.path.relpath(file_path, os.path.join(current_app.config['UPLOAD_FOLDER']))
+    metadata = FileMetadata.query.filter_by(file_path=relative_path).first()
+    
+    if metadata and metadata.original_filename:
+        download_name = metadata.original_filename
+    else:
+        download_name = filename
+    
+    return send_file(file_path, as_attachment=True, download_name=download_name)
 
 @pdf_management_bp.route('/delete/<path:filepath>', methods=['POST'])
 def delete_pdf(filepath):

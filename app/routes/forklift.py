@@ -1,7 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, jsonify, current_app, send_file
 from app.models import db, AuditLog
 from app.models.forklift import Forklift, ForkliftRepair, ForkliftPrediction
-from app.models.master import Manufacturer, WarehouseGroup
+from app.models.master import Manufacturer, WarehouseGroup, MasterItem
 from datetime import datetime
 import os
 from werkzeug.utils import secure_filename
@@ -145,12 +145,22 @@ def create():
     manufacturers = Manufacturer.query.filter_by(is_active=True).all()
     warehouse_groups = WarehouseGroup.query.filter_by(is_active=True).all()
     
+    # マスターアイテムからデータを取得
+    forklift_types_db = MasterItem.query.filter_by(category='forklift_type', is_active=True).order_by(MasterItem.sort_order).all()
+    power_sources_db = MasterItem.query.filter_by(category='power_source', is_active=True).order_by(MasterItem.sort_order).all()
+    asset_statuses_db = MasterItem.query.filter_by(category='asset_status', is_active=True).order_by(MasterItem.sort_order).all()
+    
+    # マスターアイテムがない場合は設定ファイルから取得
+    forklift_types = {item.key: item.value for item in forklift_types_db} if forklift_types_db else Config.FORKLIFT_TYPE_NAMES
+    power_sources = {item.key: item.value for item in power_sources_db} if power_sources_db else Config.POWER_SOURCE_NAMES
+    asset_statuses = {item.key: item.value for item in asset_statuses_db} if asset_statuses_db else Config.ASSET_STATUS_NAMES
+    
     return render_template('forklift/create.html',
                           manufacturers=manufacturers,
                           warehouse_groups=warehouse_groups,
-                          forklift_types=Config.FORKLIFT_TYPE_NAMES,
-                          power_sources=Config.POWER_SOURCE_NAMES,
-                          asset_statuses=Config.ASSET_STATUS_NAMES)
+                          forklift_types=forklift_types,
+                          power_sources=power_sources,
+                          asset_statuses=asset_statuses)
 
 @forklift_bp.route('/<int:id>')
 def view(id):

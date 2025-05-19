@@ -54,16 +54,20 @@
                                 <th>サイズ</th>
                                 <th>作成日時</th>
                                 <th>更新日時</th>
+                                <th>説明</th>
+                                <th>登録者</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for file in pdf_files %}
                                 <tr>
-                                    <td>{{ file.filename }}</td>
+                                    <td>{{ file.display_filename }}</td>
                                     <td>{{ (file.size / 1024)|round(1) }} KB</td>
                                     <td>{{ file.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
                                     <td>{{ file.modified_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>{{ file.description or '-' }}</td>
+                                    <td>{{ file.created_by or '-' }}</td>
                                     <td>
                                         <div class="btn-group" role="group">
                                             <a href="{{ url_for('pdf_management.view_pdf', filepath=file.path) }}" class="btn btn-sm btn-primary" target="_blank">
@@ -87,7 +91,7 @@
                                                     </div>
                                                     <div class="modal-body">
                                                         <p>以下のファイルを削除してもよろしいですか？</p>
-                                                        <p><strong>{{ file.filename }}</strong></p>
+                                                        <p><strong>{{ file.display_filename }}</strong></p>
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
