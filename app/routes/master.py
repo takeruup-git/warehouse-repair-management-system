@@ -22,7 +22,17 @@ def index():
         'repair_target_type': '修繕対象種別',
         'repair_reason': '修繕理由',
         'asset_status': '資産ステータス',
-        'ownership_type': '所有形態'
+        'ownership_type': '所有形態',
+        'department': '部門',
+        'manufacturer': 'メーカー',
+        'warehouse_number': '倉庫番号',
+        'floor': '階層',
+        'operator': '取扱担当者',
+        'department': '部門',
+        'manufacturer': 'メーカー',
+        'warehouse_number': '倉庫番号',
+        'floor': '階層',
+        'operator': '取扱担当者'
     }
     
     # カテゴリ情報を整形
@@ -50,7 +60,12 @@ def category(category):
         'repair_target_type': '修繕対象種別',
         'repair_reason': '修繕理由',
         'asset_status': '資産ステータス',
-        'ownership_type': '所有形態'
+        'ownership_type': '所有形態',
+        'department': '部門',
+        'manufacturer': 'メーカー',
+        'warehouse_number': '倉庫番号',
+        'floor': '階層',
+        'operator': '取扱担当者'
     }
     category_name = category_names.get(category, category)
     
@@ -119,7 +134,12 @@ def create(category):
         'repair_target_type': '修繕対象種別',
         'repair_reason': '修繕理由',
         'asset_status': '資産ステータス',
-        'ownership_type': '所有形態'
+        'ownership_type': '所有形態',
+        'department': '部門',
+        'manufacturer': 'メーカー',
+        'warehouse_number': '倉庫番号',
+        'floor': '階層',
+        'operator': '取扱担当者'
     }
     category_name = category_names.get(category, category)
     
@@ -179,7 +199,12 @@ def edit(id):
         'repair_target_type': '修繕対象種別',
         'repair_reason': '修繕理由',
         'asset_status': '資産ステータス',
-        'ownership_type': '所有形態'
+        'ownership_type': '所有形態',
+        'department': '部門',
+        'manufacturer': 'メーカー',
+        'warehouse_number': '倉庫番号',
+        'floor': '階層',
+        'operator': '取扱担当者'
     }
     category_name = category_names.get(item.category, item.category)
     
@@ -255,6 +280,42 @@ def initialize():
         for key, value in Config.OWNERSHIP_TYPE_NAMES.items():
             if not MasterItem.query.filter_by(category='ownership_type', key=key).first():
                 item = MasterItem(category='ownership_type', key=key, value=value)
+                db.session.add(item)
+        
+        # 部門
+        for key, value in Config.DEPARTMENT_NAMES.items():
+            if not MasterItem.query.filter_by(category='department', key=key).first():
+                item = MasterItem(category='department', key=key, value=value)
+                db.session.add(item)
+        
+        # メーカー
+        for key, value in Config.MANUFACTURER_NAMES.items():
+            if not MasterItem.query.filter_by(category='manufacturer', key=key).first():
+                item = MasterItem(category='manufacturer', key=key, value=value)
+                db.session.add(item)
+        
+        # 倉庫グループ
+        for key, value in Config.WAREHOUSE_GROUP_NAMES.items():
+            if not MasterItem.query.filter_by(category='warehouse_group', key=key).first():
+                item = MasterItem(category='warehouse_group', key=key, value=value)
+                db.session.add(item)
+        
+        # 倉庫番号
+        for key, value in Config.WAREHOUSE_NUMBER_NAMES.items():
+            if not MasterItem.query.filter_by(category='warehouse_number', key=key).first():
+                item = MasterItem(category='warehouse_number', key=key, value=value)
+                db.session.add(item)
+        
+        # 階層
+        for key, value in Config.FLOOR_NAMES.items():
+            if not MasterItem.query.filter_by(category='floor', key=key).first():
+                item = MasterItem(category='floor', key=key, value=value)
+                db.session.add(item)
+        
+        # 取扱担当者
+        for key, value in Config.OPERATOR_NAMES.items():
+            if not MasterItem.query.filter_by(category='operator', key=key).first():
+                item = MasterItem(category='operator', key=key, value=value)
                 db.session.add(item)
         
         db.session.commit()

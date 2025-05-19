@@ -33,6 +33,65 @@ class Config:
         'annual_inspection': '年次点検'
     }
     
+    # 部門設定
+    DEPARTMENT_NAMES = {
+        'logistics': '物流部',
+        'warehouse': '倉庫部',
+        'maintenance': '保守部',
+        'admin': '管理部',
+        'sales': '営業部'
+    }
+    
+    # メーカー設定
+    MANUFACTURER_NAMES = {
+        'toyota': 'トヨタ',
+        'komatsu': 'コマツ',
+        'nichiyu': 'ニチユ',
+        'mitsubishi': '三菱',
+        'tcm': 'TCM',
+        'other': 'その他'
+    }
+    
+    # 倉庫グループ設定
+    WAREHOUSE_GROUP_NAMES = {
+        'tokyo': '東京エリア',
+        'osaka': '大阪エリア',
+        'nagoya': '名古屋エリア',
+        'fukuoka': '福岡エリア',
+        'sapporo': '札幌エリア',
+        'other': 'その他'
+    }
+    
+    # 倉庫番号設定
+    WAREHOUSE_NUMBER_NAMES = {
+        'tokyo1': '東京1号倉庫',
+        'tokyo2': '東京2号倉庫',
+        'osaka1': '大阪1号倉庫',
+        'osaka2': '大阪2号倉庫',
+        'nagoya1': '名古屋1号倉庫',
+        'fukuoka1': '福岡1号倉庫',
+        'sapporo1': '札幌1号倉庫',
+        'other': 'その他'
+    }
+    
+    # 階層設定
+    FLOOR_NAMES = {
+        '1f': '1F',
+        '2f': '2F',
+        '3f': '3F',
+        'b1': 'B1',
+        'b2': 'B2',
+        'other': 'その他'
+    }
+    
+    # 取扱担当者設定
+    OPERATOR_NAMES = {
+        'owned': '自社',
+        'leased': 'リース',
+        'rental': 'レンタル',
+        'other': 'その他'
+    }
+    
     # フォークリフト設定
     FORKLIFT_TYPES = ['reach', 'counter']
     FORKLIFT_TYPE_NAMES = {
