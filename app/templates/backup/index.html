@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+
+{% block title %}システムバックアップ{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <h5 class="mb-0">システムバックアップ管理</h5>
+                    <form action="{{ url_for('backup.create_backup') }}" method="post" class="d-inline">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> バックアップを作成
+                        </button>
+                    </form>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h5><i class="fas fa-info-circle"></i> バックアップについて</h5>
+                        <p>バックアップには以下の情報が含まれます：</p>
+                        <ul>
+                            <li>データベース全体</li>
+                            <li>アップロードされたファイル（PDF、CSVなど）</li>
+                            <li>システム設定</li>
+                        </ul>
+                        <p><strong>注意：</strong> 復元を行うと現在のデータが上書きされます。復元前に必ずバックアップを作成してください。</p>
+                    </div>
+
+                    {% if backups %}
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>バックアップファイル</th>
+                                    <th>作成日時</th>
+                                    <th>サイズ</th>
+                                    <th>操作</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for backup in backups %}
+                                <tr>
+                                    <td>{{ backup.name }}</td>
+                                    <td>{{ backup.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</td>
+                                    <td>{{ (backup.size / 1024 / 1024) | round(2) }} MB</td>
+                                    <td>
+                                        <div class="btn-group" role="group">
+                                            <a href="{{ url_for('backup.download_backup', filename=backup.name) }}" class="btn btn-sm btn-outline-primary">
+                                                <i class="fas fa-download"></i> ダウンロード
+                                            </a>
+                                            <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#restoreModal{{ loop.index }}">
+                                                <i class="fas fa-undo"></i> 復元
+                                            </button>
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ loop.index }}">
+                                                <i class="fas fa-trash"></i> 削除
+                                            </button>
+                                        </div>
+
+                                        <!-- 復元確認モーダル -->
+                                        <div class="modal fade" id="restoreModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="restoreModalLabel{{ loop.index }}" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-warning text-white">
+                                                        <h5 class="modal-title" id="restoreModalLabel{{ loop.index }}">バックアップからの復元確認</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <div class="alert alert-danger">
+                                                            <i class="fas fa-exclamation-triangle"></i> <strong>警告:</strong> 復元を実行すると、現在のデータがすべて上書きされます。この操作は元に戻せません。
+                                                        </div>
+                                                        <p>バックアップファイル: <strong>{{ backup.name }}</strong> から復元しますか？</p>
+                                                        <p>作成日時: {{ backup.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                                                        <form action="{{ url_for('backup.restore_backup', filename=backup.name) }}" method="post">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-warning">復元を実行</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- 削除確認モーダル -->
+                                        <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
+                                            <div class="modal-dialog" role="document">
+                                                <div class="modal-content">
+                                                    <div class="modal-header bg-danger text-white">
+                                                        <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">バックアップ削除確認</h5>
+                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                                            <span aria-hidden="true">&times;</span>
+                                                        </button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <p>バックアップファイル: <strong>{{ backup.name }}</strong> を削除しますか？</p>
+                                                        <p>この操作は元に戻せません。</p>
+                                                    </div>
+                                                    <div class="modal-footer">
+                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                                                        <form action="{{ url_for('backup.delete_backup', filename=backup.name) }}" method="post">
+                                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                                            <button type="submit" class="btn btn-danger">削除</button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-circle"></i> バックアップが存在しません。「バックアップを作成」ボタンをクリックして新しいバックアップを作成してください。
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

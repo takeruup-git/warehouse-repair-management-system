@@ -108,6 +108,7 @@ def create_app(config_name='default'):
     from app.routes.operator import operator_bp
     from app.routes.pdf_management import pdf_management_bp
     from app.routes.master import master_bp
+    from app.routes.backup import backup_bp
     
     app.register_blueprint(main_bp)
     app.register_blueprint(forklift_bp, url_prefix='/forklift')
@@ -122,6 +123,7 @@ def create_app(config_name='default'):
     app.register_blueprint(operator_bp, url_prefix='/operator')
     app.register_blueprint(pdf_management_bp, url_prefix='/pdf-management')
     app.register_blueprint(master_bp, url_prefix='/master')
+    app.register_blueprint(backup_bp, url_prefix='/backup')
     
     # 管理者ページのリダイレクト
     @app.route('/admin/users')

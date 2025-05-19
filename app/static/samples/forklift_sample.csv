@@ -1,3 +1,3 @@
-﻿asset_id,name,model,manufacturer,forklift_type,power_source,max_load,purchase_date,status,location,hour_meter,ownership_type,notes
-FL-001,1号機,FD25T-17,トヨタ,reach,battery,2500,2022-04-01,active,東京倉庫,1250.5,owned,バッテリー交換予定
-FL-002,2号機,FD15T-10,ニチユ,counter,diesel,1500,2021-10-15,active,大阪倉庫,980.2,leased,
+﻿management_number,manufacturer,forklift_type,power_source,model,serial_number,vehicle_id_number,load_capacity,manufacture_date,lift_height,warehouse_group,warehouse_number,floor,operator,asset_management_number,department,asset_type,acquisition_date,useful_life,depreciation_rate,acquisition_cost,residual_value,asset_status
+1,コマツ,reach,battery,FB18RL-15,1号車,159391,1800,2019-09-30,2000,東京エリア,26号倉庫,1F,owned,A1,倉庫部,forklift,2019-09-30,8,0.5,1000000,1,active
+2,トヨタ,counter,diesel,FD25T-17,2号車,159392,2500,2020-05-15,3000,大阪エリア,15号倉庫,2F,owned,A2,物流部,forklift,2020-05-15,8,0.5,1500000,1,active

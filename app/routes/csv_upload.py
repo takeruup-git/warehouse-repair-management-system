@@ -65,7 +65,10 @@ def upload_csv():
                 if result['success']:
                     flash(f"{result['count']}件のデータを正常にインポートしました", 'success')
                 else:
-                    flash(f"インポート中にエラーが発生しました: {result['error']}", 'danger')
+                    error_message = f"インポート中にエラーが発生しました: {result['error']}"
+                    if 'fix' in result:
+                        error_message += f"<br><br>【対処方法】<br>{result['fix']}"
+                    flash(error_message, 'danger')
                 
             except Exception as e:
                 flash(f"CSVファイルの処理中にエラーが発生しました: {str(e)}", 'danger')
@@ -83,236 +86,455 @@ def upload_csv():
     # GETリクエストの場合、アップロードフォームを表示
     return render_template('csv_upload/upload.html')
 
+def validate_forklift_csv(df):
+    """フォークリフトのCSVデータを検証"""
+    required_fields = [
+        'management_number', 'manufacturer', 'forklift_type', 'power_source', 
+        'model', 'serial_number', 'load_capacity', 'manufacture_date', 
+        'lift_height', 'warehouse_group', 'warehouse_number', 'floor',
+        'asset_type'
+    ]
+    
+    # 必須フィールドの存在確認
+    missing_fields = [field for field in required_fields if field not in df.columns]
+    if missing_fields:
+        return {
+            'valid': False, 
+            'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
+        }
+    
+    return {'valid': True}
+
 def process_forklift_csv(df):
     """フォークリフトのCSVデータを処理"""
     try:
+        # データ検証
+        validation = validate_forklift_csv(df)
+        if not validation['valid']:
+            return {'success': False, 'error': validation['error'], 'fix': validation['fix']}
+        
         count = 0
-        for _, row in df.iterrows():
-            # 必須フィールドの存在確認
-            if 'management_number' not in row or pd.isna(row['management_number']):
+        errors = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2  # ヘッダー行を考慮して行番号を+2
+            
+            # 必須フィールドの値確認
+            if pd.isna(row['management_number']):
+                errors.append(f"行 {row_num}: 管理番号が空です")
                 continue
                 
-            # 既存のフォークリフトを検索
-            forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
-            
-            # 新規作成または更新
-            if forklift is None:
-                forklift = Forklift()
-                forklift.management_number = row['management_number']
+            try:
+                # 既存のフォークリフトを検索
+                forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
                 
-                # 新規作成時に必須フィールドを設定
-                if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
-                    forklift.asset_management_number = f"FL-{row['management_number']}"
+                # 新規作成または更新
+                if forklift is None:
+                    forklift = Forklift()
+                    forklift.management_number = row['management_number']
+                    
+                    # 新規作成時に必須フィールドを設定
+                    if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
+                        forklift.asset_management_number = f"FL-{row['management_number']}"
+                    else:
+                        forklift.asset_management_number = row['asset_management_number']
+                    
+                    # デフォルト値を設定
+                    forklift.department = "物流部"
+                    forklift.acquisition_date = datetime.now().date()
+                    forklift.useful_life = 8
+                    forklift.depreciation_rate = 0.125
+                    forklift.acquisition_cost = 0
+                    forklift.residual_value = 1
+                    forklift.asset_status = "active"
+                    forklift.manufacture_date = datetime.now().date()
+                    forklift.lift_height = 0
+                    forklift.load_capacity = 0
+                    forklift.warehouse_group = "デフォルト"
+                    forklift.warehouse_number = "不明"
+                    forklift.floor = "1F"
+                
+                # 必須フィールドの設定
+                if 'asset_type' not in row or pd.isna(row['asset_type']):
+                    forklift.asset_type = "forklift"  # デフォルト値を設定
                 else:
-                    forklift.asset_management_number = row['asset_management_number']
+                    forklift.asset_type = row['asset_type']
                 
-                # デフォルト値を設定
-                forklift.department = "物流部"
-                forklift.acquisition_date = datetime.now().date()
-                forklift.useful_life = 8
-                forklift.depreciation_rate = 0.125
-                forklift.acquisition_cost = 0
-                forklift.residual_value = 1
-                forklift.asset_status = "active"
-                forklift.manufacture_date = datetime.now().date()
-                forklift.lift_height = 0
-                forklift.load_capacity = 0
-                forklift.warehouse_group = "デフォルト"
-                forklift.warehouse_number = "不明"
-                forklift.floor = "1F"
-            
-            # 各フィールドを更新
-            if 'asset_management_number' in row and not pd.isna(row['asset_management_number']):
-                forklift.asset_management_number = row['asset_management_number']
-            if 'department' in row and not pd.isna(row['department']):
-                forklift.department = row['department']
-            if 'acquisition_date' in row and not pd.isna(row['acquisition_date']):
-                forklift.acquisition_date = pd.to_datetime(row['acquisition_date']).date()
-            if 'useful_life' in row and not pd.isna(row['useful_life']):
-                forklift.useful_life = int(row['useful_life'])
-            if 'depreciation_rate' in row and not pd.isna(row['depreciation_rate']):
-                forklift.depreciation_rate = float(row['depreciation_rate'])
-            if 'acquisition_cost' in row and not pd.isna(row['acquisition_cost']):
-                forklift.acquisition_cost = int(float(row['acquisition_cost']))
-            if 'residual_value' in row and not pd.isna(row['residual_value']):
-                forklift.residual_value = int(float(row['residual_value']))
-            if 'asset_status' in row and not pd.isna(row['asset_status']):
-                forklift.asset_status = row['asset_status']
-            
-            if 'model' in row and not pd.isna(row['model']):
-                forklift.model = row['model']
-            if 'manufacturer' in row and not pd.isna(row['manufacturer']):
-                forklift.manufacturer = row['manufacturer']
-            if 'forklift_type' in row and not pd.isna(row['forklift_type']):
-                forklift.forklift_type = row['forklift_type']
-            if 'power_source' in row and not pd.isna(row['power_source']):
-                forklift.power_source = row['power_source']
-            if 'serial_number' in row and not pd.isna(row['serial_number']):
-                forklift.serial_number = row['serial_number']
-            if 'vehicle_id_number' in row and not pd.isna(row['vehicle_id_number']):
-                forklift.vehicle_id_number = row['vehicle_id_number']
-            if 'load_capacity' in row and not pd.isna(row['load_capacity']):
-                forklift.load_capacity = int(float(row['load_capacity']))
-            if 'manufacture_date' in row and not pd.isna(row['manufacture_date']):
-                forklift.manufacture_date = pd.to_datetime(row['manufacture_date']).date()
-            if 'lift_height' in row and not pd.isna(row['lift_height']):
-                forklift.lift_height = int(float(row['lift_height']))
-            if 'warehouse_group' in row and not pd.isna(row['warehouse_group']):
-                forklift.warehouse_group = row['warehouse_group']
-            if 'warehouse_number' in row and not pd.isna(row['warehouse_number']):
-                forklift.warehouse_number = row['warehouse_number']
-            if 'floor' in row and not pd.isna(row['floor']):
-                forklift.floor = row['floor']
-            if 'operator' in row and not pd.isna(row['operator']):
-                forklift.operator = row['operator']
-            
-            db.session.add(forklift)
-            count += 1
+                # 各フィールドを更新
+                if 'asset_management_number' in row and not pd.isna(row['asset_management_number']):
+                    forklift.asset_management_number = row['asset_management_number']
+                if 'department' in row and not pd.isna(row['department']):
+                    forklift.department = row['department']
+                if 'acquisition_date' in row and not pd.isna(row['acquisition_date']):
+                    forklift.acquisition_date = pd.to_datetime(row['acquisition_date']).date()
+                if 'useful_life' in row and not pd.isna(row['useful_life']):
+                    forklift.useful_life = int(row['useful_life'])
+                if 'depreciation_rate' in row and not pd.isna(row['depreciation_rate']):
+                    forklift.depreciation_rate = float(row['depreciation_rate'])
+                if 'acquisition_cost' in row and not pd.isna(row['acquisition_cost']):
+                    forklift.acquisition_cost = int(float(row['acquisition_cost']))
+                if 'residual_value' in row and not pd.isna(row['residual_value']):
+                    forklift.residual_value = int(float(row['residual_value']))
+                if 'asset_status' in row and not pd.isna(row['asset_status']):
+                    forklift.asset_status = row['asset_status']
+                
+                if 'model' in row and not pd.isna(row['model']):
+                    forklift.model = row['model']
+                if 'manufacturer' in row and not pd.isna(row['manufacturer']):
+                    forklift.manufacturer = row['manufacturer']
+                if 'forklift_type' in row and not pd.isna(row['forklift_type']):
+                    forklift.forklift_type = row['forklift_type']
+                if 'power_source' in row and not pd.isna(row['power_source']):
+                    forklift.power_source = row['power_source']
+                if 'serial_number' in row and not pd.isna(row['serial_number']):
+                    forklift.serial_number = row['serial_number']
+                if 'vehicle_id_number' in row and not pd.isna(row['vehicle_id_number']):
+                    forklift.vehicle_id_number = row['vehicle_id_number']
+                if 'load_capacity' in row and not pd.isna(row['load_capacity']):
+                    forklift.load_capacity = int(float(row['load_capacity']))
+                if 'manufacture_date' in row and not pd.isna(row['manufacture_date']):
+                    forklift.manufacture_date = pd.to_datetime(row['manufacture_date']).date()
+                if 'lift_height' in row and not pd.isna(row['lift_height']):
+                    forklift.lift_height = int(float(row['lift_height']))
+                if 'warehouse_group' in row and not pd.isna(row['warehouse_group']):
+                    forklift.warehouse_group = row['warehouse_group']
+                if 'warehouse_number' in row and not pd.isna(row['warehouse_number']):
+                    forklift.warehouse_number = row['warehouse_number']
+                if 'floor' in row and not pd.isna(row['floor']):
+                    forklift.floor = row['floor']
+                if 'operator' in row and not pd.isna(row['operator']):
+                    forklift.operator = row['operator']
+                
+                db.session.add(forklift)
+                count += 1
+                
+            except Exception as e:
+                errors.append(f"行 {row_num}: {str(e)}")
+        
+        if errors:
+            db.session.rollback()
+            error_message = "\n".join(errors)
+            return {'success': False, 'error': f"データ処理中にエラーが発生しました:\n{error_message}", 'fix': "エラーメッセージを確認し、CSVファイルを修正してください。"}
         
         db.session.commit()
         return {'success': True, 'count': count}
     
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': str(e), 'fix': "CSVファイルの形式を確認し、サンプルCSVをダウンロードして参考にしてください。"}
+
+def validate_facility_csv(df):
+    """倉庫施設のCSVデータを検証"""
+    required_fields = [
+        'warehouse_number', 'construction_date', 'main_structure', 
+        'ownership_type', 'floor_count', 'asset_type'
+    ]
+    
+    # 必須フィールドの存在確認
+    missing_fields = [field for field in required_fields if field not in df.columns]
+    if missing_fields:
+        return {
+            'valid': False, 
+            'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
+        }
+    
+    return {'valid': True}
 
 def process_facility_csv(df):
     """倉庫施設のCSVデータを処理"""
     try:
+        # データ検証
+        validation = validate_facility_csv(df)
+        if not validation['valid']:
+            return {'success': False, 'error': validation['error'], 'fix': validation['fix']}
+        
         count = 0
-        for _, row in df.iterrows():
-            # 必須フィールドの存在確認
-            if 'warehouse_number' not in row or pd.isna(row['warehouse_number']):
+        errors = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2  # ヘッダー行を考慮して行番号を+2
+            
+            # 必須フィールドの値確認
+            if pd.isna(row['warehouse_number']):
+                errors.append(f"行 {row_num}: 倉庫番号が空です")
                 continue
                 
-            # 既存の施設を検索
-            facility = Facility.query.filter_by(warehouse_number=row['warehouse_number']).first()
-            
-            # 新規作成または更新
-            if facility is None:
-                facility = Facility()
-                facility.warehouse_number = row['warehouse_number']
+            try:
+                # 既存の施設を検索
+                facility = Facility.query.filter_by(warehouse_number=row['warehouse_number']).first()
                 
-                # 新規作成時に必須フィールドを設定
-                if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
-                    facility.asset_management_number = f"WH-{row['warehouse_number']}"
+                # 新規作成または更新
+                if facility is None:
+                    facility = Facility()
+                    facility.warehouse_number = row['warehouse_number']
+                    
+                    # 新規作成時に必須フィールドを設定
+                    if 'asset_management_number' not in row or pd.isna(row['asset_management_number']):
+                        facility.asset_management_number = f"WH-{row['warehouse_number']}"
+                    else:
+                        facility.asset_management_number = row['asset_management_number']
+                    
+                    # デフォルト値を設定
+                    facility.department = "物流部"
+                    facility.acquisition_date = datetime.now().date()
+                    facility.useful_life = 30
+                    facility.depreciation_rate = 0.033
+                    facility.acquisition_cost = 0
+                    facility.residual_value = 1
+                    facility.asset_status = "active"
+                    facility.construction_date = datetime.now().date()
+                    facility.main_structure = "不明"
+                    facility.ownership_type = "owned"
+                    facility.floor_count = 1
+                
+                # 必須フィールドの設定
+                if 'asset_type' not in row or pd.isna(row['asset_type']):
+                    facility.asset_type = "facility"  # デフォルト値を設定
                 else:
-                    facility.asset_management_number = row['asset_management_number']
+                    facility.asset_type = row['asset_type']
                 
-                # デフォルト値を設定
-                facility.department = "物流部"
-                facility.acquisition_date = datetime.now().date()
-                facility.useful_life = 30
-                facility.depreciation_rate = 0.033
-                facility.acquisition_cost = 0
-                facility.residual_value = 1
-                facility.asset_status = "active"
-                facility.construction_date = datetime.now().date()
-                facility.main_structure = "不明"
-                facility.ownership_type = "owned"
-                facility.floor_count = 1
-            
-            # 各フィールドを更新
-            if 'asset_management_number' in row and not pd.isna(row['asset_management_number']):
-                facility.asset_management_number = row['asset_management_number']
-            if 'department' in row and not pd.isna(row['department']):
-                facility.department = row['department']
-            if 'acquisition_date' in row and not pd.isna(row['acquisition_date']):
-                facility.acquisition_date = pd.to_datetime(row['acquisition_date']).date()
-            if 'useful_life' in row and not pd.isna(row['useful_life']):
-                facility.useful_life = int(row['useful_life'])
-            if 'depreciation_rate' in row and not pd.isna(row['depreciation_rate']):
-                facility.depreciation_rate = float(row['depreciation_rate'])
-            if 'acquisition_cost' in row and not pd.isna(row['acquisition_cost']):
-                facility.acquisition_cost = int(float(row['acquisition_cost']))
-            if 'residual_value' in row and not pd.isna(row['residual_value']):
-                facility.residual_value = int(float(row['residual_value']))
-            if 'asset_status' in row and not pd.isna(row['asset_status']):
-                facility.asset_status = row['asset_status']
-            
-            if 'construction_date' in row and not pd.isna(row['construction_date']):
-                facility.construction_date = pd.to_datetime(row['construction_date']).date()
-            if 'main_structure' in row and not pd.isna(row['main_structure']):
-                facility.main_structure = row['main_structure']
-            if 'ownership_type' in row and not pd.isna(row['ownership_type']):
-                facility.ownership_type = row['ownership_type']
-            if 'floor_count' in row and not pd.isna(row['floor_count']):
-                facility.floor_count = int(row['floor_count'])
-            
-            db.session.add(facility)
-            count += 1
+                # 各フィールドを更新
+                if 'asset_management_number' in row and not pd.isna(row['asset_management_number']):
+                    facility.asset_management_number = row['asset_management_number']
+                if 'department' in row and not pd.isna(row['department']):
+                    facility.department = row['department']
+                if 'acquisition_date' in row and not pd.isna(row['acquisition_date']):
+                    facility.acquisition_date = pd.to_datetime(row['acquisition_date']).date()
+                if 'useful_life' in row and not pd.isna(row['useful_life']):
+                    facility.useful_life = int(row['useful_life'])
+                if 'depreciation_rate' in row and not pd.isna(row['depreciation_rate']):
+                    facility.depreciation_rate = float(row['depreciation_rate'])
+                if 'acquisition_cost' in row and not pd.isna(row['acquisition_cost']):
+                    facility.acquisition_cost = int(float(row['acquisition_cost']))
+                if 'residual_value' in row and not pd.isna(row['residual_value']):
+                    facility.residual_value = int(float(row['residual_value']))
+                if 'asset_status' in row and not pd.isna(row['asset_status']):
+                    facility.asset_status = row['asset_status']
+                
+                if 'construction_date' in row and not pd.isna(row['construction_date']):
+                    facility.construction_date = pd.to_datetime(row['construction_date']).date()
+                if 'main_structure' in row and not pd.isna(row['main_structure']):
+                    facility.main_structure = row['main_structure']
+                if 'ownership_type' in row and not pd.isna(row['ownership_type']):
+                    facility.ownership_type = row['ownership_type']
+                if 'floor_count' in row and not pd.isna(row['floor_count']):
+                    facility.floor_count = int(row['floor_count'])
+                
+                db.session.add(facility)
+                count += 1
+                
+            except Exception as e:
+                errors.append(f"行 {row_num}: {str(e)}")
+        
+        if errors:
+            db.session.rollback()
+            error_message = "\n".join(errors)
+            return {'success': False, 'error': f"データ処理中にエラーが発生しました:\n{error_message}", 'fix': "エラーメッセージを確認し、CSVファイルを修正してください。"}
         
         db.session.commit()
         return {'success': True, 'count': count}
     
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': str(e), 'fix': "CSVファイルの形式を確認し、サンプルCSVをダウンロードして参考にしてください。"}
+
+def validate_repair_csv(df):
+    """修繕履歴のCSVデータを検証"""
+    required_fields = [
+        'repair_date', 'repair_target_type', 'repair_item', 
+        'repair_cost', 'contractor', 'repair_reason', 'operator'
+    ]
+    
+    # 必須フィールドの存在確認
+    missing_fields = [field for field in required_fields if field not in df.columns]
+    if missing_fields:
+        return {
+            'valid': False, 
+            'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
+        }
+    
+    # 識別フィールドの存在確認
+    if 'management_number' not in df.columns and 'warehouse_number' not in df.columns and 'target_name' not in df.columns:
+        return {
+            'valid': False, 
+            'error': "識別フィールド(management_number, warehouse_number, target_name)のいずれかが必要です",
+            'fix': "CSVファイルに少なくとも1つの識別フィールドを追加してください。"
+        }
+    
+    return {'valid': True}
 
 def process_repair_csv(df):
     """修繕履歴のCSVデータを処理"""
     try:
+        # データ検証
+        validation = validate_repair_csv(df)
+        if not validation['valid']:
+            return {'success': False, 'error': validation['error'], 'fix': validation['fix']}
+        
         count = 0
-        for _, row in df.iterrows():
-            # 必須フィールドの存在確認
+        errors = []
+        
+        for idx, row in df.iterrows():
+            row_num = idx + 2  # ヘッダー行を考慮して行番号を+2
+            
+            # 必須フィールドの値確認
             if ('target_name' not in row or pd.isna(row['target_name'])) and \
                ('management_number' not in row or pd.isna(row['management_number'])) and \
                ('warehouse_number' not in row or pd.isna(row['warehouse_number'])):
+                errors.append(f"行 {row_num}: 修繕対象(management_number, warehouse_number, target_name)が指定されていません")
                 continue
                 
             if 'repair_date' not in row or pd.isna(row['repair_date']):
+                errors.append(f"行 {row_num}: 修繕日が空です")
                 continue
                 
-            # 対象の種類を判断
-            target_type = None
-            target_id = None
-            target_name = None
+            try:
+                # 対象の種類を判断
+                target_type = None
+                target_id = None
+                target_name = None
+                
+                # フォークリフトの修繕
+                if 'management_number' in row and not pd.isna(row['management_number']):
+                    forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
+                    if forklift:
+                        target_type = 'forklift'
+                        target_id = forklift.id
+                        target_name = forklift.management_number
+                        
+                        # フォークリフト修繕を作成
+                        repair = ForkliftRepair()
+                        repair.forklift_id = forklift.id
+                        repair.target_management_number = forklift.management_number
+                        repair.repair_date = pd.to_datetime(row['repair_date']).date()
+                        
+                        if 'contractor' in row and not pd.isna(row['contractor']):
+                            repair.contractor = row['contractor']
+                        else:
+                            repair.contractor = '不明'
+                        
+                        if 'repair_target_type' in row and not pd.isna(row['repair_target_type']):
+                            repair.repair_target_type = row['repair_target_type']
+                        else:
+                            repair.repair_target_type = 'other'
+                        
+                        if 'repair_item' in row and not pd.isna(row['repair_item']):
+                            repair.repair_item = row['repair_item']
+                        else:
+                            repair.repair_item = '不明'
+                        
+                        if 'repair_cost' in row and not pd.isna(row['repair_cost']):
+                            repair.repair_cost = int(float(row['repair_cost']))
+                        else:
+                            repair.repair_cost = 0
+                        
+                        if 'repair_reason' in row and not pd.isna(row['repair_reason']):
+                            repair.repair_reason = row['repair_reason']
+                        else:
+                            repair.repair_reason = 'other'
+                        
+                        if 'hour_meter' in row and not pd.isna(row['hour_meter']):
+                            repair.hour_meter = int(float(row['hour_meter']))
+                        
+                        if 'notes' in row and not pd.isna(row['notes']):
+                            repair.notes = row['notes']
+                        
+                        if 'operator' in row and not pd.isna(row['operator']):
+                            repair.operator = row['operator']
+                        else:
+                            repair.operator = 'システム'
+                        
+                        db.session.add(repair)
+                        count += 1
+                        continue
+                    else:
+                        errors.append(f"行 {row_num}: 管理番号 {row['management_number']} のフォークリフトが見つかりません")
             
-            # フォークリフトの修繕
-            if 'management_number' in row and not pd.isna(row['management_number']):
-                forklift = Forklift.query.filter_by(management_number=row['management_number']).first()
-                if forklift:
-                    target_type = 'forklift'
-                    target_id = forklift.id
-                    target_name = forklift.management_number
-                    
-                    # フォークリフト修繕を作成
-                    repair = ForkliftRepair()
-                    repair.forklift_id = forklift.id
-                    repair.target_management_number = forklift.management_number
+                # 倉庫施設の修繕
+                if 'warehouse_number' in row and not pd.isna(row['warehouse_number']):
+                    facility = Facility.query.filter_by(warehouse_number=row['warehouse_number']).first()
+                    if facility:
+                        target_type = 'facility'
+                        target_id = facility.id
+                        target_name = facility.warehouse_number
+                        
+                        # 倉庫施設修繕を作成
+                        repair = FacilityRepair()
+                        repair.facility_id = facility.id
+                        repair.target_warehouse_number = facility.warehouse_number
+                        repair.repair_date = pd.to_datetime(row['repair_date']).date()
+                        
+                        if 'floor' in row and not pd.isna(row['floor']):
+                            repair.floor = row['floor']
+                        else:
+                            repair.floor = '1F'
+                        
+                        if 'contractor' in row and not pd.isna(row['contractor']):
+                            repair.contractor = row['contractor']
+                        else:
+                            repair.contractor = '不明'
+                        
+                        if 'repair_target_type' in row and not pd.isna(row['repair_target_type']):
+                            repair.repair_target_type = row['repair_target_type']
+                        else:
+                            repair.repair_target_type = 'other'
+                        
+                        if 'repair_item' in row and not pd.isna(row['repair_item']):
+                            repair.repair_item = row['repair_item']
+                        else:
+                            repair.repair_item = '不明'
+                        
+                        if 'repair_cost' in row and not pd.isna(row['repair_cost']):
+                            repair.repair_cost = int(float(row['repair_cost']))
+                        else:
+                            repair.repair_cost = 0
+                        
+                        if 'repair_reason' in row and not pd.isna(row['repair_reason']):
+                            repair.repair_reason = row['repair_reason']
+                        else:
+                            repair.repair_reason = 'other'
+                        
+                        if 'notes' in row and not pd.isna(row['notes']):
+                            repair.notes = row['notes']
+                        
+                        if 'operator' in row and not pd.isna(row['operator']):
+                            repair.operator = row['operator']
+                        else:
+                            repair.operator = 'システム'
+                        
+                        db.session.add(repair)
+                        count += 1
+                        continue
+                    else:
+                        errors.append(f"行 {row_num}: 倉庫番号 {row['warehouse_number']} の施設が見つかりません")
+            
+                # その他の修繕
+                if 'target_name' in row and not pd.isna(row['target_name']):
+                    repair = OtherRepair()
+                    repair.target_name = row['target_name']
                     repair.repair_date = pd.to_datetime(row['repair_date']).date()
                     
-                    if 'contractor' in row and not pd.isna(row['contractor']):
-                        repair.contractor = row['contractor']
+                    if 'category' in row and not pd.isna(row['category']):
+                        repair.category = row['category']
                     else:
-                        repair.contractor = '不明'
-                    
-                    if 'repair_target_type' in row and not pd.isna(row['repair_target_type']):
-                        repair.repair_target_type = row['repair_target_type']
-                    else:
-                        repair.repair_target_type = 'other'
-                    
-                    if 'repair_item' in row and not pd.isna(row['repair_item']):
-                        repair.repair_item = row['repair_item']
-                    else:
-                        repair.repair_item = '不明'
-                    
+                        repair.category = 'その他'
+                        
                     if 'repair_cost' in row and not pd.isna(row['repair_cost']):
                         repair.repair_cost = int(float(row['repair_cost']))
                     else:
                         repair.repair_cost = 0
-                    
-                    if 'repair_reason' in row and not pd.isna(row['repair_reason']):
-                        repair.repair_reason = row['repair_reason']
+                        
+                    if 'contractor' in row and not pd.isna(row['contractor']):
+                        repair.contractor = row['contractor']
                     else:
-                        repair.repair_reason = 'other'
-                    
-                    if 'hour_meter' in row and not pd.isna(row['hour_meter']):
-                        repair.hour_meter = int(float(row['hour_meter']))
-                    
+                        repair.contractor = '不明'
+                        
                     if 'notes' in row and not pd.isna(row['notes']):
                         repair.notes = row['notes']
-                    
+                        
                     if 'operator' in row and not pd.isna(row['operator']):
                         repair.operator = row['operator']
                     else:
@@ -321,93 +543,21 @@ def process_repair_csv(df):
                     db.session.add(repair)
                     count += 1
                     continue
-            
-            # 倉庫施設の修繕
-            if 'warehouse_number' in row and not pd.isna(row['warehouse_number']):
-                facility = Facility.query.filter_by(warehouse_number=row['warehouse_number']).first()
-                if facility:
-                    target_type = 'facility'
-                    target_id = facility.id
-                    target_name = facility.warehouse_number
-                    
-                    # 倉庫施設修繕を作成
-                    repair = FacilityRepair()
-                    repair.facility_id = facility.id
-                    repair.target_warehouse_number = facility.warehouse_number
-                    repair.repair_date = pd.to_datetime(row['repair_date']).date()
-                    
-                    if 'floor' in row and not pd.isna(row['floor']):
-                        repair.floor = row['floor']
-                    else:
-                        repair.floor = '1F'
-                    
-                    if 'contractor' in row and not pd.isna(row['contractor']):
-                        repair.contractor = row['contractor']
-                    else:
-                        repair.contractor = '不明'
-                    
-                    if 'repair_item' in row and not pd.isna(row['repair_item']):
-                        repair.repair_item = row['repair_item']
-                    else:
-                        repair.repair_item = '不明'
-                    
-                    if 'repair_cost' in row and not pd.isna(row['repair_cost']):
-                        repair.repair_cost = int(float(row['repair_cost']))
-                    else:
-                        repair.repair_cost = 0
-                    
-                    if 'repair_reason' in row and not pd.isna(row['repair_reason']):
-                        repair.repair_reason = row['repair_reason']
-                    else:
-                        repair.repair_reason = 'other'
-                    
-                    if 'notes' in row and not pd.isna(row['notes']):
-                        repair.notes = row['notes']
-                    
-                    if 'operator' in row and not pd.isna(row['operator']):
-                        repair.operator = row['operator']
-                    else:
-                        repair.operator = 'システム'
-                    
-                    db.session.add(repair)
-                    count += 1
-                    continue
-            
-            # その他の修繕
-            if 'target_name' in row and not pd.isna(row['target_name']):
-                repair = OtherRepair()
-                repair.target_name = row['target_name']
-                repair.repair_date = pd.to_datetime(row['repair_date']).date()
                 
-                if 'category' in row and not pd.isna(row['category']):
-                    repair.category = row['category']
-                else:
-                    repair.category = 'その他'
-                    
-                if 'repair_cost' in row and not pd.isna(row['repair_cost']):
-                    repair.repair_cost = int(float(row['repair_cost']))
-                else:
-                    repair.repair_cost = 0
-                    
-                if 'contractor' in row and not pd.isna(row['contractor']):
-                    repair.contractor = row['contractor']
-                else:
-                    repair.contractor = '不明'
-                    
-                if 'notes' in row and not pd.isna(row['notes']):
-                    repair.notes = row['notes']
-                    
-                if 'operator' in row and not pd.isna(row['operator']):
-                    repair.operator = row['operator']
-                else:
-                    repair.operator = 'システム'
-                
-                db.session.add(repair)
-                count += 1
+                # 対象が特定できない場合
+                errors.append(f"行 {row_num}: 修繕対象が特定できません。management_number、warehouse_number、またはtarget_nameを指定してください。")
+            
+            except Exception as e:
+                errors.append(f"行 {row_num}: {str(e)}")
+        
+        if errors:
+            db.session.rollback()
+            error_message = "\n".join(errors)
+            return {'success': False, 'error': f"データ処理中にエラーが発生しました:\n{error_message}", 'fix': "エラーメッセージを確認し、CSVファイルを修正してください。"}
         
         db.session.commit()
         return {'success': True, 'count': count}
     
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'error': str(e)}
+        return {'success': False, 'error': str(e), 'fix': "CSVファイルの形式を確認し、サンプルCSVをダウンロードして参考にしてください。"}

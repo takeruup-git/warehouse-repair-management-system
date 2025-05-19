@@ -711,8 +711,13 @@ def upload_inspection_pdf(inspection_type):
         
         # ファイル形式が正しいか確認
         if file and allowed_file(file.filename):
-            # ファイル名を安全に保存
-            filename = secure_filename(file.filename)
+            # オリジナルのファイル名を保持（日本語対応）
+            original_filename = file.filename
+            # 保存用のファイル名を生成（UUIDを使用）
+            ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
+            filename = f"{uuid.uuid4().hex}.{ext}"
+            # メタデータにオリジナルのファイル名も保存
+            display_filename = original_filename
             
             # 点検タイプに応じたディレクトリを確認・作成
             pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', inspection_type)

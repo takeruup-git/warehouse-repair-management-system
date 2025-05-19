@@ -91,10 +91,16 @@
                             <li><a class="dropdown-item" href="{{ url_for('pdf_management.search') }}">PDF検索</a></li>
                         </ul>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link {% if request.endpoint and request.endpoint.startswith('master') %}active{% endif %}" href="{{ url_for('master.index') }}">
-                            <i class="bi bi-gear"></i> マスタ管理
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle {% if request.endpoint and (request.endpoint.startswith('master') or request.endpoint.startswith('backup')) %}active{% endif %}" href="#" role="button" data-bs-toggle="dropdown">
+                            <i class="bi bi-gear"></i> システム管理
                         </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="{{ url_for('master.index') }}">マスタ管理</a></li>
+                            {% if current_user.is_admin() %}
+                            <li><a class="dropdown-item" href="{{ url_for('backup.index') }}">バックアップ管理</a></li>
+                            {% endif %}
+                        </ul>
                     </li>
                 </ul>
                 <div class="d-flex align-items-center">

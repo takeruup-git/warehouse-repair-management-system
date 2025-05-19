@@ -50,8 +50,13 @@ def manage_annual_inspection(forklift_id):
                     if os.path.exists(old_file_path):
                         os.remove(old_file_path)
                 
-                # オリジナルのファイル名を保持しつつ、一意性を確保するためのディレクトリ構造を使用
-                filename = secure_filename(file.filename)
+                # オリジナルのファイル名を保持（日本語対応）
+                original_filename = file.filename
+                # 保存用のファイル名を生成（UUIDを使用）
+                ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
+                filename = f"{uuid.uuid4().hex}.{ext}"
+                # メタデータにオリジナルのファイル名も保存
+                display_filename = original_filename
                 
                 # フォークリフトIDと日付を含むディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
