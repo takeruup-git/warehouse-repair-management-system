@@ -40,12 +40,17 @@
         <form method="post" enctype="multipart/form-data">
     
             <div class="row mb-3">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <label for="inspection_date" class="form-label">点検実施日</label>
                     <input type="date" class="form-control" id="inspection_date" name="inspection_date" 
                            value="{{ prediction.annual_inspection_date.strftime('%Y-%m-%d') if prediction.annual_inspection_date else '' }}">
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
+                    <label for="next_inspection_date" class="form-label">次回点検予定日</label>
+                    <input type="date" class="form-control" id="next_inspection_date" name="next_inspection_date" 
+                           value="{{ prediction.next_annual_inspection_date.strftime('%Y-%m-%d') if prediction.next_annual_inspection_date else '' }}">
+                </div>
+                <div class="col-md-4">
                     <label for="inspection_status" class="form-label">点検結果</label>
                     <select class="form-select" id="inspection_status" name="inspection_status">
                         <option value="">選択してください</option>
@@ -66,7 +71,7 @@
                 <input type="file" class="form-control" id="inspection_report" name="inspection_report" accept=".pdf">
                 {% if prediction.annual_inspection_report %}
                 <div class="mt-2">
-                    <a href="{{ url_for('static', filename=prediction.annual_inspection_report.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-info">
+                    <a href="{{ url_for('pdf_management.view_pdf', filepath=prediction.annual_inspection_report) }}" target="_blank" class="btn btn-sm btn-info">
                         <i class="bi bi-file-earmark-pdf"></i> 現在のレポートを表示
                     </a>
                     
@@ -104,10 +109,62 @@
     </div>
 </div>
 
-{% if prediction.annual_inspection_date %}
+{% if inspection_history %}
 <div class="card mb-4">
     <div class="card-header">
         <h5 class="card-title mb-0">点検履歴</h5>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>点検日</th>
+                        <th>次回点検予定日</th>
+                        <th>点検結果</th>
+                        <th>点検備考</th>
+                        <th>登録者</th>
+                        <th>レポート</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for history in inspection_history %}
+                    <tr>
+                        <td>{{ history.inspection_date.strftime('%Y-%m-%d') }}</td>
+                        <td>{{ history.next_inspection_date.strftime('%Y-%m-%d') if history.next_inspection_date else '未設定' }}</td>
+                        <td>
+                            {% if history.inspection_status == 'passed' %}
+                            <span class="badge bg-success">合格</span>
+                            {% elif history.inspection_status == 'failed' %}
+                            <span class="badge bg-danger">不合格</span>
+                            {% elif history.inspection_status == 'pending' %}
+                            <span class="badge bg-warning">保留</span>
+                            {% else %}
+                            <span class="badge bg-secondary">未設定</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ history.inspection_notes or '' }}</td>
+                        <td>{{ history.created_by }}</td>
+                        <td>
+                            {% if history.report_path %}
+                            <a href="{{ url_for('pdf_management.view_pdf', filepath=history.report_path) }}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-file-earmark-pdf"></i> 表示
+                            </a>
+                            {% else %}
+                            <span class="text-muted">なし</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% elif prediction.annual_inspection_date %}
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="card-title mb-0">現在の点検情報</h5>
     </div>
     <div class="card-body">
         <table class="table table-bordered">

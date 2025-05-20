@@ -120,7 +120,7 @@ def index():
             'management_number': management_number,
             'item': 'バッテリー交換',
             'date': replacement_date.strftime('%Y-%m-%d'),
-            'days_left': (replacement_date - Config.CURRENT_DATE.date()).days
+            'days_left': (replacement_date - Config.CURRENT_DATE).days
         })
     
     # タイヤ交換アラート
@@ -150,7 +150,7 @@ def index():
             'management_number': management_number,
             'item': f'{tire_type_name}交換',
             'date': replacement_date.strftime('%Y-%m-%d'),
-            'days_left': (replacement_date - Config.CURRENT_DATE.date()).days
+            'days_left': (replacement_date - Config.CURRENT_DATE).days
         })
     
     # 年次点検アラート
@@ -178,7 +178,7 @@ def index():
             'management_number': management_number,
             'item': '年次点検',
             'date': inspection_date.strftime('%Y-%m-%d'),
-            'days_left': (inspection_date - Config.CURRENT_DATE.date()).days
+            'days_left': (inspection_date - Config.CURRENT_DATE).days
         })
     
     # 日数でソート

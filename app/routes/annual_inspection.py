@@ -1,6 +1,7 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
 from app.models import db, AuditLog
 from app.models.forklift import Forklift, ForkliftPrediction
+from app.models.annual_inspection_history import AnnualInspectionHistory
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
 import os
@@ -33,7 +34,14 @@ def manage_annual_inspection(forklift_id):
         if inspection_date:
             inspection_date = datetime.strptime(inspection_date, '%Y-%m-%d').date()
             prediction.annual_inspection_date = inspection_date
-            # 次回点検日は1年後
+            
+        # 次回点検日を直接設定できるようにする
+        next_inspection_date = request.form.get('next_inspection_date')
+        if next_inspection_date:
+            next_inspection_date = datetime.strptime(next_inspection_date, '%Y-%m-%d').date()
+            prediction.next_annual_inspection_date = next_inspection_date
+        elif inspection_date and not prediction.next_annual_inspection_date:
+            # 次回点検日が設定されていない場合のみ、デフォルトで1年後に設定
             prediction.next_annual_inspection_date = inspection_date + timedelta(days=365)
         
         prediction.annual_inspection_status = inspection_status
@@ -88,7 +96,7 @@ def manage_annual_inspection(forklift_id):
                     entity_type='forklift',
                     entity_id=forklift_id,
                     description=f'フォークリフト {forklift.management_number} の年次点検レポート ({inspection_date})',
-                    created_by=operator or current_user.username
+                    created_by=operator or current_user.full_name or current_user.username
                 )
                 db.session.add(file_metadata)
                 
@@ -97,18 +105,36 @@ def manage_annual_inspection(forklift_id):
                     action='upload',
                     entity_type='annual_inspection_report',
                     entity_id=forklift_id,
-                    operator=operator or current_user.username,
+                    operator=operator or current_user.full_name or current_user.username,
                     details=f'フォークリフト {forklift.management_number} の年次点検レポートをアップロード'
                 )
                 db.session.add(audit_log)
+        
+        # 履歴を保存
+        inspection_history = AnnualInspectionHistory(
+            forklift_id=forklift_id,
+            inspection_date=prediction.annual_inspection_date,
+            next_inspection_date=prediction.next_annual_inspection_date,
+            inspection_status=prediction.annual_inspection_status,
+            inspection_notes=prediction.annual_inspection_notes,
+            report_path=prediction.annual_inspection_report,
+            created_by=operator
+        )
+        db.session.add(inspection_history)
         
         db.session.commit()
         flash('年次点検情報が更新されました。', 'success')
         return redirect(url_for('forklift.view', id=forklift_id))
     
+    # 点検履歴を取得
+    inspection_history = AnnualInspectionHistory.query.filter_by(
+        forklift_id=forklift_id
+    ).order_by(AnnualInspectionHistory.inspection_date.desc()).all()
+    
     return render_template('annual_inspection/manage.html', 
                           forklift=forklift, 
-                          prediction=prediction)
+                          prediction=prediction,
+                          inspection_history=inspection_history)
 
 @annual_inspection_bp.route('/annual-inspection/list')
 @login_required
@@ -159,7 +185,7 @@ def manage_battery_tire(forklift_id):
         tire_type = request.form.get('tire_type')
         next_tire_replacement_date = request.form.get('next_tire_replacement_date')
         
-        operator = request.form.get('operator_name', current_user.username)
+        operator = request.form.get('operator_name', current_user.full_name or current_user.username)
         
         # 日付の変換
         if battery_replacement_date:
@@ -265,7 +291,7 @@ def create_replacement_schedule():
             prediction.next_tire_replacement_date = next_date
             prediction.tire_type = request.form.get('tire_type', 'drive')
         
-        prediction.updated_by = operator_name or current_user.username
+        prediction.updated_by = operator_name or current_user.full_name or current_user.username
         db.session.commit()
         
         flash('交換予定が正常に登録されました', 'success')
@@ -279,7 +305,7 @@ def create_replacement_schedule():
             action='create',
             entity_type='replacement_schedule',
             entity_id=forklift.id,
-            operator=operator_name or current_user.username,
+            operator=operator_name or current_user.full_name or current_user.username,
             details=log_message
         )
         db.session.add(audit_log)

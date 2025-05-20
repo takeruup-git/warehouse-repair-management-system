@@ -861,15 +861,31 @@ def upload_inspection_pdf(inspection_type):
             
             # ファイルメタデータを保存
             from app.models.file import FileMetadata
-            file_metadata = FileMetadata(
-                file_path=os.path.join('pdf', inspection_type, filename),
+            
+            # 既存のメタデータを確認（同じファイル名のものがあれば更新）
+            existing_metadata = FileMetadata.query.filter_by(
                 original_filename=original_filename,
-                file_type='pdf',
-                entity_type=inspection_type,
-                description=f'{title} ({datetime.now().strftime("%Y-%m-%d")})',
-                created_by=request.form.get('operator_name', 'システム')
-            )
-            db.session.add(file_metadata)
+                entity_type=inspection_type
+            ).first()
+            
+            if existing_metadata:
+                # 既存のメタデータを更新
+                existing_metadata.file_path = os.path.join('pdf', inspection_type, filename)
+                existing_metadata.description = f'{title} ({datetime.now().strftime("%Y-%m-%d")})'
+                existing_metadata.created_by = request.form.get('operator_name', 'システム')
+                existing_metadata.created_at = datetime.now()
+            else:
+                # 新規メタデータを作成
+                file_metadata = FileMetadata(
+                    file_path=os.path.join('pdf', inspection_type, filename),
+                    original_filename=original_filename,
+                    file_type='pdf',
+                    entity_type=inspection_type,
+                    description=f'{title} ({datetime.now().strftime("%Y-%m-%d")})',
+                    created_by=request.form.get('operator_name', 'システム')
+                )
+                db.session.add(file_metadata)
+            
             db.session.commit()
             
             flash(f'PDFファイル「{original_filename}」がアップロードされました', 'success')

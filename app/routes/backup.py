@@ -73,7 +73,7 @@ def create_backup():
             # バックアップ情報を作成
             backup_info = {
                 'created_at': timestamp,
-                'created_by': current_user.username,
+                'created_by': current_user.full_name or current_user.username,
                 'version': current_app.config.get('VERSION', '1.0.0')
             }
             

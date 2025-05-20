@@ -59,6 +59,9 @@ def monthly_cost():
                     extract('year', ForkliftRepair.repair_date) == year
                 )
                 
+                # SQLクエリをログに出力
+                current_app.logger.info(f"フォークリフト修繕費クエリ（修正版）: {str(query)}")
+                
                 if month:
                     query = query.filter(extract('month', ForkliftRepair.repair_date) == month)
                 
@@ -668,6 +671,9 @@ def repair_target_summary():
             ).group_by(
                 ForkliftRepair.repair_target_type
             )
+            
+            # クエリをログに出力（詳細版）
+            current_app.logger.info(f"修繕対象種別集計クエリ（詳細版）: {str(target_summary_query.statement.compile(compile_kwargs={'literal_binds': True}))}")
             
             # SQLクエリをログに出力
             current_app.logger.info(f"修繕対象種別集計クエリ: {str(target_summary_query)}")

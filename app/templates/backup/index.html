@@ -50,23 +50,21 @@
                                             <a href="{{ url_for('backup.download_backup', filename=backup.name) }}" class="btn btn-sm btn-outline-primary">
                                                 <i class="fas fa-download"></i> ダウンロード
                                             </a>
-                                            <button type="button" class="btn btn-sm btn-outline-success" data-toggle="modal" data-target="#restoreModal{{ loop.index }}">
+                                            <button type="button" class="btn btn-sm btn-outline-success" data-bs-toggle="modal" data-bs-target="#restoreModal{{ loop.index }}">
                                                 <i class="fas fa-undo"></i> 復元
                                             </button>
-                                            <button type="button" class="btn btn-sm btn-outline-danger" data-toggle="modal" data-target="#deleteModal{{ loop.index }}">
+                                            <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteModal{{ loop.index }}">
                                                 <i class="fas fa-trash"></i> 削除
                                             </button>
                                         </div>
 
                                         <!-- 復元確認モーダル -->
-                                        <div class="modal fade" id="restoreModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="restoreModalLabel{{ loop.index }}" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
+                                        <div class="modal fade" id="restoreModal{{ loop.index }}" tabindex="-1" aria-labelledby="restoreModalLabel{{ loop.index }}" aria-hidden="true">
+                                            <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-warning text-white">
                                                         <h5 class="modal-title" id="restoreModalLabel{{ loop.index }}">バックアップからの復元確認</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
                                                         <div class="alert alert-danger">
@@ -76,7 +74,7 @@
                                                         <p>作成日時: {{ backup.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                         <form action="{{ url_for('backup.restore_backup', filename=backup.name) }}" method="post">
                                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-warning">復元を実行</button>
@@ -87,21 +85,19 @@
                                         </div>
 
                                         <!-- 削除確認モーダル -->
-                                        <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" role="dialog" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
-                                            <div class="modal-dialog" role="document">
+                                        <div class="modal fade" id="deleteModal{{ loop.index }}" tabindex="-1" aria-labelledby="deleteModalLabel{{ loop.index }}" aria-hidden="true">
+                                            <div class="modal-dialog">
                                                 <div class="modal-content">
                                                     <div class="modal-header bg-danger text-white">
                                                         <h5 class="modal-title" id="deleteModalLabel{{ loop.index }}">バックアップ削除確認</h5>
-                                                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                                                            <span aria-hidden="true">&times;</span>
-                                                        </button>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
                                                         <p>バックアップファイル: <strong>{{ backup.name }}</strong> を削除しますか？</p>
                                                         <p>この操作は元に戻せません。</p>
                                                     </div>
                                                     <div class="modal-footer">
-                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">キャンセル</button>
+                                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
                                                         <form action="{{ url_for('backup.delete_backup', filename=backup.name) }}" method="post">
                                                             <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
                                                             <button type="submit" class="btn btn-danger">削除</button>
