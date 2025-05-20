@@ -417,6 +417,69 @@
         </form>
     </div>
 </div>
+
+<!-- アップロードされたファイル一覧 -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">アップロードされたファイル</h5>
+    </div>
+    <div class="card-body">
+        <div id="uploaded-files-container">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>ファイル一覧を読み込み中...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // フォークリフトに関連するファイルを取得
+    fetch(`/api/files?entity_type=forklift&entity_id={{ forklift.id }}`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('uploaded-files-container');
+            
+            if (data.success && data.files && data.files.length > 0) {
+                // ファイル一覧を表示
+                let html = '<div class="table-responsive"><table class="table table-striped">';
+                html += '<thead><tr><th>ファイル名</th><th>種類</th><th>説明</th><th>アップロード日</th><th>操作</th></tr></thead>';
+                html += '<tbody>';
+                
+                data.files.forEach(file => {
+                    html += `<tr>
+                        <td>${file.original_filename}</td>
+                        <td>${file.file_type === 'pdf' ? 'PDF' : '画像'}</td>
+                        <td>${file.description || '-'}</td>
+                        <td>${file.created_at}</td>
+                        <td>
+                            <a href="/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-eye"></i> 表示
+                            </a>
+                            <a href="/pdf_management/download/static/uploads/${file.file_path}" class="btn btn-sm btn-secondary">
+                                <i class="bi bi-download"></i> ダウンロード
+                            </a>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } else {
+                // ファイルがない場合
+                container.innerHTML = '<div class="alert alert-info">アップロードされたファイルはありません。</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching files:', error);
+            const container = document.getElementById('uploaded-files-container');
+            container.innerHTML = '<div class="alert alert-danger">ファイル一覧の取得中にエラーが発生しました。</div>';
+        });
+});
+</script>
 {% endblock content %}
 
 {% block scripts %}

@@ -69,6 +69,23 @@
                     <a href="{{ url_for('static', filename=prediction.annual_inspection_report.replace('static/', '')) }}" target="_blank" class="btn btn-sm btn-info">
                         <i class="bi bi-file-earmark-pdf"></i> 現在のレポートを表示
                     </a>
+                    
+                    <!-- Display original filename if available -->
+                    <span class="ms-2 text-muted" id="original-filename-display"></span>
+                    <script>
+                        // Fetch the original filename using AJAX
+                        document.addEventListener('DOMContentLoaded', function() {
+                            const filePath = "{{ prediction.annual_inspection_report.replace('static/uploads/', '') }}";
+                            fetch(`/api/file_metadata?file_path=${encodeURIComponent(filePath)}`)
+                                .then(response => response.json())
+                                .then(data => {
+                                    if (data.success && data.metadata) {
+                                        document.getElementById('original-filename-display').textContent = data.metadata.original_filename;
+                                    }
+                                })
+                                .catch(error => console.error('Error fetching file metadata:', error));
+                        });
+                    </script>
                 </div>
                 {% endif %}
             </div>

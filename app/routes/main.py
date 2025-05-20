@@ -96,15 +96,24 @@ def index():
     alerts = []
     
     # バッテリー交換アラート
-    battery_alerts = db.session.query(
+    battery_alerts_query = db.session.query(
         Forklift.management_number,
         ForkliftPrediction.next_battery_replacement_date
     ).join(
         ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
     ).filter(
         ForkliftPrediction.next_battery_replacement_date <= one_year_later,
-        ForkliftPrediction.next_battery_replacement_date >= Config.CURRENT_DATE
-    ).all()
+        ForkliftPrediction.next_battery_replacement_date >= Config.CURRENT_DATE,
+        Forklift.asset_status == 'active'  # アクティブなフォークリフトのみ
+    )
+    
+    # SQLクエリをログに出力
+    current_app.logger.info(f"バッテリー交換アラートクエリ: {str(battery_alerts_query)}")
+    
+    battery_alerts = battery_alerts_query.all()
+    
+    # 結果をログに出力
+    current_app.logger.info(f"バッテリー交換アラート結果: {len(battery_alerts)}件")
     
     for management_number, replacement_date in battery_alerts:
         alerts.append({
@@ -115,7 +124,7 @@ def index():
         })
     
     # タイヤ交換アラート
-    tire_alerts = db.session.query(
+    tire_alerts_query = db.session.query(
         Forklift.management_number,
         ForkliftPrediction.next_tire_replacement_date,
         ForkliftPrediction.tire_type
@@ -123,8 +132,17 @@ def index():
         ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
     ).filter(
         ForkliftPrediction.next_tire_replacement_date <= one_year_later,
-        ForkliftPrediction.next_tire_replacement_date >= Config.CURRENT_DATE
-    ).all()
+        ForkliftPrediction.next_tire_replacement_date >= Config.CURRENT_DATE,
+        Forklift.asset_status == 'active'  # アクティブなフォークリフトのみ
+    )
+    
+    # SQLクエリをログに出力
+    current_app.logger.info(f"タイヤ交換アラートクエリ: {str(tire_alerts_query)}")
+    
+    tire_alerts = tire_alerts_query.all()
+    
+    # 結果をログに出力
+    current_app.logger.info(f"タイヤ交換アラート結果: {len(tire_alerts)}件")
     
     for management_number, replacement_date, tire_type in tire_alerts:
         tire_type_name = "ドライブタイヤ" if tire_type == "drive" else "キャスタータイヤ"
@@ -136,15 +154,24 @@ def index():
         })
     
     # 年次点検アラート
-    inspection_alerts = db.session.query(
+    inspection_alerts_query = db.session.query(
         Forklift.management_number,
         ForkliftPrediction.next_annual_inspection_date
     ).join(
         ForkliftPrediction, Forklift.id == ForkliftPrediction.forklift_id
     ).filter(
         ForkliftPrediction.next_annual_inspection_date <= one_year_later,
-        ForkliftPrediction.next_annual_inspection_date >= Config.CURRENT_DATE
-    ).all()
+        ForkliftPrediction.next_annual_inspection_date >= Config.CURRENT_DATE,
+        Forklift.asset_status == 'active'  # アクティブなフォークリフトのみ
+    )
+    
+    # SQLクエリをログに出力
+    current_app.logger.info(f"年次点検アラートクエリ: {str(inspection_alerts_query)}")
+    
+    inspection_alerts = inspection_alerts_query.all()
+    
+    # 結果をログに出力
+    current_app.logger.info(f"年次点検アラート結果: {len(inspection_alerts)}件")
     
     for management_number, inspection_date in inspection_alerts:
         alerts.append({

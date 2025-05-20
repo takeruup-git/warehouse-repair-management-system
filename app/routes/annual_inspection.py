@@ -91,6 +91,16 @@ def manage_annual_inspection(forklift_id):
                     created_by=operator or current_user.username
                 )
                 db.session.add(file_metadata)
+                
+                # 監査ログを記録
+                audit_log = AuditLog(
+                    action='upload',
+                    entity_type='annual_inspection_report',
+                    entity_id=forklift_id,
+                    operator=operator or current_user.username,
+                    details=f'フォークリフト {forklift.management_number} の年次点検レポートをアップロード'
+                )
+                db.session.add(audit_log)
         
         db.session.commit()
         flash('年次点検情報が更新されました。', 'success')

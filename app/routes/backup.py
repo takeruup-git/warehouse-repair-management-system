@@ -156,11 +156,18 @@ def restore_backup(filename):
             db.session.close_all()
             db.engine.dispose()
             
-            # データベースファイルをコピー
-            shutil.copy2(db_backup_path, db_path)
-            
-            # 権限を設定
-            os.chmod(db_path, 0o666)
+            try:
+                # データベースファイルをコピー
+                shutil.copy2(db_backup_path, db_path)
+                
+                # 権限を設定
+                os.chmod(db_path, 0o666)
+                
+                # データベース復元の成功をログに記録
+                current_app.logger.info(f"データベースを正常に復元しました: {db_path}")
+            except Exception as e:
+                current_app.logger.error(f"データベース復元中にエラーが発生しました: {str(e)}")
+                raise
             
             # アップロードファイルを復元
             uploads_dir = current_app.config['UPLOAD_FOLDER']
@@ -173,47 +180,54 @@ def restore_backup(filename):
             
             # アップロードファイルを復元
             if os.path.exists(uploads_backup_dir):
-                # 現在のバックアップファイルを保存
-                current_backups = []
-                backups_dir = os.path.join(uploads_dir, 'backups')
-                if os.path.exists(backups_dir):
-                    current_backups = [os.path.join(backups_dir, f) for f in os.listdir(backups_dir)]
-                
-                # アップロードディレクトリを削除して復元（バックアップディレクトリを除く）
-                for item in os.listdir(uploads_dir):
-                    if item != 'backups':  # バックアップディレクトリは保持
-                        item_path = os.path.join(uploads_dir, item)
-                        if os.path.isdir(item_path):
-                            shutil.rmtree(item_path)
-                        else:
-                            os.remove(item_path)
-                
-                # バックアップからファイルを復元
-                for item in os.listdir(uploads_backup_dir):
-                    src = os.path.join(uploads_backup_dir, item)
-                    dst = os.path.join(uploads_dir, item)
+                try:
+                    # 現在のバックアップファイルを保存
+                    current_backups = []
+                    backups_dir = os.path.join(uploads_dir, 'backups')
+                    if os.path.exists(backups_dir):
+                        current_backups = [os.path.join(backups_dir, f) for f in os.listdir(backups_dir)]
                     
-                    if item == 'backups':  # バックアップディレクトリは特別処理
-                        continue
+                    # アップロードディレクトリを削除して復元（バックアップディレクトリを除く）
+                    for item in os.listdir(uploads_dir):
+                        if item != 'backups':  # バックアップディレクトリは保持
+                            item_path = os.path.join(uploads_dir, item)
+                            if os.path.isdir(item_path):
+                                shutil.rmtree(item_path)
+                            else:
+                                os.remove(item_path)
+                    
+                    # バックアップからファイルを復元
+                    for item in os.listdir(uploads_backup_dir):
+                        src = os.path.join(uploads_backup_dir, item)
+                        dst = os.path.join(uploads_dir, item)
                         
-                    if os.path.isdir(src):
-                        if os.path.exists(dst):
-                            shutil.rmtree(dst)
-                        shutil.copytree(src, dst)
-                    else:
-                        if os.path.exists(dst):
-                            os.remove(dst)
-                        shutil.copy2(src, dst)
-                
-                # バックアップディレクトリが存在しない場合は作成
-                if not os.path.exists(backups_dir):
-                    os.makedirs(backups_dir)
-                
-                # 現在のバックアップファイルを復元
-                for backup_file in current_backups:
-                    if os.path.exists(backup_file):
-                        dst = os.path.join(backups_dir, os.path.basename(backup_file))
-                        shutil.copy2(backup_file, dst)
+                        if item == 'backups':  # バックアップディレクトリは特別処理
+                            continue
+                            
+                        if os.path.isdir(src):
+                            if os.path.exists(dst):
+                                shutil.rmtree(dst)
+                            shutil.copytree(src, dst)
+                        else:
+                            if os.path.exists(dst):
+                                os.remove(dst)
+                            shutil.copy2(src, dst)
+                    
+                    # バックアップディレクトリが存在しない場合は作成
+                    if not os.path.exists(backups_dir):
+                        os.makedirs(backups_dir)
+                    
+                    # 現在のバックアップファイルを復元
+                    for backup_file in current_backups:
+                        if os.path.exists(backup_file):
+                            dst = os.path.join(backups_dir, os.path.basename(backup_file))
+                            shutil.copy2(backup_file, dst)
+                    
+                    # アップロードファイル復元の成功をログに記録
+                    current_app.logger.info(f"アップロードファイルを正常に復元しました: {uploads_dir}")
+                except Exception as e:
+                    current_app.logger.error(f"アップロードファイル復元中にエラーが発生しました: {str(e)}")
+                    raise
         
         flash('システムが正常に復元されました。アプリケーションを再起動してください。', 'success')
     except Exception as e:

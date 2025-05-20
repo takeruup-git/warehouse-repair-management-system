@@ -65,7 +65,13 @@ def monthly_cost():
                 if target_id:
                     query = query.filter(ForkliftRepair.forklift_id == target_id)
                 
+                # SQLクエリをログに出力
+                current_app.logger.info(f"フォークリフト修繕費クエリ: {str(query)}")
+                
                 repairs = query.order_by(ForkliftRepair.repair_date).all()
+                
+                # 結果をログに出力
+                current_app.logger.info(f"フォークリフト修繕費結果: {len(repairs)}件")
                 
                 # データフレームを作成
                 data = []
@@ -653,7 +659,7 @@ def repair_target_summary():
             export_format = request.form.get('export_format', 'excel')
             
             # 修繕対象種別ごとの集計を取得
-            target_summary = db.session.query(
+            target_summary_query = db.session.query(
                 ForkliftRepair.repair_target_type,
                 func.count(ForkliftRepair.id).label('count'),
                 func.sum(ForkliftRepair.repair_cost).label('total_cost')
@@ -661,7 +667,15 @@ def repair_target_summary():
                 extract('year', ForkliftRepair.repair_date) == year
             ).group_by(
                 ForkliftRepair.repair_target_type
-            ).all()
+            )
+            
+            # SQLクエリをログに出力
+            current_app.logger.info(f"修繕対象種別集計クエリ: {str(target_summary_query)}")
+            
+            target_summary = target_summary_query.all()
+            
+            # 結果をログに出力
+            current_app.logger.info(f"修繕対象種別集計結果: {len(target_summary)}件")
             
             # データフレームを作成
             data = []

@@ -5,6 +5,7 @@ from app.models.facility import Facility, FacilityRepair
 from app.models.other_repair import OtherRepair
 from app.models.master import Employee, Contractor, WarehouseGroup, Manufacturer, Budget, EquipmentLifespan
 from app.models.inspection import BatteryFluidCheck, PeriodicSelfInspection, PreShiftInspection
+from app.models.file import FileMetadata
 from sqlalchemy import func, extract
 from datetime import datetime, timedelta
 from config import Config
@@ -45,6 +46,41 @@ def get_facility_repairs(id):
 def get_other_repairs():
     repairs = OtherRepair.query.order_by(OtherRepair.repair_date.desc()).all()
     return jsonify([repair.to_dict() for repair in repairs])
+
+@api_bp.route('/file_metadata')
+def get_file_metadata():
+    file_path = request.args.get('file_path')
+    if not file_path:
+        return jsonify({'success': False, 'error': 'File path is required'})
+    
+    metadata = FileMetadata.query.filter_by(file_path=file_path).first()
+    if metadata:
+        return jsonify({
+            'success': True,
+            'metadata': metadata.to_dict()
+        })
+    else:
+        return jsonify({'success': False, 'error': 'File metadata not found'})
+
+@api_bp.route('/files')
+def get_files():
+    entity_type = request.args.get('entity_type')
+    entity_id = request.args.get('entity_id')
+    
+    if not entity_type or not entity_id:
+        return jsonify({'success': False, 'error': 'Entity type and ID are required'})
+    
+    try:
+        entity_id = int(entity_id)
+        files = FileMetadata.query.filter_by(entity_type=entity_type, entity_id=entity_id).order_by(FileMetadata.created_at.desc()).all()
+        
+        return jsonify({
+            'success': True,
+            'files': [file.to_dict() for file in files]
+        })
+    except Exception as e:
+        current_app.logger.error(f"Error fetching files: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)})
 
 @api_bp.route('/dashboard/monthly_costs')
 def get_monthly_costs():
