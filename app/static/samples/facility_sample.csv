@@ -1,3 +1,3 @@
 ﻿warehouse_number,construction_date,main_structure,ownership_type,floor_count,asset_management_number,department,asset_type,acquisition_date,useful_life,depreciation_rate,acquisition_cost,residual_value,asset_status
-東京1号倉庫,2015-06-15,鉄骨,owned,3,WH-001,物流部,facility,2015-06-15,30,0.033,500000000,1,active
-大阪2号倉庫,2018-03-20,鉄筋コンクリート,leased,2,WH-002,物流部,facility,2018-03-20,30,0.033,300000000,1,active
+WH-001,2015-06-15,鉄骨造,owned,3,A-WH-001,物流部,facility,2015-06-15,30,0.033,500000000,1,active
+WH-002,2018-03-20,鉄筋コンクリート造,leased,2,A-WH-002,物流部,facility,2018-03-20,30,0.033,300000000,1,active

@@ -1,5 +1,5 @@
 from flask import Blueprint, render_template, request, redirect, url_for, flash, current_app, jsonify
-from app.models import db
+from app.models import db, AuditLog
 from app.models.forklift import Forklift, ForkliftPrediction
 from flask_login import login_required, current_user
 from datetime import datetime, timedelta
@@ -49,14 +49,20 @@ def manage_annual_inspection(forklift_id):
                     old_file_path = os.path.join(current_app.root_path, prediction.annual_inspection_report)
                     if os.path.exists(old_file_path):
                         os.remove(old_file_path)
+                    
+                    # 古いファイルメタデータも削除
+                    from app.models.file import FileMetadata
+                    old_metadata = FileMetadata.query.filter_by(file_path=os.path.relpath(
+                        old_file_path, os.path.join(current_app.root_path, 'static', 'uploads')
+                    )).first()
+                    if old_metadata:
+                        db.session.delete(old_metadata)
                 
                 # オリジナルのファイル名を保持（日本語対応）
                 original_filename = file.filename
                 # 保存用のファイル名を生成（UUIDを使用）
                 ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
                 filename = f"{uuid.uuid4().hex}.{ext}"
-                # メタデータにオリジナルのファイル名も保存
-                display_filename = original_filename
                 
                 # フォークリフトIDと日付を含むディレクトリを作成して一意性を確保
                 date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
@@ -72,6 +78,19 @@ def manage_annual_inspection(forklift_id):
                 # 相対パスをDBに保存
                 relative_path = os.path.join('static', 'uploads', unique_dir, filename)
                 prediction.annual_inspection_report = relative_path
+                
+                # ファイルメタデータを保存
+                from app.models.file import FileMetadata
+                file_metadata = FileMetadata(
+                    file_path=os.path.join(unique_dir, filename),
+                    original_filename=original_filename,
+                    file_type='pdf',
+                    entity_type='forklift',
+                    entity_id=forklift_id,
+                    description=f'フォークリフト {forklift.management_number} の年次点検レポート ({inspection_date})',
+                    created_by=operator or current_user.username
+                )
+                db.session.add(file_metadata)
         
         db.session.commit()
         flash('年次点検情報が更新されました。', 'success')
@@ -193,3 +212,72 @@ def list_battery_tire():
         current_app.logger.error(f"バッテリー・タイヤ交換一覧取得エラー: {str(e)}")
         flash(f"バッテリー・タイヤ交換一覧の取得中にエラーが発生しました: {str(e)}", "danger")
         return redirect(url_for('main.index'))
+
+@annual_inspection_bp.route('/create-replacement-schedule', methods=['POST'])
+@login_required
+def create_replacement_schedule():
+    """新規バッテリー・タイヤ交換予定を作成するルート"""
+    try:
+        forklift_id = request.form.get('forklift_id')
+        replacement_type = request.form.get('replacement_type')
+        last_replacement_date = request.form.get('last_replacement_date')
+        next_replacement_date = request.form.get('next_replacement_date')
+        operator_name = request.form.get('operator_name')
+        
+        # 必須項目の確認
+        if not forklift_id or not replacement_type or not next_replacement_date:
+            flash('必須項目が入力されていません', 'danger')
+            return redirect(url_for('annual_inspection.list_battery_tire'))
+        
+        # フォークリフトの存在確認
+        forklift = Forklift.query.get_or_404(forklift_id)
+        
+        # 予測データの取得または作成
+        prediction = ForkliftPrediction.query.filter_by(forklift_id=forklift_id).first()
+        if not prediction:
+            prediction = ForkliftPrediction(forklift_id=forklift_id)
+            db.session.add(prediction)
+        
+        # 日付の変換
+        if last_replacement_date:
+            last_date = datetime.strptime(last_replacement_date, '%Y-%m-%d').date()
+        else:
+            last_date = None
+            
+        next_date = datetime.strptime(next_replacement_date, '%Y-%m-%d').date()
+        
+        # 交換種別に応じたデータ更新
+        if replacement_type == 'battery':
+            prediction.battery_replacement_date = last_date
+            prediction.next_battery_replacement_date = next_date
+        elif replacement_type == 'tire':
+            prediction.tire_replacement_date = last_date
+            prediction.next_tire_replacement_date = next_date
+            prediction.tire_type = request.form.get('tire_type', 'drive')
+        
+        prediction.updated_by = operator_name or current_user.username
+        db.session.commit()
+        
+        flash('交換予定が正常に登録されました', 'success')
+        
+        # 監査ログを記録
+        log_message = f"{forklift.management_number} の"
+        log_message += "バッテリー" if replacement_type == 'battery' else "タイヤ"
+        log_message += f"交換予定を登録（次回予定日: {next_replacement_date}）"
+        
+        audit_log = AuditLog(
+            action='create',
+            entity_type='replacement_schedule',
+            entity_id=forklift.id,
+            operator=operator_name or current_user.username,
+            details=log_message
+        )
+        db.session.add(audit_log)
+        db.session.commit()
+        
+    except Exception as e:
+        db.session.rollback()
+        current_app.logger.error(f"交換予定登録エラー: {str(e)}")
+        flash(f"交換予定の登録中にエラーが発生しました: {str(e)}", "danger")
+    
+    return redirect(url_for('annual_inspection.list_battery_tire'))

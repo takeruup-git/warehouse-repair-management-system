@@ -6,11 +6,91 @@
 <div class="d-flex justify-content-between align-items-center mb-4">
     <h1>バッテリー・タイヤ交換一覧</h1>
     <div>
+        <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#newReplacementModal">
+            <i class="bi bi-plus-circle"></i> 新規交換予定登録
+        </button>
         <a href="{{ url_for('main.index') }}" class="btn btn-secondary">
             <i class="bi bi-arrow-left"></i> ダッシュボードに戻る
         </a>
     </div>
 </div>
+
+<!-- 新規交換予定登録モーダル -->
+<div class="modal fade" id="newReplacementModal" tabindex="-1" aria-labelledby="newReplacementModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="newReplacementModalLabel">新規交換予定登録</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="newReplacementForm" action="{{ url_for('annual_inspection.create_replacement_schedule') }}" method="post">
+                    <div class="mb-3">
+                        <label for="forklift_id" class="form-label">フォークリフト</label>
+                        <select class="form-select" id="forklift_id" name="forklift_id" required>
+                            <option value="" selected disabled>選択してください</option>
+                            {% for forklift, _ in battery_replacements + tire_replacements %}
+                                <option value="{{ forklift.id }}">{{ forklift.management_number }} - {{ forklift.manufacturer }} {{ forklift.model }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="replacement_type" class="form-label">交換種別</label>
+                        <select class="form-select" id="replacement_type" name="replacement_type" required>
+                            <option value="" selected disabled>選択してください</option>
+                            <option value="battery">バッテリー</option>
+                            <option value="tire">タイヤ</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3 tire-options" style="display: none;">
+                        <label for="tire_type" class="form-label">タイヤタイプ</label>
+                        <select class="form-select" id="tire_type" name="tire_type">
+                            <option value="drive">ドライブタイヤ</option>
+                            <option value="caster">キャスタータイヤ</option>
+                            <option value="both">両方</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="last_replacement_date" class="form-label">前回交換日</label>
+                        <input type="date" class="form-control" id="last_replacement_date" name="last_replacement_date">
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="next_replacement_date" class="form-label">次回交換予定日</label>
+                        <input type="date" class="form-control" id="next_replacement_date" name="next_replacement_date" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="operator_name" class="form-label">登録者</label>
+                        <input type="text" class="form-control" id="operator_name" name="operator_name" value="{{ current_user.username }}" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
+                <button type="submit" form="newReplacementForm" class="btn btn-primary">登録</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const replacementTypeSelect = document.getElementById('replacement_type');
+        const tireOptions = document.querySelector('.tire-options');
+        
+        replacementTypeSelect.addEventListener('change', function() {
+            if (this.value === 'tire') {
+                tireOptions.style.display = 'block';
+            } else {
+                tireOptions.style.display = 'none';
+            }
+        });
+    });
+</script>
 
 <!-- バッテリー交換予定 -->
 <div class="card mb-4">

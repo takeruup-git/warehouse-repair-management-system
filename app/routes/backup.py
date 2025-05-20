@@ -151,11 +151,16 @@ def restore_backup(filename):
             shutil.copy2(db_path, db_before_restore)
             
             # データベースを復元
-            backup_conn = sqlite3.connect(db_backup_path)
-            conn = sqlite3.connect(db_path)
-            backup_conn.backup(conn)
-            backup_conn.close()
-            conn.close()
+            # 既存のデータベースを閉じる
+            from app.models import db
+            db.session.close_all()
+            db.engine.dispose()
+            
+            # データベースファイルをコピー
+            shutil.copy2(db_backup_path, db_path)
+            
+            # 権限を設定
+            os.chmod(db_path, 0o666)
             
             # アップロードファイルを復元
             uploads_dir = current_app.config['UPLOAD_FOLDER']
@@ -168,27 +173,47 @@ def restore_backup(filename):
             
             # アップロードファイルを復元
             if os.path.exists(uploads_backup_dir):
-                # バックアップディレクトリを保持
-                if os.path.exists(os.path.join(uploads_dir, 'backups')):
-                    backups_temp = os.path.join(temp_dir, 'backups_temp')
-                    shutil.copytree(os.path.join(uploads_dir, 'backups'), backups_temp)
+                # 現在のバックアップファイルを保存
+                current_backups = []
+                backups_dir = os.path.join(uploads_dir, 'backups')
+                if os.path.exists(backups_dir):
+                    current_backups = [os.path.join(backups_dir, f) for f in os.listdir(backups_dir)]
                 
-                # アップロードディレクトリを削除して復元
-                if os.path.exists(uploads_dir):
-                    shutil.rmtree(uploads_dir)
-                shutil.copytree(uploads_backup_dir, uploads_dir)
-                
-                # バックアップディレクトリを復元
-                if os.path.exists(os.path.join(temp_dir, 'backups_temp')):
-                    if not os.path.exists(os.path.join(uploads_dir, 'backups')):
-                        os.makedirs(os.path.join(uploads_dir, 'backups'))
-                    for item in os.listdir(os.path.join(temp_dir, 'backups_temp')):
-                        s = os.path.join(temp_dir, 'backups_temp', item)
-                        d = os.path.join(uploads_dir, 'backups', item)
-                        if os.path.isdir(s):
-                            shutil.copytree(s, d, dirs_exist_ok=True)
+                # アップロードディレクトリを削除して復元（バックアップディレクトリを除く）
+                for item in os.listdir(uploads_dir):
+                    if item != 'backups':  # バックアップディレクトリは保持
+                        item_path = os.path.join(uploads_dir, item)
+                        if os.path.isdir(item_path):
+                            shutil.rmtree(item_path)
                         else:
-                            shutil.copy2(s, d)
+                            os.remove(item_path)
+                
+                # バックアップからファイルを復元
+                for item in os.listdir(uploads_backup_dir):
+                    src = os.path.join(uploads_backup_dir, item)
+                    dst = os.path.join(uploads_dir, item)
+                    
+                    if item == 'backups':  # バックアップディレクトリは特別処理
+                        continue
+                        
+                    if os.path.isdir(src):
+                        if os.path.exists(dst):
+                            shutil.rmtree(dst)
+                        shutil.copytree(src, dst)
+                    else:
+                        if os.path.exists(dst):
+                            os.remove(dst)
+                        shutil.copy2(src, dst)
+                
+                # バックアップディレクトリが存在しない場合は作成
+                if not os.path.exists(backups_dir):
+                    os.makedirs(backups_dir)
+                
+                # 現在のバックアップファイルを復元
+                for backup_file in current_backups:
+                    if os.path.exists(backup_file):
+                        dst = os.path.join(backups_dir, os.path.basename(backup_file))
+                        shutil.copy2(backup_file, dst)
         
         flash('システムが正常に復元されました。アプリケーションを再起動してください。', 'success')
     except Exception as e:

@@ -16,18 +16,57 @@
                 <div class="mb-3">
                     <label for="search_term" class="form-label">検索キーワード</label>
                     <input type="text" class="form-control" id="search_term" name="search_term" required>
-                    <div class="form-text">ファイル名に含まれるキーワードを入力してください。</div>
+                </div>
+                
+                <div class="mb-3">
+                    <label for="search_type" class="form-label">検索対象</label>
+                    <select class="form-select" id="search_type" name="search_type">
+                        <option value="filename" selected>ファイル名</option>
+                        <option value="description">説明</option>
+                        <option value="created_by">登録者</option>
+                        <option value="entity">関連情報（例：forklift-1）</option>
+                    </select>
+                    <div class="form-text" id="search_help">ファイル名に含まれるキーワードを入力してください。</div>
                 </div>
                 
                 <div class="d-flex justify-content-between">
-                    <a href="{{ url_for('pdf_management.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-arrow-left"></i> 戻る
-                    </a>
+                    <div>
+                        <a href="{{ url_for('pdf_management.index') }}" class="btn btn-secondary me-2">
+                            <i class="fas fa-arrow-left"></i> 戻る
+                        </a>
+                        <a href="{{ url_for('pdf_management.all_files') }}" class="btn btn-info">
+                            <i class="fas fa-list"></i> すべてのファイルを表示
+                        </a>
+                    </div>
                     <button type="submit" class="btn btn-primary">
                         <i class="fas fa-search"></i> 検索
                     </button>
                 </div>
             </form>
+            
+            <script>
+                document.addEventListener('DOMContentLoaded', function() {
+                    const searchType = document.getElementById('search_type');
+                    const searchHelp = document.getElementById('search_help');
+                    
+                    searchType.addEventListener('change', function() {
+                        switch(this.value) {
+                            case 'filename':
+                                searchHelp.textContent = 'ファイル名に含まれるキーワードを入力してください。';
+                                break;
+                            case 'description':
+                                searchHelp.textContent = 'ファイルの説明に含まれるキーワードを入力してください。';
+                                break;
+                            case 'created_by':
+                                searchHelp.textContent = 'ファイルの登録者名を入力してください。';
+                                break;
+                            case 'entity':
+                                searchHelp.textContent = '関連情報を「タイプ-ID」の形式で入力してください（例：forklift-1）。';
+                                break;
+                        }
+                    });
+                });
+            </script>
         </div>
     </div>
     

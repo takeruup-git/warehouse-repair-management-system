@@ -101,7 +101,67 @@ def validate_forklift_csv(df):
         return {
             'valid': False, 
             'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
-            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。以下のフィールドは必須です：\n" + 
+                  "- management_number: フォークリフトの管理番号\n" +
+                  "- manufacturer: メーカー名\n" +
+                  "- forklift_type: フォークリフトタイプ（reach/counter）\n" +
+                  "- power_source: 動力源（battery/diesel/gasoline/lpg）\n" +
+                  "- model: 機種\n" +
+                  "- serial_number: 機番\n" +
+                  "- load_capacity: 積載量（kg）\n" +
+                  "- manufacture_date: 製造年月日（YYYY-MM-DD）\n" +
+                  "- lift_height: 揚高（mm）\n" +
+                  "- warehouse_group: 配置倉庫グループ\n" +
+                  "- warehouse_number: 配置倉庫番号\n" +
+                  "- floor: 配置倉庫階層\n" +
+                  "- asset_type: 資産タイプ（forklift）"
+        }
+    
+    # データ型の検証
+    errors = []
+    
+    # 数値フィールドの検証
+    numeric_fields = ['load_capacity', 'lift_height']
+    for field in numeric_fields:
+        if field in df.columns:
+            non_numeric = df[~pd.to_numeric(df[field], errors='coerce').notna()][field]
+            if not non_numeric.empty:
+                rows = non_numeric.index.tolist()
+                errors.append(f"{field}列に数値以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）")
+    
+    # 日付フィールドの検証
+    date_fields = ['manufacture_date', 'acquisition_date']
+    for field in date_fields:
+        if field in df.columns:
+            non_date = df[~pd.to_datetime(df[field], errors='coerce').notna()][field]
+            if not non_date.empty:
+                rows = non_date.index.tolist()
+                errors.append(f"{field}列に日付以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。YYYY-MM-DD形式で入力してください。")
+    
+    # 列挙型フィールドの検証
+    if 'forklift_type' in df.columns:
+        invalid_types = df[~df['forklift_type'].isin(['reach', 'counter'])]['forklift_type']
+        if not invalid_types.empty:
+            rows = invalid_types.index.tolist()
+            errors.append(f"forklift_type列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。'reach'または'counter'を指定してください。")
+    
+    if 'power_source' in df.columns:
+        invalid_sources = df[~df['power_source'].isin(['battery', 'diesel', 'gasoline', 'lpg'])]['power_source']
+        if not invalid_sources.empty:
+            rows = invalid_sources.index.tolist()
+            errors.append(f"power_source列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。'battery'、'diesel'、'gasoline'、または'lpg'を指定してください。")
+    
+    if 'asset_type' in df.columns:
+        invalid_types = df[df['asset_type'] != 'forklift']['asset_type']
+        if not invalid_types.empty:
+            rows = invalid_types.index.tolist()
+            errors.append(f"asset_type列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。'forklift'を指定してください。")
+    
+    if errors:
+        return {
+            'valid': False,
+            'error': "\n".join(errors),
+            'fix': "上記のエラーを修正してください。サンプルCSVをダウンロードして参考にしてください。"
         }
     
     return {'valid': True}
@@ -237,7 +297,54 @@ def validate_facility_csv(df):
         return {
             'valid': False, 
             'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
-            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。以下のフィールドは必須です：\n" + 
+                  "- warehouse_number: 倉庫番号\n" +
+                  "- construction_date: 建築年月日（YYYY-MM-DD）\n" +
+                  "- main_structure: 主要構造（鉄骨造、鉄筋コンクリート造など）\n" +
+                  "- ownership_type: 所有形態（owned/leased）\n" +
+                  "- floor_count: 階層数\n" +
+                  "- asset_type: 資産タイプ（facility）"
+        }
+    
+    # データ型の検証
+    errors = []
+    
+    # 数値フィールドの検証
+    numeric_fields = ['floor_count', 'acquisition_cost', 'useful_life']
+    for field in numeric_fields:
+        if field in df.columns:
+            non_numeric = df[~pd.to_numeric(df[field], errors='coerce').notna()][field]
+            if not non_numeric.empty:
+                rows = non_numeric.index.tolist()
+                errors.append(f"{field}列に数値以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）")
+    
+    # 日付フィールドの検証
+    date_fields = ['construction_date', 'acquisition_date']
+    for field in date_fields:
+        if field in df.columns:
+            non_date = df[~pd.to_datetime(df[field], errors='coerce').notna()][field]
+            if not non_date.empty:
+                rows = non_date.index.tolist()
+                errors.append(f"{field}列に日付以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。YYYY-MM-DD形式で入力してください。")
+    
+    # 列挙型フィールドの検証
+    if 'ownership_type' in df.columns:
+        invalid_types = df[~df['ownership_type'].isin(['owned', 'leased'])]['ownership_type']
+        if not invalid_types.empty:
+            rows = invalid_types.index.tolist()
+            errors.append(f"ownership_type列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。'owned'または'leased'を指定してください。")
+    
+    if 'asset_type' in df.columns:
+        invalid_types = df[df['asset_type'] != 'facility']['asset_type']
+        if not invalid_types.empty:
+            rows = invalid_types.index.tolist()
+            errors.append(f"asset_type列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。'facility'を指定してください。")
+    
+    if errors:
+        return {
+            'valid': False,
+            'error': "\n".join(errors),
+            'fix': "上記のエラーを修正してください。サンプルCSVをダウンロードして参考にしてください。"
         }
     
     return {'valid': True}
@@ -340,31 +447,7 @@ def process_facility_csv(df):
         db.session.rollback()
         return {'success': False, 'error': str(e), 'fix': "CSVファイルの形式を確認し、サンプルCSVをダウンロードして参考にしてください。"}
 
-def validate_repair_csv(df):
-    """修繕履歴のCSVデータを検証"""
-    required_fields = [
-        'repair_date', 'repair_target_type', 'repair_item', 
-        'repair_cost', 'contractor', 'repair_reason', 'operator'
-    ]
-    
-    # 必須フィールドの存在確認
-    missing_fields = [field for field in required_fields if field not in df.columns]
-    if missing_fields:
-        return {
-            'valid': False, 
-            'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
-            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。"
-        }
-    
-    # 識別フィールドの存在確認
-    if 'management_number' not in df.columns and 'warehouse_number' not in df.columns and 'target_name' not in df.columns:
-        return {
-            'valid': False, 
-            'error': "識別フィールド(management_number, warehouse_number, target_name)のいずれかが必要です",
-            'fix': "CSVファイルに少なくとも1つの識別フィールドを追加してください。"
-        }
-    
-    return {'valid': True}
+
 
 def process_repair_csv(df):
     """修繕履歴のCSVデータを処理"""
@@ -561,3 +644,75 @@ def process_repair_csv(df):
     except Exception as e:
         db.session.rollback()
         return {'success': False, 'error': str(e), 'fix': "CSVファイルの形式を確認し、サンプルCSVをダウンロードして参考にしてください。"}
+
+def validate_repair_csv(df):
+    """修繕履歴のCSVデータを検証"""
+    required_fields = [
+        'repair_date', 'repair_item',
+        'repair_cost', 'contractor', 'repair_reason', 'operator'
+    ]
+
+    # 必須フィールドの存在確認
+    missing_fields = [field for field in required_fields if field not in df.columns]
+    if missing_fields:
+        return {
+            'valid': False,
+            'error': f"必須フィールドが不足しています: {', '.join(missing_fields)}",
+            'fix': "サンプルCSVをダウンロードして、正しいフィールド名を確認してください。以下のフィールドは必須です：\n" + 
+                  "- repair_date: 修繕日（YYYY-MM-DD）\n" +
+                  "- repair_item: 修繕項目\n" +
+                  "- repair_cost: 修繕費用（円）\n" +
+                  "- contractor: 業者\n" +
+                  "- repair_reason: 修繕理由（wear/damage/malfunction/scheduled/other）\n" +
+                  "- operator: 作業者\n\n" +
+                  "また、以下のいずれかのフィールドも必要です：\n" +
+                  "- management_number: フォークリフト管理番号\n" +
+                  "- warehouse_number: 倉庫番号\n" +
+                  "- target_name: その他修繕対象名"
+        }
+
+    # 識別フィールドの存在確認
+    if 'management_number' not in df.columns and 'warehouse_number' not in df.columns and 'target_name' not in df.columns:
+        return {
+            'valid': False,
+            'error': "識別フィールド(management_number, warehouse_number, target_name)のいずれかが必要です",
+            'fix': "CSVファイルに少なくとも1つの識別フィールド（management_number、warehouse_number、またはtarget_name）を追加してください。"
+        }
+    
+    # データ型の検証
+    errors = []
+    
+    # 数値フィールドの検証
+    numeric_fields = ['repair_cost', 'hour_meter']
+    for field in numeric_fields:
+        if field in df.columns and not df[field].isna().all():
+            non_numeric = df[~pd.to_numeric(df[field], errors='coerce').notna() & ~df[field].isna()][field]
+            if not non_numeric.empty:
+                rows = non_numeric.index.tolist()
+                errors.append(f"{field}列に数値以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）")
+    
+    # 日付フィールドの検証
+    date_fields = ['repair_date']
+    for field in date_fields:
+        if field in df.columns:
+            non_date = df[~pd.to_datetime(df[field], errors='coerce').notna()][field]
+            if not non_date.empty:
+                rows = non_date.index.tolist()
+                errors.append(f"{field}列に日付以外の値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。YYYY-MM-DD形式で入力してください。")
+    
+    # 列挙型フィールドの検証
+    if 'repair_reason' in df.columns:
+        valid_reasons = ['wear', 'damage', 'malfunction', 'scheduled', 'other']
+        invalid_reasons = df[~df['repair_reason'].isin(valid_reasons) & ~df['repair_reason'].isna()]['repair_reason']
+        if not invalid_reasons.empty:
+            rows = invalid_reasons.index.tolist()
+            errors.append(f"repair_reason列に無効な値があります（行: {', '.join(map(lambda x: str(x+2), rows))}）。{', '.join(valid_reasons)}のいずれかを指定してください。")
+    
+    if errors:
+        return {
+            'valid': False,
+            'error': "\n".join(errors),
+            'fix': "上記のエラーを修正してください。サンプルCSVをダウンロードして参考にしてください。"
+        }
+
+    return {'valid': True}

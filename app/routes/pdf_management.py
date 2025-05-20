@@ -110,16 +110,42 @@ def upload():
                 # 保存用のファイル名を生成（UUIDを使用）
                 ext = original_filename.rsplit('.', 1)[1].lower() if '.' in original_filename else 'pdf'
                 filename = f"{uuid.uuid4().hex}.{ext}"
-                # オリジナルのファイル名も保存するための情報
-                display_filename = original_filename
-                
-                # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
-                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
                 
                 # アセットタイプとIDが指定されている場合はそれを含める
                 asset_type = request.form.get('asset_type', '')
                 asset_id = request.form.get('asset_id', '')
                 description = request.form.get('description', '')
+                operator = request.form.get('operator_name', 'システム')
+                
+                # 同じファイル名のファイルが既に存在するか確認
+                existing_file = FileMetadata.query.filter_by(
+                    original_filename=original_filename,
+                    entity_type=asset_type if asset_type else None,
+                    entity_id=asset_id if asset_id else None
+                ).first()
+                
+                # 上書き確認が必要かどうか
+                overwrite_confirmed = request.form.get('overwrite_confirmed') == 'true'
+                
+                if existing_file and not overwrite_confirmed:
+                    # 上書き確認が必要な場合
+                    session_data = {
+                        'original_filename': original_filename,
+                        'asset_type': asset_type,
+                        'asset_id': asset_id,
+                        'description': description,
+                        'operator': operator
+                    }
+                    # セッションにデータを保存
+                    from flask import session
+                    session['upload_confirmation_data'] = session_data
+                    
+                    return render_template('pdf_management/confirm_overwrite.html', 
+                                          filename=original_filename,
+                                          existing_file=existing_file)
+                
+                # 重複を避けるためにタイムスタンプ付きのサブディレクトリを作成
+                date_str = datetime.now().strftime('%Y%m%d_%H%M%S')
                 
                 if asset_type and asset_id:
                     unique_dir = os.path.join('pdf', asset_type, str(asset_id), date_str)
@@ -134,38 +160,62 @@ def upload():
                 file_path = os.path.join(upload_dir, filename)
                 file.save(file_path)
                 
-                # ファイルメタデータを保存
-                operator = request.form.get('operator_name', 'システム')
-                description_text = request.form.get('description', '')
-                
                 # 相対パスを保存
                 relative_path = os.path.join(unique_dir, filename)
                 
-                # ファイルメタデータを作成
-                file_metadata = FileMetadata(
-                    file_path=relative_path,
-                    original_filename=display_filename,
-                    file_type='pdf',
-                    entity_type=asset_type if asset_type else None,
-                    entity_id=asset_id if asset_id else None,
-                    description=description_text,
-                    created_by=operator
-                )
-                db.session.add(file_metadata)
+                # 既存のファイルがある場合は削除
+                if existing_file and overwrite_confirmed:
+                    # 古いファイルを削除
+                    old_file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], existing_file.file_path)
+                    if os.path.exists(old_file_path):
+                        os.remove(old_file_path)
+                    
+                    # メタデータを更新
+                    existing_file.file_path = relative_path
+                    existing_file.description = description
+                    existing_file.created_at = datetime.now()
+                    existing_file.created_by = operator
+                    
+                    # 監査ログを記録
+                    log_details = f'PDFファイル {original_filename} を上書き'
+                    if description:
+                        log_details += f' (説明: {description})'
+                    
+                    audit_log = AuditLog(
+                        action='update',
+                        entity_type='pdf',
+                        entity_id=asset_id if asset_id else None,
+                        operator=operator,
+                        details=log_details
+                    )
+                    db.session.add(audit_log)
+                else:
+                    # 新規ファイルメタデータを作成
+                    file_metadata = FileMetadata(
+                        file_path=relative_path,
+                        original_filename=original_filename,
+                        file_type='pdf',
+                        entity_type=asset_type if asset_type else None,
+                        entity_id=asset_id if asset_id else None,
+                        description=description,
+                        created_by=operator
+                    )
+                    db.session.add(file_metadata)
+                    
+                    # 監査ログを記録
+                    log_details = f'PDFファイル {original_filename} をアップロード'
+                    if description:
+                        log_details += f' (説明: {description})'
+                    
+                    audit_log = AuditLog(
+                        action='upload',
+                        entity_type='pdf',
+                        entity_id=asset_id if asset_id else None,
+                        operator=operator,
+                        details=log_details
+                    )
+                    db.session.add(audit_log)
                 
-                # 監査ログを記録
-                log_details = f'PDFファイル {display_filename} をアップロード'
-                if description_text:
-                    log_details += f' (説明: {description_text})'
-                
-                audit_log = AuditLog(
-                    action='upload',
-                    entity_type='pdf',
-                    entity_id=asset_id if asset_id else None,
-                    operator=operator,
-                    details=log_details
-                )
-                db.session.add(audit_log)
                 db.session.commit()
                 
                 flash('PDFファイルがアップロードされました', 'success')
@@ -664,35 +714,116 @@ def generate_repair_pdf(asset_type, repair_id):
 def search():
     if request.method == 'POST':
         search_term = request.form.get('search_term', '')
+        search_type = request.form.get('search_type', 'filename')
         
-        pdf_dir = ensure_pdf_directory()
         pdf_files = []
         
-        # メインディレクトリとサブディレクトリの両方を検索
-        for root, dirs, files in os.walk(pdf_dir):
-            for filename in files:
-                if filename.endswith('.pdf') and search_term.lower() in filename.lower():
-                    file_path = os.path.join(root, filename)
-                    file_stats = os.stat(file_path)
-                    
-                    # ファイルパスからrelative_pathを作成
-                    relative_path = os.path.relpath(file_path, os.path.join(current_app.root_path, 'static', 'uploads'))
-                    display_path = os.path.join('static', 'uploads', relative_path)
-                    
-                    pdf_files.append({
-                        'filename': filename,
-                        'path': display_path,
-                        'size': file_stats.st_size,
-                        'created_at': datetime.fromtimestamp(file_stats.st_ctime),
-                        'modified_at': datetime.fromtimestamp(file_stats.st_mtime)
-                    })
+        # データベースからファイルメタデータを取得
+        query = FileMetadata.query.filter_by(file_type='pdf')
         
-        # 修正日時の降順でソート
-        pdf_files.sort(key=lambda x: x['modified_at'], reverse=True)
+        # 検索条件に応じてクエリを絞り込む
+        if search_term:
+            if search_type == 'filename':
+                query = query.filter(FileMetadata.original_filename.ilike(f'%{search_term}%'))
+            elif search_type == 'description':
+                query = query.filter(FileMetadata.description.ilike(f'%{search_term}%'))
+            elif search_type == 'created_by':
+                query = query.filter(FileMetadata.created_by.ilike(f'%{search_term}%'))
+            elif search_type == 'entity':
+                # エンティティタイプとIDで検索
+                entity_parts = search_term.split('-')
+                if len(entity_parts) == 2:
+                    entity_type, entity_id = entity_parts
+                    query = query.filter(
+                        FileMetadata.entity_type == entity_type,
+                        FileMetadata.entity_id == entity_id
+                    )
         
-        return render_template('pdf_management/search_results.html', pdf_files=pdf_files, search_term=search_term)
+        # 検索結果を取得
+        file_metadata_records = query.order_by(FileMetadata.created_at.desc()).all()
+        
+        for metadata in file_metadata_records:
+            # ファイルパスを構築
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], metadata.file_path)
+            
+            if os.path.exists(file_path):
+                file_stats = os.stat(file_path)
+                
+                # 表示用のパスを作成
+                display_path = os.path.join('static', 'uploads', metadata.file_path)
+                
+                # エンティティ情報を取得
+                entity_info = ""
+                if metadata.entity_type == 'forklift' and metadata.entity_id:
+                    forklift = Forklift.query.get(metadata.entity_id)
+                    if forklift:
+                        entity_info = f"フォークリフト: {forklift.management_number}"
+                elif metadata.entity_type == 'facility' and metadata.entity_id:
+                    facility = Facility.query.get(metadata.entity_id)
+                    if facility:
+                        entity_info = f"倉庫施設: {facility.warehouse_number}"
+                
+                pdf_files.append({
+                    'filename': os.path.basename(file_path),
+                    'display_filename': metadata.original_filename,
+                    'path': display_path,
+                    'size': file_stats.st_size,
+                    'created_at': metadata.created_at,
+                    'modified_at': datetime.fromtimestamp(file_stats.st_mtime),
+                    'description': metadata.description,
+                    'created_by': metadata.created_by,
+                    'entity_info': entity_info
+                })
+        
+        return render_template('pdf_management/search_results.html', 
+                              pdf_files=pdf_files, 
+                              search_term=search_term,
+                              search_type=search_type)
     
     return render_template('pdf_management/search.html')
+
+@pdf_management_bp.route('/all-files')
+def all_files():
+    """すべてのPDFファイルを表示"""
+    pdf_files = []
+    
+    # データベースからファイルメタデータを取得
+    file_metadata_records = FileMetadata.query.filter_by(file_type='pdf').order_by(FileMetadata.created_at.desc()).all()
+    
+    for metadata in file_metadata_records:
+        # ファイルパスを構築
+        file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], metadata.file_path)
+        
+        if os.path.exists(file_path):
+            file_stats = os.stat(file_path)
+            
+            # 表示用のパスを作成
+            display_path = os.path.join('static', 'uploads', metadata.file_path)
+            
+            # エンティティ情報を取得
+            entity_info = ""
+            if metadata.entity_type == 'forklift' and metadata.entity_id:
+                forklift = Forklift.query.get(metadata.entity_id)
+                if forklift:
+                    entity_info = f"フォークリフト: {forklift.management_number}"
+            elif metadata.entity_type == 'facility' and metadata.entity_id:
+                facility = Facility.query.get(metadata.entity_id)
+                if facility:
+                    entity_info = f"倉庫施設: {facility.warehouse_number}"
+            
+            pdf_files.append({
+                'filename': os.path.basename(file_path),
+                'display_filename': metadata.original_filename,
+                'path': display_path,
+                'size': file_stats.st_size,
+                'created_at': metadata.created_at,
+                'modified_at': datetime.fromtimestamp(file_stats.st_mtime),
+                'description': metadata.description,
+                'created_by': metadata.created_by,
+                'entity_info': entity_info
+            })
+    
+    return render_template('pdf_management/all_files.html', pdf_files=pdf_files)
 
 @pdf_management_bp.route('/upload/inspection/<inspection_type>', methods=['GET', 'POST'])
 def upload_inspection_pdf(inspection_type):

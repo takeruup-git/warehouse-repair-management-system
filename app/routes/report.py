@@ -518,11 +518,13 @@ def vehicle_history():
                     title_format = workbook.add_format({'bold': True, 'font_size': 14})
                     worksheet.write(0, 0, title, title_format)
                     
-                    # データを1行下にずらす
-                    for i in range(len(df) + 1, 0, -1):
-                        for j in range(len(df.columns)):
-                            cell_value = worksheet.table[i - 1][j].value
-                            worksheet.write(i, j, cell_value)
+                    # データを1行下にずらす（ワークシートのテーブル属性にアクセスせずに処理）
+                    # 一度データをメモリに読み込む
+                    df_with_title = pd.DataFrame([[''] * len(df.columns)] + df.values.tolist(), columns=df.columns)
+                    # タイトル行を追加
+                    df_with_title.iloc[0, 0] = title
+                    # 再度エクセルに書き込み
+                    df_with_title.to_excel(writer, sheet_name='修繕履歴', index=False, header=True)
                     
                     # ヘッダーを再設定
                     header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
@@ -910,11 +912,13 @@ def warehouse_history():
                     title_format = workbook.add_format({'bold': True, 'font_size': 14})
                     worksheet.write(0, 0, title, title_format)
                     
-                    # データを1行下にずらす
-                    for i in range(len(df) + 1, 0, -1):
-                        for j in range(len(df.columns)):
-                            cell_value = worksheet.table[i - 1][j].value
-                            worksheet.write(i, j, cell_value)
+                    # データを1行下にずらす（ワークシートのテーブル属性にアクセスせずに処理）
+                    # 一度データをメモリに読み込む
+                    df_with_title = pd.DataFrame([[''] * len(df.columns)] + df.values.tolist(), columns=df.columns)
+                    # タイトル行を追加
+                    df_with_title.iloc[0, 0] = title
+                    # 再度エクセルに書き込み
+                    df_with_title.to_excel(writer, sheet_name='修繕履歴', index=False, header=True)
                     
                     # ヘッダーを再設定
                     header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})

@@ -1,4 +1,5 @@
-﻿management_number,warehouse_number,target_name,repair_date,repair_target_type,repair_item,repair_cost,contractor,repair_reason,hour_meter,notes,operator
-1,,フォークリフト1号機,2023-05-20,tire,タイヤ交換,25000,株式会社修繕サービス,wear,1250,ドライブタイヤの摩耗による交換,山田太郎
-2,,フォークリフト2号機,2023-06-10,battery,バッテリー交換,80000,バッテリー専門店,malfunction,980,バッテリー交換,鈴木一郎
-,東京1号倉庫,東京第一倉庫,2023-04-05,wall,壁面補修,150000,建設メンテナンス株式会社,damage,,壁面補修工事,佐藤健太
+﻿management_number,warehouse_number,target_name,repair_date,repair_target_type,repair_item,repair_cost,contractor,repair_reason,hour_meter,notes,operator,category,floor
+FL-001,,,2023-05-20,drive_tire,ドライブタイヤ交換,25000,株式会社修繕サービス,wear,1250,ドライブタイヤの摩耗による交換,山田太郎,,
+FL-002,,,2023-06-10,battery,バッテリー交換,80000,バッテリー専門店,malfunction,980,バッテリー交換,鈴木一郎,,
+,WH-001,,2023-04-05,wall,壁面補修,150000,建設メンテナンス株式会社,damage,,壁面補修工事,佐藤健太,,1F
+,,エレベーター1号機,2023-07-15,,エレベーター修理,120000,エレベーター修理株式会社,malfunction,,モーター交換,高橋次郎,設備修理,

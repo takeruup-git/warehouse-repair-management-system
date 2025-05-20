@@ -1,42 +1,37 @@
 {% extends 'base.html' %}
 
-{% block title %}PDF検索結果{% endblock %}
+{% block title %}すべてのファイル - PDF管理{% endblock %}
 
 {% block content %}
 <div class="container mt-4">
-    <h1 class="mb-4">PDFファイル検索結果</h1>
+    <h1 class="mb-4">すべてのファイル</h1>
+    
+    <div class="row mb-4">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5 class="card-title">PDFファイル管理</h5>
+                    <p class="card-text">PDFファイルのアップロード、閲覧、ダウンロード、削除を行います。</p>
+                    <a href="{{ url_for('pdf_management.upload') }}" class="btn btn-primary">
+                        <i class="fas fa-upload"></i> PDFアップロード
+                    </a>
+                    <a href="{{ url_for('pdf_management.search') }}" class="btn btn-secondary">
+                        <i class="fas fa-search"></i> PDF検索
+                    </a>
+                    <a href="{{ url_for('pdf_management.index') }}" class="btn btn-info">
+                        <i class="fas fa-home"></i> PDF管理ホーム
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
     
     <div class="card">
-        <div class="card-header d-flex justify-content-between align-items-center">
-            <h5 class="mb-0">
-                検索キーワード: "{{ search_term }}"
-                {% if search_type %}
-                    (検索対象: 
-                    {% if search_type == 'filename' %}ファイル名
-                    {% elif search_type == 'description' %}説明
-                    {% elif search_type == 'created_by' %}登録者
-                    {% elif search_type == 'entity' %}関連情報
-                    {% endif %})
-                {% endif %}
-            </h5>
-            <div>
-                <a href="{{ url_for('pdf_management.search') }}" class="btn btn-sm btn-secondary">
-                    <i class="fas fa-search"></i> 新しい検索
-                </a>
-                <a href="{{ url_for('pdf_management.all_files') }}" class="btn btn-sm btn-info">
-                    <i class="fas fa-list"></i> すべてのファイル
-                </a>
-                <a href="{{ url_for('pdf_management.index') }}" class="btn btn-sm btn-primary">
-                    <i class="fas fa-home"></i> PDF管理ホーム
-                </a>
-            </div>
+        <div class="card-header">
+            <h5>すべてのPDFファイル一覧</h5>
         </div>
         <div class="card-body">
             {% if pdf_files %}
-                <div class="alert alert-success">
-                    {{ pdf_files|length }}件のPDFファイルが見つかりました。
-                </div>
-                
                 <div class="table-responsive">
                     <table class="table table-striped table-hover">
                         <thead>
@@ -83,12 +78,6 @@
                                                     <div class="modal-body">
                                                         <p>以下のファイルを削除してもよろしいですか？</p>
                                                         <p><strong>{{ file.display_filename }}</strong></p>
-                                                        {% if file.description %}
-                                                        <p>説明: {{ file.description }}</p>
-                                                        {% endif %}
-                                                        {% if file.entity_info %}
-                                                        <p>関連情報: {{ file.entity_info }}</p>
-                                                        {% endif %}
                                                     </div>
                                                     <div class="modal-footer">
                                                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">キャンセル</button>
@@ -106,17 +95,9 @@
                     </table>
                 </div>
             {% else %}
-                <div class="alert alert-warning">
-                    検索キーワード "{{ search_term }}" に一致するPDFファイルは見つかりませんでした。
+                <div class="alert alert-info">
+                    PDFファイルがありません。「PDFアップロード」ボタンからファイルをアップロードするか、点検報告書や修繕報告書からPDFを生成してください。
                 </div>
-                <p>検索のヒント:</p>
-                <ul>
-                    <li>別のキーワードで試してみてください。</li>
-                    <li>キーワードの一部だけを入力してみてください。</li>
-                    <li>スペルを確認してください。</li>
-                    <li>検索対象を変更してみてください。</li>
-                    <li><a href="{{ url_for('pdf_management.all_files') }}" class="btn btn-sm btn-info">すべてのファイルを表示</a> して確認してみてください。</li>
-                </ul>
             {% endif %}
         </div>
     </div>

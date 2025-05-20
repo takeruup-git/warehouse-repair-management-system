@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+
+{% block title %}ファイル上書き確認{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card">
+        <div class="card-header bg-warning">
+            <h5 class="card-title mb-0">ファイル上書き確認</h5>
+        </div>
+        <div class="card-body">
+            <div class="alert alert-warning">
+                <h5><i class="fas fa-exclamation-triangle"></i> 上書き確認</h5>
+                <p>同じ名前のファイルが既に存在します。上書きしますか？</p>
+                <p><strong>ファイル名:</strong> {{ filename }}</p>
+                {% if existing_file.description %}
+                <p><strong>説明:</strong> {{ existing_file.description }}</p>
+                {% endif %}
+                <p><strong>アップロード日時:</strong> {{ existing_file.created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+                <p><strong>アップロード者:</strong> {{ existing_file.created_by }}</p>
+            </div>
+            
+            <div class="d-flex justify-content-between">
+                <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="overwrite_confirmed" value="true">
+                    <input type="hidden" name="asset_type" value="{{ session.upload_confirmation_data.asset_type }}">
+                    <input type="hidden" name="asset_id" value="{{ session.upload_confirmation_data.asset_id }}">
+                    <input type="hidden" name="description" value="{{ session.upload_confirmation_data.description }}">
+                    <input type="hidden" name="operator_name" value="{{ session.upload_confirmation_data.operator }}">
+                    
+                    <button type="submit" class="btn btn-danger">
+                        <i class="fas fa-check"></i> 上書きする
+                    </button>
+                </form>
+                
+                <a href="{{ url_for('pdf_management.upload') }}" class="btn btn-secondary">
+                    <i class="fas fa-times"></i> キャンセル
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

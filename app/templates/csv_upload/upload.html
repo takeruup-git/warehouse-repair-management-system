@@ -69,113 +69,118 @@
                                     <tbody>
                                         <tr>
                                             <td>management_number</td>
-                                            <td>管理番号（必須）</td>
+                                            <td>管理番号（必須）- フォークリフトを識別するための固有の番号</td>
                                             <td>FL-001</td>
                                         </tr>
                                         <tr>
                                             <td>asset_management_number</td>
-                                            <td>資産管理番号</td>
+                                            <td>資産管理番号 - 会計上の資産管理に使用する番号</td>
                                             <td>A-FL-001</td>
                                         </tr>
                                         <tr>
                                             <td>department</td>
-                                            <td>部門</td>
+                                            <td>部門 - フォークリフトを管理する部門名</td>
                                             <td>物流部</td>
                                         </tr>
                                         <tr>
                                             <td>acquisition_date</td>
-                                            <td>取得年月日（YYYY-MM-DD）</td>
+                                            <td>取得年月日（YYYY-MM-DD） - フォークリフトを取得した日付</td>
                                             <td>2022-04-01</td>
                                         </tr>
                                         <tr>
                                             <td>useful_life</td>
-                                            <td>耐用年数</td>
+                                            <td>耐用年数 - 会計上の耐用年数（年）</td>
                                             <td>8</td>
                                         </tr>
                                         <tr>
                                             <td>depreciation_rate</td>
-                                            <td>償却率</td>
+                                            <td>償却率 - 減価償却に使用する償却率（0〜1の小数）</td>
                                             <td>0.125</td>
                                         </tr>
                                         <tr>
                                             <td>acquisition_cost</td>
-                                            <td>取得価額</td>
+                                            <td>取得価額 - フォークリフトの購入価格（円）</td>
                                             <td>2500000</td>
                                         </tr>
                                         <tr>
                                             <td>residual_value</td>
-                                            <td>残存価額</td>
+                                            <td>残存価額 - 耐用年数経過後の残存価値（円）</td>
                                             <td>1</td>
                                         </tr>
                                         <tr>
                                             <td>asset_status</td>
-                                            <td>資産ステータス（active/inactive/retired/under_repair）</td>
+                                            <td>資産ステータス - active（稼働中）/inactive（休止中）/retired（廃棄）/under_repair（修理中）</td>
                                             <td>active</td>
                                         </tr>
                                         <tr>
                                             <td>manufacturer</td>
-                                            <td>メーカー</td>
+                                            <td>メーカー - フォークリフトの製造メーカー名</td>
                                             <td>トヨタ</td>
                                         </tr>
                                         <tr>
                                             <td>forklift_type</td>
-                                            <td>フォークリフトタイプ（reach/counter）</td>
+                                            <td>フォークリフトタイプ - reach（リーチ式）/counter（カウンター式）</td>
                                             <td>reach</td>
                                         </tr>
                                         <tr>
                                             <td>power_source</td>
-                                            <td>動力源（battery/diesel/gasoline/lpg）</td>
+                                            <td>動力源 - battery（バッテリー）/diesel（ディーゼル）/gasoline（ガソリン）/lpg（LPG）</td>
                                             <td>battery</td>
                                         </tr>
                                         <tr>
                                             <td>model</td>
-                                            <td>機種</td>
+                                            <td>機種 - フォークリフトの型式・モデル名</td>
                                             <td>FD25T-17</td>
                                         </tr>
                                         <tr>
                                             <td>serial_number</td>
-                                            <td>機番</td>
+                                            <td>機番 - フォークリフトの製造番号</td>
                                             <td>12345-ABC</td>
                                         </tr>
                                         <tr>
                                             <td>vehicle_id_number</td>
-                                            <td>車体番号</td>
+                                            <td>車体番号 - フォークリフトの車体識別番号</td>
                                             <td>VIN-12345</td>
                                         </tr>
                                         <tr>
                                             <td>load_capacity</td>
-                                            <td>積載量（kg）</td>
+                                            <td>積載量（kg） - フォークリフトの最大積載重量</td>
                                             <td>2500</td>
                                         </tr>
                                         <tr>
                                             <td>manufacture_date</td>
-                                            <td>製造年月日（YYYY-MM-DD）</td>
+                                            <td>製造年月日（YYYY-MM-DD） - フォークリフトの製造日</td>
                                             <td>2022-01-15</td>
                                         </tr>
                                         <tr>
                                             <td>lift_height</td>
-                                            <td>揚高（mm）</td>
+                                            <td>揚高（mm） - フォークの最大上昇高さ</td>
                                             <td>3000</td>
                                         </tr>
                                         <tr>
                                             <td>warehouse_group</td>
-                                            <td>配置倉庫グループ</td>
+                                            <td>配置倉庫グループ - フォークリフトが配置されている倉庫グループ</td>
                                             <td>東京</td>
                                         </tr>
                                         <tr>
                                             <td>warehouse_number</td>
-                                            <td>配置倉庫番号</td>
+                                            <td>配置倉庫番号 - フォークリフトが配置されている倉庫番号</td>
                                             <td>TK-01</td>
                                         </tr>
                                         <tr>
                                             <td>floor</td>
-                                            <td>配置倉庫階層</td>
+                                            <td>配置倉庫階層 - フォークリフトが配置されている階層</td>
                                             <td>1F</td>
                                         </tr>
                                         <tr>
                                             <td>operator</td>
-                                            <td>取扱担当者</td>
+                                            <td>取扱担当者 - フォークリフトの主な操作担当者名</td>
                                             <td>山田太郎</td>
+                                        </tr>
+                                        <tr>
+                                            <td>asset_type</td>
+                                            <td>資産タイプ（必須） - 「forklift」を指定</td>
+                                            <td>forklift</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -198,68 +203,73 @@
                                     <tbody>
                                         <tr>
                                             <td>warehouse_number</td>
-                                            <td>倉庫番号（必須）</td>
+                                            <td>倉庫番号（必須） - 倉庫施設を識別するための固有の番号</td>
                                             <td>WH-001</td>
                                         </tr>
                                         <tr>
                                             <td>asset_management_number</td>
-                                            <td>資産管理番号</td>
+                                            <td>資産管理番号 - 会計上の資産管理に使用する番号</td>
                                             <td>A-WH-001</td>
                                         </tr>
                                         <tr>
                                             <td>department</td>
-                                            <td>部門</td>
+                                            <td>部門 - 倉庫施設を管理する部門名</td>
                                             <td>物流部</td>
                                         </tr>
                                         <tr>
                                             <td>acquisition_date</td>
-                                            <td>取得年月日（YYYY-MM-DD）</td>
+                                            <td>取得年月日（YYYY-MM-DD） - 倉庫施設を取得した日付</td>
                                             <td>2015-06-15</td>
                                         </tr>
                                         <tr>
                                             <td>useful_life</td>
-                                            <td>耐用年数</td>
+                                            <td>耐用年数 - 会計上の耐用年数（年）</td>
                                             <td>30</td>
                                         </tr>
                                         <tr>
                                             <td>depreciation_rate</td>
-                                            <td>償却率</td>
+                                            <td>償却率 - 減価償却に使用する償却率（0〜1の小数）</td>
                                             <td>0.033</td>
                                         </tr>
                                         <tr>
                                             <td>acquisition_cost</td>
-                                            <td>取得価額</td>
+                                            <td>取得価額 - 倉庫施設の取得価格（円）</td>
                                             <td>100000000</td>
                                         </tr>
                                         <tr>
                                             <td>residual_value</td>
-                                            <td>残存価額</td>
+                                            <td>残存価額 - 耐用年数経過後の残存価値（円）</td>
                                             <td>1</td>
                                         </tr>
                                         <tr>
                                             <td>asset_status</td>
-                                            <td>資産ステータス（active/inactive/retired/under_repair）</td>
+                                            <td>資産ステータス - active（稼働中）/inactive（休止中）/retired（廃棄）/under_repair（修理中）</td>
                                             <td>active</td>
                                         </tr>
                                         <tr>
                                             <td>construction_date</td>
-                                            <td>建築年月日（YYYY-MM-DD）</td>
+                                            <td>建築年月日（YYYY-MM-DD） - 倉庫施設の建築完了日</td>
                                             <td>2015-06-15</td>
                                         </tr>
                                         <tr>
                                             <td>main_structure</td>
-                                            <td>主要構造</td>
+                                            <td>主要構造 - 倉庫施設の主要構造材（鉄骨造、鉄筋コンクリート造など）</td>
                                             <td>鉄骨造</td>
                                         </tr>
                                         <tr>
                                             <td>ownership_type</td>
-                                            <td>所有形態（owned/leased）</td>
+                                            <td>所有形態 - owned（自社所有）/leased（賃借）</td>
                                             <td>owned</td>
                                         </tr>
                                         <tr>
                                             <td>floor_count</td>
-                                            <td>階層数</td>
+                                            <td>階層数 - 倉庫施設の階数</td>
                                             <td>3</td>
+                                        </tr>
+                                        <tr>
+                                            <td>asset_type</td>
+                                            <td>資産タイプ（必須） - 「facility」を指定</td>
+                                            <td>facility</td>
                                         </tr>
                                     </tbody>
                                 </table>
@@ -282,72 +292,72 @@
                                     <tbody>
                                         <tr>
                                             <td>repair_date</td>
-                                            <td>修繕日（YYYY-MM-DD）（必須）</td>
+                                            <td>修繕日（YYYY-MM-DD）（必須） - 修繕作業を実施した日付</td>
                                             <td>2023-05-20</td>
                                         </tr>
                                         <tr>
                                             <td>management_number</td>
-                                            <td>フォークリフト管理番号</td>
+                                            <td>フォークリフト管理番号 - フォークリフト修繕の場合、対象のフォークリフト管理番号</td>
                                             <td>FL-001</td>
                                         </tr>
                                         <tr>
                                             <td>warehouse_number</td>
-                                            <td>倉庫番号</td>
+                                            <td>倉庫番号 - 倉庫施設修繕の場合、対象の倉庫番号</td>
                                             <td>WH-001</td>
                                         </tr>
                                         <tr>
                                             <td>target_name</td>
-                                            <td>その他修繕対象名</td>
+                                            <td>その他修繕対象名 - フォークリフトや倉庫施設以外の修繕対象名</td>
                                             <td>エレベーター1号機</td>
                                         </tr>
                                         <tr>
                                             <td>floor</td>
-                                            <td>倉庫階層（倉庫修繕の場合）</td>
+                                            <td>倉庫階層 - 倉庫施設修繕の場合、修繕を行った階層</td>
                                             <td>1F</td>
                                         </tr>
                                         <tr>
                                             <td>contractor</td>
-                                            <td>業者</td>
+                                            <td>業者 - 修繕作業を実施した業者名</td>
                                             <td>株式会社修繕サービス</td>
                                         </tr>
                                         <tr>
                                             <td>repair_target_type</td>
-                                            <td>修繕対象種別（フォークリフトの場合）</td>
+                                            <td>修繕対象種別 - フォークリフトの場合：drive_tire（駆動輪）/load_tire（荷重輪）/battery（バッテリー）/fork（フォーク）/mast（マスト）/hydraulic（油圧系統）/electric（電気系統）/engine（エンジン）/transmission（トランスミッション）/brake（ブレーキ）/other（その他）</td>
                                             <td>drive_tire</td>
                                         </tr>
                                         <tr>
                                             <td>repair_item</td>
-                                            <td>修繕項目</td>
+                                            <td>修繕項目 - 具体的な修繕内容の説明</td>
                                             <td>ドライブタイヤ交換</td>
                                         </tr>
                                         <tr>
                                             <td>repair_cost</td>
-                                            <td>修繕費用（円）</td>
+                                            <td>修繕費用（円） - 修繕にかかった費用</td>
                                             <td>25000</td>
                                         </tr>
                                         <tr>
                                             <td>repair_reason</td>
-                                            <td>修繕理由</td>
+                                            <td>修繕理由 - wear（摩耗）/damage（損傷）/malfunction（故障）/scheduled（定期交換）/other（その他）</td>
                                             <td>wear</td>
                                         </tr>
                                         <tr>
                                             <td>hour_meter</td>
-                                            <td>アワーメーター値（フォークリフトの場合）</td>
+                                            <td>アワーメーター値 - フォークリフト修繕時のアワーメーター値</td>
                                             <td>1250</td>
                                         </tr>
                                         <tr>
                                             <td>category</td>
-                                            <td>カテゴリ（その他修繕の場合）</td>
+                                            <td>カテゴリ - その他修繕の場合のカテゴリ分類</td>
                                             <td>タイヤ交換</td>
                                         </tr>
                                         <tr>
                                             <td>notes</td>
-                                            <td>備考</td>
+                                            <td>備考 - 修繕に関する補足情報</td>
                                             <td>ドライブタイヤの摩耗による交換</td>
                                         </tr>
                                         <tr>
                                             <td>operator</td>
-                                            <td>作業者</td>
+                                            <td>作業者（必須） - 修繕作業の担当者または記録者</td>
                                             <td>山田太郎</td>
                                         </tr>
                                     </tbody>

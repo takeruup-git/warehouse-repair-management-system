@@ -1,3 +1,3 @@
 ﻿management_number,manufacturer,forklift_type,power_source,model,serial_number,vehicle_id_number,load_capacity,manufacture_date,lift_height,warehouse_group,warehouse_number,floor,operator,asset_management_number,department,asset_type,acquisition_date,useful_life,depreciation_rate,acquisition_cost,residual_value,asset_status
-1,コマツ,reach,battery,FB18RL-15,1号車,159391,1800,2019-09-30,2000,東京エリア,26号倉庫,1F,owned,A1,倉庫部,forklift,2019-09-30,8,0.5,1000000,1,active
-2,トヨタ,counter,diesel,FD25T-17,2号車,159392,2500,2020-05-15,3000,大阪エリア,15号倉庫,2F,owned,A2,物流部,forklift,2020-05-15,8,0.5,1500000,1,active
+FL-001,コマツ,reach,battery,FB18RL-15,1号車,159391,1800,2019-09-30,2000,東京エリア,26号倉庫,1F,山田太郎,A-FL-001,倉庫部,forklift,2019-09-30,8,0.125,1000000,1,active
+FL-002,トヨタ,counter,diesel,FD25T-17,2号車,159392,2500,2020-05-15,3000,大阪エリア,15号倉庫,2F,鈴木一郎,A-FL-002,物流部,forklift,2020-05-15,8,0.125,1500000,1,active

@@ -161,49 +161,59 @@
                             <span class="text-muted">予定なし</span>
                             {% endif %}
                         </p>
-                        <div class="btn-group btn-group-sm">
-                            <a href="{{ url_for('annual_inspection.manage_annual_inspection', forklift_id=forklift.id) }}" class="btn btn-primary">
-                                <i class="bi bi-tools"></i> 点検管理
-                            </a>
-                            <a href="{{ url_for('annual_inspection.manage_battery_tire', forklift_id=forklift.id) }}" class="btn btn-success">
-                                <i class="bi bi-battery-charging"></i> 交換管理
-                            </a>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card h-100">
+                    <div class="card-header d-flex justify-content-between align-items-center">
+                        <h5 class="card-title mb-0">バッテリー・タイヤ交換</h5>
+                        <a href="{{ url_for('annual_inspection.manage_battery_tire', forklift_id=forklift.id) }}" class="btn btn-sm btn-primary">
+                            <i class="bi bi-pencil"></i> 交換管理
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6 class="text-center">バッテリー交換</h6>
+                                <p class="card-text text-center">
+                                    {% if prediction.battery_replacement_date %}
+                                    <strong>前回交換日:</strong> {{ prediction.battery_replacement_date.strftime('%Y-%m-%d') }}<br>
+                                    {% endif %}
+                                    {% if prediction.next_battery_replacement_date %}
+                                    <strong>次回予定日:</strong> {{ prediction.next_battery_replacement_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    <span class="text-muted">予定なし</span>
+                                    {% endif %}
+                                </p>
+                            </div>
+                            <div class="col-md-6">
+                                <h6 class="text-center">タイヤ交換</h6>
+                                <p class="card-text text-center">
+                                    {% if prediction.tire_replacement_date %}
+                                    <strong>前回交換日:</strong> {{ prediction.tire_replacement_date.strftime('%Y-%m-%d') }}<br>
+                                    {% if prediction.tire_type %}
+                                    <strong>タイプ:</strong> 
+                                    {% if prediction.tire_type == 'drive' %}
+                                        ドライブタイヤ
+                                    {% elif prediction.tire_type == 'caster' %}
+                                        キャスタータイヤ
+                                    {% elif prediction.tire_type == 'both' %}
+                                        両方
+                                    {% else %}
+                                        {{ prediction.tire_type }}
+                                    {% endif %}
+                                    <br>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% if prediction.next_tire_replacement_date %}
+                                    <strong>次回予定日:</strong> {{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    <span class="text-muted">予定なし</span>
+                                    {% endif %}
+                                </p>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">バッテリー交換</h5>
-                        <p class="card-text">
-                            {% if prediction.battery_replacement_date %}
-                            <strong>前回交換日:</strong> {{ prediction.battery_replacement_date.strftime('%Y-%m-%d') }}<br>
-                            {% endif %}
-                            {% if prediction.next_battery_replacement_date %}
-                            <strong>次回予定日:</strong> {{ prediction.next_battery_replacement_date.strftime('%Y-%m-%d') }}
-                            {% else %}
-                            <span class="text-muted">予定なし</span>
-                            {% endif %}
-                        </p>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card h-100">
-                    <div class="card-body text-center">
-                        <h5 class="card-title">タイヤ交換</h5>
-                        <p class="card-text">
-                            {% if prediction.tire_replacement_date %}
-                            <strong>前回交換日:</strong> {{ prediction.tire_replacement_date.strftime('%Y-%m-%d') }}<br>
-                            <strong>タイプ:</strong> {{ "ドライブタイヤ" if prediction.tire_type == "drive" else "キャスタータイヤ" }}<br>
-                            {% endif %}
-                            {% if prediction.next_tire_replacement_date %}
-                            <strong>次回予定日:</strong> {{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') }}
-                            {% else %}
-                            <span class="text-muted">予定なし</span>
-                            {% endif %}
-                        </p>
                     </div>
                 </div>
             </div>
