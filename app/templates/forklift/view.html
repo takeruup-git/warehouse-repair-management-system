@@ -194,29 +194,58 @@
                             </div>
                             <div class="col-md-6">
                                 <h6 class="text-center">タイヤ交換</h6>
-                                <p class="card-text text-center">
-                                    {% if prediction.tire_replacement_date %}
-                                    <strong>前回交換日:</strong> {{ prediction.tire_replacement_date.strftime('%Y-%m-%d') }}<br>
-                                    {% if prediction.tire_type %}
-                                    <strong>タイプ:</strong> 
-                                    {% if prediction.tire_type == 'drive' %}
-                                        ドライブタイヤ
-                                    {% elif prediction.tire_type == 'caster' %}
-                                        キャスタータイヤ
-                                    {% elif prediction.tire_type == 'both' %}
-                                        両方
-                                    {% else %}
-                                        {{ prediction.tire_type }}
-                                    {% endif %}
+                                
+                                <!-- ドライブタイヤ情報 -->
+                                <div class="mb-3">
+                                    <h6 class="text-center">ドライブタイヤ</h6>
+                                    <p class="card-text text-center">
+                                    {% if prediction and prediction.drive_tire_replacement_date %}
+                                    <strong>前回交換日:</strong> {{ prediction.drive_tire_replacement_date.strftime('%Y-%m-%d') }}
                                     <br>
                                     {% endif %}
-                                    {% endif %}
-                                    {% if prediction.next_tire_replacement_date %}
-                                    <strong>次回予定日:</strong> {{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    {% if prediction and prediction.next_drive_tire_replacement_date %}
+                                    <strong>次回予定日:</strong> {{ prediction.next_drive_tire_replacement_date.strftime('%Y-%m-%d') }}
                                     {% else %}
                                     <span class="text-muted">予定なし</span>
                                     {% endif %}
-                                </p>
+                                    </p>
+                                </div>
+                                
+                                <!-- キャスタータイヤ情報 -->
+                                <div class="mb-3">
+                                    <h6 class="text-center">キャスタータイヤ</h6>
+                                    <p class="card-text text-center">
+                                    {% if prediction and prediction.caster_tire_replacement_date %}
+                                    <strong>前回交換日:</strong> {{ prediction.caster_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    <br>
+                                    {% endif %}
+                                    {% if prediction and prediction.next_caster_tire_replacement_date %}
+                                    <strong>次回予定日:</strong> {{ prediction.next_caster_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    <span class="text-muted">予定なし</span>
+                                    {% endif %}
+                                    </p>
+                                </div>
+                                
+                                <!-- その他タイヤ情報 -->
+                                <div class="mb-3">
+                                    <h6 class="text-center">その他タイヤ</h6>
+                                    <p class="card-text text-center">
+                                    {% if prediction and prediction.other_tire_replacement_date %}
+                                    <strong>前回交換日:</strong> {{ prediction.other_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    <br>
+                                    {% if prediction.other_tire_type %}
+                                    <strong>タイプ:</strong> {{ prediction.other_tire_type }}
+                                    <br>
+                                    {% endif %}
+                                    {% endif %}
+                                    {% if prediction and prediction.next_other_tire_replacement_date %}
+                                    <strong>次回予定日:</strong> {{ prediction.next_other_tire_replacement_date.strftime('%Y-%m-%d') }}
+                                    {% else %}
+                                    <span class="text-muted">予定なし</span>
+                                    {% endif %}
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>

@@ -430,17 +430,14 @@ def add_repair(id):
                 
                 prediction.next_battery_replacement_date = next_date
             
-            elif repair_target_type in ['drive_tire', 'caster_tire']:
+            elif repair_target_type in ['drive_tire', 'caster_tire', 'other_tire']:
                 prediction = ForkliftPrediction.query.filter_by(forklift_id=id).first()
                 if not prediction:
                     prediction = ForkliftPrediction(forklift_id=id)
                     db.session.add(prediction)
                 
-                prediction.tire_replacement_date = repair_date
-                prediction.tire_type = 'drive' if repair_target_type == 'drive_tire' else 'caster'
-                
                 # 次回交換予測日を設定
-                component = 'drive_tire' if repair_target_type == 'drive_tire' else 'caster_tire'
+                component = repair_target_type
                 lifespan = db.session.query(EquipmentLifespan).filter_by(
                     equipment_type='forklift', component=component
                 ).first()
@@ -448,7 +445,13 @@ def add_repair(id):
                 if lifespan:
                     months_to_add = lifespan.expected_lifespan
                 else:
-                    months_to_add = 24 if component == 'drive_tire' else 18  # デフォルト
+                    # デフォルト値
+                    if component == 'drive_tire':
+                        months_to_add = 24
+                    elif component == 'caster_tire':
+                        months_to_add = 18
+                    else:  # other_tire
+                        months_to_add = 20
                 
                 next_date = repair_date.replace(year=repair_date.year + (months_to_add // 12))
                 if months_to_add % 12 > 0:
@@ -459,7 +462,25 @@ def add_repair(id):
                     else:
                         next_date = next_date.replace(month=month)
                 
+                # 後方互換性のために古いフィールドも更新
+                prediction.tire_replacement_date = repair_date
+                prediction.tire_type = 'drive' if repair_target_type == 'drive_tire' else ('caster' if repair_target_type == 'caster_tire' else 'other')
                 prediction.next_tire_replacement_date = next_date
+                
+                # 新しいフィールドを更新
+                if repair_target_type == 'drive_tire':
+                    prediction.drive_tire_replacement_date = repair_date
+                    prediction.next_drive_tire_replacement_date = next_date
+                elif repair_target_type == 'caster_tire':
+                    prediction.caster_tire_replacement_date = repair_date
+                    prediction.next_caster_tire_replacement_date = next_date
+                elif repair_target_type == 'other_tire':
+                    prediction.other_tire_replacement_date = repair_date
+                    prediction.next_other_tire_replacement_date = next_date
+                    # その他タイヤの種類を記録（フォームから取得）
+                    other_tire_type = request.form.get('other_tire_type')
+                    if other_tire_type:
+                        prediction.other_tire_type = other_tire_type
             
             # 監査ログを記録
             audit_log = AuditLog(

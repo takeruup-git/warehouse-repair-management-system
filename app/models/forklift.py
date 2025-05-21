@@ -142,9 +142,20 @@ class ForkliftPrediction(db.Model):
     next_annual_inspection_date = db.Column(db.Date)
     battery_replacement_date = db.Column(db.Date)
     next_battery_replacement_date = db.Column(db.Date)
+    
+    # 古いタイヤ交換フィールド（後方互換性のため残す）
     tire_replacement_date = db.Column(db.Date)
     tire_type = db.Column(db.String(50))  # summer, winter, drive, caster
     next_tire_replacement_date = db.Column(db.Date)
+    
+    # 新しいタイヤ交換フィールド（タイヤタイプごと）
+    drive_tire_replacement_date = db.Column(db.Date)
+    next_drive_tire_replacement_date = db.Column(db.Date)
+    caster_tire_replacement_date = db.Column(db.Date)
+    next_caster_tire_replacement_date = db.Column(db.Date)
+    other_tire_replacement_date = db.Column(db.Date)
+    next_other_tire_replacement_date = db.Column(db.Date)
+    other_tire_type = db.Column(db.String(50))  # その他タイヤの種類を記録
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     updated_by = db.Column(db.String(100))
@@ -166,9 +177,21 @@ class ForkliftPrediction(db.Model):
             'next_annual_inspection_date': self.next_annual_inspection_date.strftime('%Y-%m-%d') if self.next_annual_inspection_date else None,
             'battery_replacement_date': self.battery_replacement_date.strftime('%Y-%m-%d') if self.battery_replacement_date else None,
             'next_battery_replacement_date': self.next_battery_replacement_date.strftime('%Y-%m-%d') if self.next_battery_replacement_date else None,
+            
+            # 古いタイヤ交換フィールド
             'tire_replacement_date': self.tire_replacement_date.strftime('%Y-%m-%d') if self.tire_replacement_date else None,
             'tire_type': self.tire_type,
             'next_tire_replacement_date': self.next_tire_replacement_date.strftime('%Y-%m-%d') if self.next_tire_replacement_date else None,
+            
+            # 新しいタイヤ交換フィールド
+            'drive_tire_replacement_date': self.drive_tire_replacement_date.strftime('%Y-%m-%d') if self.drive_tire_replacement_date else None,
+            'next_drive_tire_replacement_date': self.next_drive_tire_replacement_date.strftime('%Y-%m-%d') if self.next_drive_tire_replacement_date else None,
+            'caster_tire_replacement_date': self.caster_tire_replacement_date.strftime('%Y-%m-%d') if self.caster_tire_replacement_date else None,
+            'next_caster_tire_replacement_date': self.next_caster_tire_replacement_date.strftime('%Y-%m-%d') if self.next_caster_tire_replacement_date else None,
+            'other_tire_replacement_date': self.other_tire_replacement_date.strftime('%Y-%m-%d') if self.other_tire_replacement_date else None,
+            'next_other_tire_replacement_date': self.next_other_tire_replacement_date.strftime('%Y-%m-%d') if self.next_other_tire_replacement_date else None,
+            'other_tire_type': self.other_tire_type,
+            
             'annual_inspection_status': self.annual_inspection_status,
             'annual_inspection_notes': self.annual_inspection_notes,
             'annual_inspection_report': self.annual_inspection_report

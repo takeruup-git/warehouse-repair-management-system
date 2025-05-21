@@ -135,12 +135,13 @@ class Config:
     
     # 修繕対象種別
     REPAIR_TARGET_TYPES = [
-        'drive_tire', 'caster_tire', 'battery', 'fork', 'motor', 
+        'drive_tire', 'caster_tire', 'other_tire', 'battery', 'fork', 'motor', 
         'hydraulic', 'brake', 'steering', 'electrical', 'structural', 'other'
     ]
     REPAIR_TARGET_TYPE_NAMES = {
         'drive_tire': 'ドライブタイヤ',
         'caster_tire': 'キャスタータイヤ',
+        'other_tire': 'その他タイヤ',
         'battery': 'バッテリー',
         'fork': 'フォーク',
         'motor': 'モーター',

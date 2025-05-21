@@ -61,6 +61,12 @@
                         </select>
                     </div>
                     
+                    <div class="mb-3" id="other_tire_type_container" style="display: none;">
+                        <label for="other_tire_type" class="form-label">その他タイヤの種類 <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="other_tire_type" name="other_tire_type">
+                        <small class="form-text text-muted">例: サイドタイヤ、ステアリングタイヤなど</small>
+                    </div>
+                    
                     <div class="mb-3">
                         <label for="repair_item" class="form-label">修繕項目 <span class="text-danger">*</span></label>
                         <input type="text" class="form-control" id="repair_item" name="repair_item" required>
@@ -138,6 +144,27 @@
         // 修繕日に今日の日付をデフォルト値として設定
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('repair_date').value = today;
+        
+        // 修繕対象種別が変更されたときの処理
+        const repairTargetType = document.getElementById('repair_target_type');
+        const otherTireTypeContainer = document.getElementById('other_tire_type_container');
+        const otherTireTypeInput = document.getElementById('other_tire_type');
+        
+        repairTargetType.addEventListener('change', function() {
+            if (this.value === 'other_tire') {
+                otherTireTypeContainer.style.display = 'block';
+                otherTireTypeInput.setAttribute('required', 'required');
+            } else {
+                otherTireTypeContainer.style.display = 'none';
+                otherTireTypeInput.removeAttribute('required');
+            }
+        });
+        
+        // 初期表示時にも実行
+        if (repairTargetType.value === 'other_tire') {
+            otherTireTypeContainer.style.display = 'block';
+            otherTireTypeInput.setAttribute('required', 'required');
+        }
         
         // フォーム送信時に操作者名を設定
         const form = document.querySelector('form');
