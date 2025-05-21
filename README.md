@@ -141,7 +141,7 @@ python app.py
 9. ブラウザで以下のURLにアクセスする
 
 ```
-http://localhost:54763
+http://localhost:53319
 ```
 
 10. 作成した管理者ユーザーでログインする
@@ -154,7 +154,7 @@ http://localhost:54763
 ローカルネットワーク内の他のコンピュータからアクセスするには、IPアドレスを使用します：
 
 ```
-http://[あなたのIPアドレス]:54763
+http://[あなたのIPアドレス]:53319
 ```
 
 ## ディレクトリ構造
@@ -216,6 +216,12 @@ warehouse-repair-management-system/
 ├── run_migration_windows.bat # Windows用マイグレーション実行バッチ
 └── README.md            # このファイル
 ```
+
+## 最新の更新内容
+
+### 2025-05-21 更新
+- ログイン時のTypeErrorを修正：未認証状態で`current_user.is_admin()`が呼び出されるエラーを修正
+- アプリケーションのデフォルトポートを54763から53319に変更
 
 ## 使用方法
 
