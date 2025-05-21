@@ -103,17 +103,12 @@
                         </ul>
                     </li>
                 </ul>
-                <div class="d-flex align-items-center ms-auto">
-                    <!-- 操作者名とユーザー名表示（シンプル化） -->
+                <div class="d-flex align-items-center">
+                    <!-- 氏名のみ表示（左側に配置） -->
                     {% if current_user.is_authenticated %}
-                    <div class="input-group me-2 operator-name-container" style="max-width: 200px;">
-                        <span class="input-group-text p-0 px-1"><i class="bi bi-person-badge"></i></span>
-                        <input type="text" class="form-control py-0" id="global-operator-name" value="{{ current_user.full_name or current_user.username }}" readonly>
-                    </div>
-                    
-                    <div class="dropdown">
+                    <div class="dropdown me-auto">
                         <button class="btn btn-light btn-sm dropdown-toggle" type="button" id="userDropdown" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="bi bi-person-circle"></i> {{ current_user.username }}
+                            <i class="bi bi-person-circle"></i> {{ current_user.full_name or current_user.username }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
                             {% if current_user.is_authenticated and current_user.is_admin() %}
@@ -174,13 +169,9 @@
     <script>
         // フォームに操作者名を自動設定
         document.addEventListener('DOMContentLoaded', function() {
-            const operatorInput = document.getElementById('global-operator-name');
-            if (!operatorInput) return;
-            
-            // ツールチップを設定（長い名前の場合に全体を表示）
-            if (operatorInput.scrollWidth > operatorInput.clientWidth) {
-                operatorInput.title = operatorInput.value;
-            }
+            // ユーザー名をフォームに自動設定
+            const userName = "{{ current_user.full_name or current_user.username if current_user.is_authenticated else '' }}";
+            if (!userName) return;
             
             // フォームに操作者名を自動設定
             const forms = document.querySelectorAll('form');
@@ -188,7 +179,7 @@
                 form.addEventListener('submit', function() {
                     const operatorField = this.querySelector('[name="operator_name"]');
                     if (operatorField && !operatorField.value) {
-                        operatorField.value = operatorInput.value;
+                        operatorField.value = userName;
                     }
                 });
             });
