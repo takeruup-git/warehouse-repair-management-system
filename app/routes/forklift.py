@@ -155,12 +155,22 @@ def create():
     power_sources = {item.key: item.value for item in power_sources_db} if power_sources_db else Config.POWER_SOURCE_NAMES
     asset_statuses = {item.key: item.value for item in asset_statuses_db} if asset_statuses_db else Config.ASSET_STATUS_NAMES
     
+    # 追加のマスターデータ
+    departments = Config.DEPARTMENT_NAMES
+    warehouse_numbers = Config.WAREHOUSE_NUMBER_NAMES
+    floors = Config.FLOOR_NAMES
+    operators = Config.OPERATOR_NAMES
+    
     return render_template('forklift/create.html',
                           manufacturers=manufacturers,
                           warehouse_groups=warehouse_groups,
                           forklift_types=forklift_types,
                           power_sources=power_sources,
-                          asset_statuses=asset_statuses)
+                          asset_statuses=asset_statuses,
+                          departments=departments,
+                          warehouse_numbers=warehouse_numbers,
+                          floors=floors,
+                          operators=operators)
 
 @forklift_bp.route('/<int:id>')
 def view(id):

@@ -42,7 +42,10 @@
                     
                     <div class="mb-3">
                         <label for="inspection_type" class="form-label">点検種別 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="inspection_type" name="inspection_type" readonly required>
+                        <select class="form-select" id="inspection_type" name="inspection_type" required>
+                            <option value="battery">バッテリー</option>
+                            <option value="engine">エンジン</option>
+                        </select>
                     </div>
                     
                     <div class="mb-3">
@@ -170,12 +173,13 @@
                 document.getElementById('management_number').value = managementNumber;
                 
                 // 点検種別とパネル切り替え
+                const inspectionTypeSelect = document.getElementById('inspection_type');
                 if (powerSource === 'battery') {
-                    document.getElementById('inspection_type').value = 'battery';
+                    inspectionTypeSelect.value = 'battery';
                     batteryPanel.style.display = 'block';
                     enginePanel.style.display = 'none';
                 } else {
-                    document.getElementById('inspection_type').value = 'engine';
+                    inspectionTypeSelect.value = 'engine';
                     batteryPanel.style.display = 'none';
                     enginePanel.style.display = 'block';
                 }
@@ -184,6 +188,18 @@
                 document.getElementById('inspection_type').value = '';
                 batteryPanel.style.display = 'none';
                 enginePanel.style.display = 'none';
+            }
+        });
+        
+        // 点検種別変更時のパネル切り替え
+        const inspectionTypeSelect = document.getElementById('inspection_type');
+        inspectionTypeSelect.addEventListener('change', function() {
+            if (this.value === 'battery') {
+                batteryPanel.style.display = 'block';
+                enginePanel.style.display = 'none';
+            } else {
+                batteryPanel.style.display = 'none';
+                enginePanel.style.display = 'block';
             }
         });
         

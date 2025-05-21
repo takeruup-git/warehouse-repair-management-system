@@ -25,7 +25,11 @@
                     
                     <div class="mb-3">
                         <label for="department" class="form-label">部門 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="department" name="department" value="物流部" required>
+                        <select class="form-select" id="department" name="department" required>
+                            {% for dept_key, dept_name in departments.items() %}
+                            <option value="{{ dept_name }}" {% if dept_key == 'logistics' %}selected{% endif %}>{{ dept_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
@@ -68,7 +72,11 @@
                     
                     <div class="mb-3">
                         <label for="warehouse_number" class="form-label">倉庫番号 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="warehouse_number" name="warehouse_number" required>
+                        <select class="form-select" id="warehouse_number" name="warehouse_number" required>
+                            {% for wh_key, wh_name in warehouse_numbers.items() %}
+                            <option value="{{ wh_name }}">{{ wh_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">

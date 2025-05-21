@@ -86,9 +86,15 @@ def create():
     ownership_types = {item.key: item.value for item in ownership_types_db} if ownership_types_db else Config.OWNERSHIP_TYPE_NAMES
     asset_statuses = {item.key: item.value for item in asset_statuses_db} if asset_statuses_db else Config.ASSET_STATUS_NAMES
     
+    # 追加のマスターデータ
+    departments = Config.DEPARTMENT_NAMES
+    warehouse_numbers = Config.WAREHOUSE_NUMBER_NAMES
+    
     return render_template('facility/create.html',
                           ownership_types=ownership_types,
-                          asset_statuses=asset_statuses)
+                          asset_statuses=asset_statuses,
+                          departments=departments,
+                          warehouse_numbers=warehouse_numbers)
 
 @facility_bp.route('/<int:id>')
 def view(id):

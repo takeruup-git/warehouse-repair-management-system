@@ -25,7 +25,11 @@
                     
                     <div class="mb-3">
                         <label for="department" class="form-label">部門 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="department" name="department" value="物流部" required>
+                        <select class="form-select" id="department" name="department" required>
+                            {% for dept_key, dept_name in departments.items() %}
+                            <option value="{{ dept_name }}" {% if dept_key == 'logistics' %}selected{% endif %}>{{ dept_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
@@ -139,17 +143,30 @@
                     
                     <div class="mb-3">
                         <label for="warehouse_number" class="form-label">配置倉庫番号 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="warehouse_number" name="warehouse_number" required>
+                        <select class="form-select" id="warehouse_number" name="warehouse_number" required>
+                            {% for wh_key, wh_name in warehouse_numbers.items() %}
+                            <option value="{{ wh_name }}">{{ wh_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="floor" class="form-label">配置倉庫階層 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="floor" name="floor" value="1F" required>
+                        <select class="form-select" id="floor" name="floor" required>
+                            {% for floor_key, floor_name in floors.items() %}
+                            <option value="{{ floor_name }}" {% if floor_key == '1f' %}selected{% endif %}>{{ floor_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
                         <label for="operator" class="form-label">取扱担当者</label>
-                        <input type="text" class="form-control" id="operator" name="operator">
+                        <select class="form-select" id="operator" name="operator">
+                            <option value=""></option>
+                            {% for op_key, op_name in operators.items() %}
+                            <option value="{{ op_name }}">{{ op_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                 </div>
             </div>

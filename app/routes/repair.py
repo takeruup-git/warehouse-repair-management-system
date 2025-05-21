@@ -409,9 +409,13 @@ def create_facility_repair(facility_id):
             db.session.rollback()
             flash(f'エラーが発生しました: {str(e)}', 'danger')
     
+    # 階層マスターデータを取得
+    floors = Config.FLOOR_NAMES
+    
     return render_template('repair/create_facility.html',
                           facility=facility,
-                          repair_reasons=Config.REPAIR_REASON_NAMES)
+                          repair_reasons=Config.REPAIR_REASON_NAMES,
+                          floors=floors)
 
 @repair_bp.route('/forklift/<int:id>/edit', methods=['GET', 'POST'])
 def edit_forklift_repair(id):

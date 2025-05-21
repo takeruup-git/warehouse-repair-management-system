@@ -62,7 +62,11 @@
                     
                     <div class="mb-3">
                         <label for="floor" class="form-label">階層 <span class="text-danger">*</span></label>
-                        <input type="text" class="form-control" id="floor" name="floor" value="1F" required>
+                        <select class="form-select" id="floor" name="floor" required>
+                            {% for floor_key, floor_name in floors.items() %}
+                            <option value="{{ floor_name }}" {% if floor_key == '1f' %}selected{% endif %}>{{ floor_name }}</option>
+                            {% endfor %}
+                        </select>
                     </div>
                     
                     <div class="mb-3">
