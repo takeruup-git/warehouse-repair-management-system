@@ -15,7 +15,7 @@ class Config:
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 最大16MB
     
     # 日付設定
-    CURRENT_DATE = datetime(2025, 3, 10)  # 現在日付の参照点
+    CURRENT_DATE = datetime.now()  # システム起動時の現在日付を使用
     
     # ページネーション設定
     ITEMS_PER_PAGE = 10
