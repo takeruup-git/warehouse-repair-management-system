@@ -33,6 +33,36 @@ def ensure_pdf_directory():
         os.makedirs(pdf_dir)
     return pdf_dir
 
+def ensure_temp_pdf_directory():
+    temp_pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_pdf')
+    if not os.path.exists(temp_pdf_dir):
+        os.makedirs(temp_pdf_dir)
+    
+    # 古い一時ファイルをクリーンアップ（24時間以上前のファイル）
+    cleanup_temp_pdf_files()
+    
+    return temp_pdf_dir
+
+def cleanup_temp_pdf_files():
+    """一時PDFディレクトリの古いファイルを削除する（24時間以上前のファイル）"""
+    temp_pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'temp_pdf')
+    if not os.path.exists(temp_pdf_dir):
+        return
+    
+    current_time = datetime.now()
+    for filename in os.listdir(temp_pdf_dir):
+        file_path = os.path.join(temp_pdf_dir, filename)
+        if os.path.isfile(file_path):
+            # ファイルの最終更新時刻を取得
+            file_mod_time = datetime.fromtimestamp(os.path.getmtime(file_path))
+            # 24時間以上前のファイルを削除
+            if (current_time - file_mod_time).total_seconds() > 24 * 60 * 60:
+                try:
+                    os.remove(file_path)
+                    current_app.logger.info(f"古い一時PDFファイルを削除しました: {filename}")
+                except Exception as e:
+                    current_app.logger.error(f"一時PDFファイルの削除中にエラーが発生しました: {str(e)}")
+
 # 許可されるファイル拡張子
 ALLOWED_EXTENSIONS = {'pdf'}
 
@@ -374,6 +404,11 @@ def view_pdf_by_name(filename):
     file_path = os.path.join(pdf_dir, filename)
     
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        # 一時ディレクトリも確認
+        temp_pdf_dir = ensure_temp_pdf_directory()
+        temp_file_path = os.path.join(temp_pdf_dir, filename)
+        if os.path.exists(temp_file_path) and os.path.isfile(temp_file_path):
+            return send_file(temp_file_path, mimetype='application/pdf')
         abort(404)
     
     return send_file(file_path, mimetype='application/pdf')
@@ -438,9 +473,9 @@ def generate_inspection_pdf(inspection_id, inspection_type, show_empty=None):
             inspection = BatteryFluidCheck.query.get_or_404(inspection_id)
             forklift = Forklift.query.get_or_404(inspection.forklift_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"battery_fluid_check_{forklift.management_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
@@ -487,9 +522,9 @@ def generate_inspection_pdf(inspection_id, inspection_type, show_empty=None):
             inspection = PeriodicSelfInspection.query.get_or_404(inspection_id)
             forklift = Forklift.query.get_or_404(inspection.forklift_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"periodic_self_inspection_{forklift.management_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
@@ -540,9 +575,9 @@ def generate_inspection_pdf(inspection_id, inspection_type, show_empty=None):
             inspection = PreShiftInspection.query.get_or_404(inspection_id)
             forklift = Forklift.query.get_or_404(inspection.forklift_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"pre_shift_inspection_{forklift.management_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
@@ -607,9 +642,9 @@ def generate_repair_pdf(asset_type, repair_id):
             repair = ForkliftRepair.query.get_or_404(repair_id)
             forklift = Forklift.query.get_or_404(repair.forklift_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"forklift_repair_{forklift.management_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
@@ -657,9 +692,9 @@ def generate_repair_pdf(asset_type, repair_id):
             repair = FacilityRepair.query.get_or_404(repair_id)
             facility = Facility.query.get_or_404(repair.facility_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"facility_repair_{facility.warehouse_number}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
@@ -706,9 +741,9 @@ def generate_repair_pdf(asset_type, repair_id):
         elif asset_type == 'other':
             repair = OtherRepair.query.get_or_404(repair_id)
             
-            # PDFファイルを生成
+            # PDFファイルを一時ディレクトリに生成
             filename = f"other_repair_{repair.target_name}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-            pdf_dir = ensure_pdf_directory()
+            pdf_dir = ensure_temp_pdf_directory()
             file_path = os.path.join(pdf_dir, filename)
             
             # PDFを生成
