@@ -30,8 +30,8 @@ class Forklift(Asset):
     def elapsed_years(self):
         if not self.manufacture_date:
             return None
-        current_date = Config.CURRENT_DATE
-        delta = current_date - datetime.combine(self.manufacture_date, datetime.min.time())
+        current_date = Config.CURRENT_DATE.date()
+        delta = current_date - self.manufacture_date
         return delta.days / 365.25
     
     @property
