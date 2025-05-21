@@ -339,6 +339,9 @@ def upload():
 
 @pdf_management_bp.route('/view/<path:filepath>')
 def view_pdf(filepath):
+    # URLのバックスラッシュをスラッシュに変換
+    filepath = filepath.replace('\\', '/')
+    
     # ファイルパスを安全に処理
     safe_path = os.path.normpath(filepath)
     if safe_path.startswith('..'):
@@ -353,6 +356,8 @@ def view_pdf(filepath):
     
     # バックスラッシュをスラッシュに変換（Windowsパス対応）
     file_path = file_path.replace('\\', '/')
+    
+    current_app.logger.info(f"Attempting to access PDF file: {file_path}")
     
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         current_app.logger.error(f"File not found: {file_path}")
@@ -365,6 +370,9 @@ def view_image(filepath):
     """
     画像ファイルを表示するためのルート
     """
+    # URLのバックスラッシュをスラッシュに変換
+    filepath = filepath.replace('\\', '/')
+    
     # ファイルパスを安全に処理
     safe_path = os.path.normpath(filepath)
     if safe_path.startswith('..'):
@@ -379,6 +387,8 @@ def view_image(filepath):
     
     # バックスラッシュをスラッシュに変換（Windowsパス対応）
     file_path = file_path.replace('\\', '/')
+    
+    current_app.logger.info(f"Attempting to access image file: {file_path}")
     
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
         current_app.logger.error(f"Image file not found: {file_path}")
@@ -415,6 +425,9 @@ def view_pdf_by_name(filename):
 
 @pdf_management_bp.route('/download/<path:filepath>')
 def download_pdf(filepath):
+    # URLのバックスラッシュをスラッシュに変換
+    filepath = filepath.replace('\\', '/')
+    
     # ファイルパスを安全に処理
     safe_path = os.path.normpath(filepath)
     if safe_path.startswith('..') or safe_path.startswith('/'):
@@ -422,7 +435,13 @@ def download_pdf(filepath):
     
     file_path = os.path.join(current_app.root_path, safe_path)
     
+    # バックスラッシュをスラッシュに変換（Windowsパス対応）
+    file_path = file_path.replace('\\', '/')
+    
+    current_app.logger.info(f"Attempting to download file: {file_path}")
+    
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        current_app.logger.error(f"Download file not found: {file_path}")
         abort(404)
     
     # オリジナルのファイル名を取得
@@ -441,6 +460,9 @@ def download_pdf(filepath):
 
 @pdf_management_bp.route('/delete/<path:filepath>', methods=['POST'])
 def delete_pdf(filepath):
+    # URLのバックスラッシュをスラッシュに変換
+    filepath = filepath.replace('\\', '/')
+    
     # ファイルパスを安全に処理
     safe_path = os.path.normpath(filepath)
     if safe_path.startswith('..') or safe_path.startswith('/'):
@@ -448,7 +470,13 @@ def delete_pdf(filepath):
     
     file_path = os.path.join(current_app.root_path, safe_path)
     
+    # バックスラッシュをスラッシュに変換（Windowsパス対応）
+    file_path = file_path.replace('\\', '/')
+    
+    current_app.logger.info(f"Attempting to delete file: {file_path}")
+    
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        current_app.logger.error(f"Delete file not found: {file_path}")
         abort(404)
     
     try:
