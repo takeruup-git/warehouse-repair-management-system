@@ -71,7 +71,7 @@
                 <input type="file" class="form-control" id="inspection_report" name="inspection_report" accept=".pdf">
                 {% if prediction.annual_inspection_report %}
                 <div class="mt-2">
-                    <a href="{{ url_for('pdf_management.view_pdf', filepath=prediction.annual_inspection_report) }}" target="_blank" class="btn btn-sm btn-info">
+                    <a href="{{ url_for('pdf_management.view_pdf', filepath=prediction.annual_inspection_report.replace('\\', '/')) }}" target="_blank" class="btn btn-sm btn-info">
                         <i class="bi bi-file-earmark-pdf"></i> 現在のレポートを表示
                     </a>
                     
@@ -80,7 +80,7 @@
                     <script>
                         // Fetch the original filename using AJAX
                         document.addEventListener('DOMContentLoaded', function() {
-                            const filePath = "{{ prediction.annual_inspection_report.replace('static/uploads/', '') }}";
+                            const filePath = "{{ prediction.annual_inspection_report.replace('static/uploads/', '').replace('\\', '/') }}";
                             fetch(`/api/file_metadata?file_path=${encodeURIComponent(filePath)}`)
                                 .then(response => response.json())
                                 .then(data => {
