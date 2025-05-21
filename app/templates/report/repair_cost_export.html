@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>修繕費用エクスポート</h1>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            レポート条件
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('report.repair_cost_export') }}">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="start_date">開始日</label>
+                            <input type="date" class="form-control" id="start_date" name="start_date" required>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="end_date">終了日</label>
+                            <input type="date" class="form-control" id="end_date" name="end_date" required>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label for="asset_type">資産種類</label>
+                            <select class="form-control" id="asset_type" name="asset_type" required>
+                                <option value="all">すべて</option>
+                                <option value="facility">倉庫施設</option>
+                                <option value="forklift">フォークリフト</option>
+                                <option value="other">その他</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mb-3">
+                    <div class="col-md-12">
+                        <div class="form-group">
+                            <label id="target_label" for="target_ids">対象資産</label>
+                            <select class="form-control" id="target_ids" name="target_ids" multiple size="8">
+                                <option value="" disabled>資産種類を選択してください</option>
+                            </select>
+                            <small class="form-text text-muted">複数選択する場合はCtrlキーを押しながら選択してください。何も選択しない場合はすべての対象が含まれます。</small>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">レポート作成</button>
+                        <a href="{{ url_for('report.index') }}" class="btn btn-secondary">戻る</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const assetTypeSelect = document.getElementById('asset_type');
+        const targetIdsSelect = document.getElementById('target_ids');
+        const targetLabel = document.getElementById('target_label');
+        
+        // フォークリフトのデータ
+        const forklifts = [
+            {% for forklift in forklifts %}
+            { id: {{ forklift.id }}, name: "{{ forklift.management_number }}" },
+            {% endfor %}
+        ];
+        
+        // 倉庫施設のデータ
+        const facilities = [
+            {% for facility in facilities %}
+            { id: {{ facility.id }}, name: "{{ facility.warehouse_number }}" },
+            {% endfor %}
+        ];
+        
+        // その他資産のデータ
+        const otherTargets = [
+            {% for target in other_targets %}
+            { id: "{{ target }}", name: "{{ target }}" },
+            {% endfor %}
+        ];
+        
+        // 資産種類に応じて対象リストを更新
+        function updateTargetOptions() {
+            // 既存のオプションをクリア
+            targetIdsSelect.innerHTML = '';
+            
+            let options = [];
+            let labelText = '対象資産';
+            
+            switch(assetTypeSelect.value) {
+                case 'forklift':
+                    options = forklifts;
+                    labelText = '対象フォークリフト';
+                    break;
+                case 'facility':
+                    options = facilities;
+                    labelText = '対象倉庫施設';
+                    break;
+                case 'other':
+                    options = otherTargets;
+                    labelText = 'その他対象';
+                    break;
+                case 'all':
+                    targetIdsSelect.disabled = true;
+                    targetIdsSelect.innerHTML = '<option value="" disabled selected>すべての資産が対象となります</option>';
+                    labelText = '対象資産（すべて）';
+                    return;
+            }
+            
+            // ラベルを更新
+            targetLabel.textContent = labelText;
+            
+            // 選択肢を追加
+            targetIdsSelect.disabled = false;
+            if (options.length === 0) {
+                targetIdsSelect.innerHTML = '<option value="" disabled>データがありません</option>';
+            } else {
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.id;
+                    optionElement.textContent = option.name;
+                    targetIdsSelect.appendChild(optionElement);
+                });
+            }
+        }
+        
+        // 初期表示
+        updateTargetOptions();
+        
+        // 資産種類変更時のイベント
+        assetTypeSelect.addEventListener('change', updateTargetOptions);
+        
+        // 日付の初期値を設定（今月の1日から今日まで）
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('start_date').valueAsDate = firstDayOfMonth;
+        document.getElementById('end_date').valueAsDate = today;
+    });
+</script>
+{% endblock %}

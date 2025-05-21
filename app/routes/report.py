@@ -4,417 +4,249 @@ from app.models.forklift import Forklift, ForkliftRepair
 from app.models.facility import Facility, FacilityRepair
 from app.models.other_repair import OtherRepair
 from app.models.master import Budget
-from sqlalchemy import func, extract
+from sqlalchemy import func, extract, and_
 from datetime import datetime, timedelta
 import pandas as pd
 from io import BytesIO
-from reportlab.pdfgen import canvas
-from reportlab.lib.pagesizes import A4, landscape
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.lib.units import mm
+import json
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+import matplotlib.dates as mdates
+from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
+import numpy as np
+import io
+import base64
 from config import Config
 
 report_bp = Blueprint('report', __name__)
-
-# 日本語フォントの登録
-try:
-    pdfmetrics.registerFont(TTFont('MSGothic', 'msgothic.ttc'))
-except:
-    # フォントが見つからない場合はデフォルトフォントを使用
-    pass
 
 @report_bp.route('/')
 def index():
     return render_template('report/index.html')
 
-@report_bp.route('/monthly_cost', methods=['GET', 'POST'])
-def monthly_cost():
+@report_bp.route('/repair_cost_export', methods=['GET', 'POST'])
+def repair_cost_export():
     if request.method == 'POST':
         try:
             # フィルター条件を取得
-            year = int(request.form.get('year', Config.CURRENT_DATE.year))
-            month = request.form.get('month')
-            if month:
-                month = int(month)
-            
+            start_date = datetime.strptime(request.form['start_date'], '%Y-%m-%d').date()
+            end_date = datetime.strptime(request.form['end_date'], '%Y-%m-%d').date()
             asset_type = request.form.get('asset_type')
-            target_id = request.form.get('target_id')
-            if target_id:
-                target_id = int(target_id)
+            target_ids = request.form.getlist('target_ids')
             
-            # エクスポート形式を取得
-            export_format = request.form.get('export_format', 'excel')
+            # 対象期間の月リストを作成
+            months = []
+            current_date = start_date.replace(day=1)
+            while current_date <= end_date:
+                months.append(current_date)
+                # 次の月に進む
+                if current_date.month == 12:
+                    current_date = current_date.replace(year=current_date.year + 1, month=1)
+                else:
+                    current_date = current_date.replace(month=current_date.month + 1)
             
-            # クエリを構築
-            if asset_type == 'forklift':
-                query = db.session.query(
-                    ForkliftRepair.repair_date,
-                    ForkliftRepair.target_management_number,
-                    ForkliftRepair.repair_item,
-                    ForkliftRepair.repair_cost,
-                    ForkliftRepair.repair_reason,
-                    ForkliftRepair.hour_meter
+            # 月ごとのデータを格納する辞書
+            monthly_data = {}
+            
+            # 資産タイプに応じたデータ取得
+            if asset_type == 'all' or asset_type == 'forklift':
+                # フォークリフトのデータを取得
+                forklift_query = db.session.query(
+                    extract('year', ForkliftRepair.repair_date).label('year'),
+                    extract('month', ForkliftRepair.repair_date).label('month'),
+                    Forklift.management_number,
+                    func.sum(ForkliftRepair.repair_cost).label('total_cost')
+                ).join(
+                    Forklift, ForkliftRepair.forklift_id == Forklift.id
                 ).filter(
-                    extract('year', ForkliftRepair.repair_date) == year
+                    ForkliftRepair.repair_date.between(start_date, end_date)
+                ).group_by(
+                    extract('year', ForkliftRepair.repair_date),
+                    extract('month', ForkliftRepair.repair_date),
+                    Forklift.management_number
                 )
                 
-                # SQLクエリをログに出力
-                current_app.logger.info(f"フォークリフト修繕費クエリ（修正版）: {str(query)}")
+                # 特定のフォークリフトが選択されている場合
+                if asset_type == 'forklift' and target_ids:
+                    forklift_query = forklift_query.filter(ForkliftRepair.forklift_id.in_([int(id) for id in target_ids if id.isdigit()]))
                 
-                if month:
-                    query = query.filter(extract('month', ForkliftRepair.repair_date) == month)
+                forklift_results = forklift_query.all()
                 
-                if target_id:
-                    query = query.filter(ForkliftRepair.forklift_id == target_id)
-                
-                # SQLクエリをログに出力
-                current_app.logger.info(f"フォークリフト修繕費クエリ: {str(query)}")
-                
-                repairs = query.order_by(ForkliftRepair.repair_date).all()
-                
-                # 結果をログに出力
-                current_app.logger.info(f"フォークリフト修繕費結果: {len(repairs)}件")
-                
-                # データフレームを作成
-                data = []
-                for repair in repairs:
-                    data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '管理番号': repair.target_management_number,
-                        '修繕項目': repair.repair_item,
-                        '修繕費用': repair.repair_cost,
-                        '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason),
-                        'アワーメーター': repair.hour_meter
-                    })
-                
-                # 合計を計算
-                total_cost = sum(repair.repair_cost for repair in repairs)
-                
-                # 予算を取得
-                budget = Budget.query.filter_by(year=year, asset_type='forklift').first()
-                budget_amount = budget.amount if budget else 0
-                
-                # 予算消化率を計算
-                if budget_amount > 0:
-                    budget_usage_rate = (total_cost / budget_amount) * 100
-                else:
-                    budget_usage_rate = 0
-                
-                # タイトルを設定
-                title = f'{year}年'
-                if month:
-                    title += f'{month}月'
-                title += 'フォークリフト修繕費'
-                
-                if target_id:
-                    forklift = Forklift.query.get(target_id)
-                    if forklift:
-                        title += f' - {forklift.management_number}'
-                
-            elif asset_type == 'facility':
-                query = db.session.query(
-                    FacilityRepair.repair_date,
-                    FacilityRepair.target_warehouse_number,
-                    FacilityRepair.floor,
-                    FacilityRepair.repair_item,
-                    FacilityRepair.repair_cost,
-                    FacilityRepair.repair_reason
+                # 結果を月ごとに整理
+                for year, month, management_number, total_cost in forklift_results:
+                    month_key = datetime(int(year), int(month), 1).date()
+                    if month_key not in monthly_data:
+                        monthly_data[month_key] = {}
+                    
+                    asset_key = f"フォークリフト: {management_number}"
+                    monthly_data[month_key][asset_key] = total_cost
+            
+            if asset_type == 'all' or asset_type == 'facility':
+                # 倉庫施設のデータを取得
+                facility_query = db.session.query(
+                    extract('year', FacilityRepair.repair_date).label('year'),
+                    extract('month', FacilityRepair.repair_date).label('month'),
+                    Facility.warehouse_number,
+                    func.sum(FacilityRepair.repair_cost).label('total_cost')
+                ).join(
+                    Facility, FacilityRepair.facility_id == Facility.id
                 ).filter(
-                    extract('year', FacilityRepair.repair_date) == year
+                    FacilityRepair.repair_date.between(start_date, end_date)
+                ).group_by(
+                    extract('year', FacilityRepair.repair_date),
+                    extract('month', FacilityRepair.repair_date),
+                    Facility.warehouse_number
                 )
                 
-                if month:
-                    query = query.filter(extract('month', FacilityRepair.repair_date) == month)
+                # 特定の倉庫施設が選択されている場合
+                if asset_type == 'facility' and target_ids:
+                    facility_query = facility_query.filter(FacilityRepair.facility_id.in_([int(id) for id in target_ids if id.isdigit()]))
                 
-                if target_id:
-                    query = query.filter(FacilityRepair.facility_id == target_id)
+                facility_results = facility_query.all()
                 
-                repairs = query.order_by(FacilityRepair.repair_date).all()
-                
-                # データフレームを作成
-                data = []
-                for repair in repairs:
-                    data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '倉庫番号': repair.target_warehouse_number,
-                        '階層': repair.floor,
-                        '修繕項目': repair.repair_item,
-                        '修繕費用': repair.repair_cost,
-                        '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason)
-                    })
-                
-                # 合計を計算
-                total_cost = sum(repair.repair_cost for repair in repairs)
-                
-                # 予算を取得
-                budget = Budget.query.filter_by(year=year, asset_type='facility').first()
-                budget_amount = budget.amount if budget else 0
-                
-                # 予算消化率を計算
-                if budget_amount > 0:
-                    budget_usage_rate = (total_cost / budget_amount) * 100
-                else:
-                    budget_usage_rate = 0
-                
-                # タイトルを設定
-                title = f'{year}年'
-                if month:
-                    title += f'{month}月'
-                title += '倉庫施設修繕費'
-                
-                if target_id:
-                    facility = Facility.query.get(target_id)
-                    if facility:
-                        title += f' - {facility.warehouse_number}'
-                
-            else:  # other
-                query = db.session.query(
-                    OtherRepair.repair_date,
+                # 結果を月ごとに整理
+                for year, month, warehouse_number, total_cost in facility_results:
+                    month_key = datetime(int(year), int(month), 1).date()
+                    if month_key not in monthly_data:
+                        monthly_data[month_key] = {}
+                    
+                    asset_key = f"倉庫施設: {warehouse_number}"
+                    monthly_data[month_key][asset_key] = total_cost
+            
+            if asset_type == 'all' or asset_type == 'other':
+                # その他資産のデータを取得
+                other_query = db.session.query(
+                    extract('year', OtherRepair.repair_date).label('year'),
+                    extract('month', OtherRepair.repair_date).label('month'),
                     OtherRepair.target_name,
-                    OtherRepair.category,
-                    OtherRepair.repair_cost,
-                    OtherRepair.contractor
+                    func.sum(OtherRepair.repair_cost).label('total_cost')
                 ).filter(
-                    extract('year', OtherRepair.repair_date) == year
+                    OtherRepair.repair_date.between(start_date, end_date)
+                ).group_by(
+                    extract('year', OtherRepair.repair_date),
+                    extract('month', OtherRepair.repair_date),
+                    OtherRepair.target_name
                 )
                 
-                if month:
-                    query = query.filter(extract('month', OtherRepair.repair_date) == month)
+                # 特定のその他資産が選択されている場合
+                if asset_type == 'other' and target_ids:
+                    other_query = other_query.filter(OtherRepair.id.in_([int(id) for id in target_ids if id.isdigit()]))
                 
-                repairs = query.order_by(OtherRepair.repair_date).all()
+                other_results = other_query.all()
                 
-                # データフレームを作成
-                data = []
-                for repair in repairs:
-                    data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '対象名': repair.target_name,
-                        'カテゴリ': repair.category,
-                        '修繕費用': repair.repair_cost,
-                        '業者': repair.contractor
-                    })
-                
-                # 合計を計算
-                total_cost = sum(repair.repair_cost for repair in repairs)
-                
-                # 予算を取得
-                budget = Budget.query.filter_by(year=year, asset_type='other').first()
-                budget_amount = budget.amount if budget else 0
-                
-                # 予算消化率を計算
-                if budget_amount > 0:
-                    budget_usage_rate = (total_cost / budget_amount) * 100
-                else:
-                    budget_usage_rate = 0
-                
-                # タイトルを設定
-                title = f'{year}年'
-                if month:
-                    title += f'{month}月'
-                title += 'その他修繕費'
+                # 結果を月ごとに整理
+                for year, month, target_name, total_cost in other_results:
+                    month_key = datetime(int(year), int(month), 1).date()
+                    if month_key not in monthly_data:
+                        monthly_data[month_key] = {}
+                    
+                    asset_key = f"その他: {target_name}"
+                    monthly_data[month_key][asset_key] = total_cost
+            
+            # 全ての資産キーを取得
+            all_asset_keys = set()
+            for month_data in monthly_data.values():
+                all_asset_keys.update(month_data.keys())
+            all_asset_keys = sorted(list(all_asset_keys))
             
             # データフレームを作成
+            data = []
+            for month in months:
+                month_str = month.strftime('%Y年%m月')
+                row_data = {'月': month_str}
+                
+                # 各資産の修繕費を追加
+                for asset_key in all_asset_keys:
+                    row_data[asset_key] = monthly_data.get(month, {}).get(asset_key, 0)
+                
+                data.append(row_data)
+            
             df = pd.DataFrame(data)
             
-            if export_format == 'excel':
-                # Excelファイルを作成
-                output = BytesIO()
+            # 合計行を追加
+            totals = {'月': '合計'}
+            for asset_key in all_asset_keys:
+                totals[asset_key] = df[asset_key].sum()
+            
+            df = pd.concat([df, pd.DataFrame([totals])], ignore_index=True)
+            
+            # グラフ用のデータを準備
+            graph_data = {
+                'months': [month.strftime('%Y-%m') for month in months],
+                'datasets': []
+            }
+            
+            # 色のリスト
+            colors = [
+                '#4e73df', '#1cc88a', '#36b9cc', '#f6c23e', '#e74a3b', 
+                '#6f42c1', '#fd7e14', '#20c9a6', '#5a5c69', '#858796'
+            ]
+            
+            # 各資産のデータセットを作成
+            for i, asset_key in enumerate(all_asset_keys):
+                color_index = i % len(colors)
+                dataset = {
+                    'label': asset_key,
+                    'data': [monthly_data.get(month, {}).get(asset_key, 0) for month in months],
+                    'backgroundColor': colors[color_index]
+                }
+                graph_data['datasets'].append(dataset)
+            
+            # Excelファイルを作成
+            output = BytesIO()
+            
+            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+                # データシートを作成
+                df.to_excel(writer, sheet_name='修繕費データ', index=False)
                 
-                # Excelファイルに書き込み
-                with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                    df.to_excel(writer, sheet_name='修繕費', index=False)
-                    
-                    # シートを取得
-                    worksheet = writer.sheets['修繕費']
-                    workbook = writer.book
-                    
-                    # 列幅を調整
-                    for i, col in enumerate(df.columns):
-                        column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
-                        worksheet.set_column(i, i, column_width)
-                    
-                    # 合計行を追加
-                    row = len(df) + 2
-                    worksheet.write(row, 0, '合計')
-                    
-                    # 修繕費用の列を特定
-                    cost_col = None
-                    for i, col in enumerate(df.columns):
-                        if '修繕費用' in col:
-                            cost_col = i
-                            break
-                    
-                    if cost_col is not None:
-                        worksheet.write(row, cost_col, total_cost)
-                    
-                    # 予算情報を追加
-                    row += 2
-                    worksheet.write(row, 0, '年間予算')
-                    if cost_col is not None:
-                        worksheet.write(row, cost_col, budget_amount)
-                    
-                    row += 1
-                    worksheet.write(row, 0, '予算消化率')
-                    if cost_col is not None:
-                        worksheet.write(row, cost_col, f'{budget_usage_rate:.2f}%')
-                    
-                    # タイトルを追加
-                    title_format = workbook.add_format({'bold': True, 'font_size': 14})
-                    worksheet.write(0, 0, title, title_format)
-                    
-                    # データを1行下にずらす
-                    # Note: We can't directly access worksheet.table[i-1][j].value in xlsxwriter
-                    # Instead, we'll use the dataframe to get the values
-                    
-                    # First write the title in row 0
-                    worksheet.write(0, 0, title, title_format)
-                    
-                    # Then write the dataframe starting from row 2 (leaving row 1 for headers)
-                    for i, (_, row) in enumerate(df.iterrows(), start=2):
-                        for j, value in enumerate(row):
-                            worksheet.write(i, j, value)
-                    
-                    # ヘッダーを再設定
-                    header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
-                    for i, col in enumerate(df.columns):
-                        worksheet.write(1, i, col, header_format)
+                workbook = writer.book
+                worksheet = writer.sheets['修繕費データ']
                 
-                output.seek(0)
-                
-                # ファイル名を設定
-                filename = f"monthly_cost_{asset_type}_{year}"
-                if month:
-                    filename += f"_{month}"
-                filename += f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
-                
-                return send_file(
-                    output,
-                    as_attachment=True,
-                    download_name=filename,
-                    mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                
-            elif export_format == 'pdf':
-                # PDFファイルを作成
-                output = BytesIO()
-                
-                # A4横向き
-                c = canvas.Canvas(output, pagesize=landscape(A4))
-                
-                # 日本語フォントを設定
-                try:
-                    c.setFont('MSGothic', 10)
-                except:
-                    # フォントが見つからない場合はデフォルトフォントを使用
-                    c.setFont('Helvetica', 10)
-                
-                # タイトル
-                c.setFont('MSGothic', 16)
-                c.drawString(30 * mm, 200 * mm, title)
-                
-                # 日付
-                c.setFont('MSGothic', 10)
-                c.drawString(30 * mm, 190 * mm, f'出力日: {datetime.now().strftime("%Y-%m-%d")}')
-                
-                # ヘッダー
-                headers = list(df.columns)
-                header_widths = [25] * len(headers)  # 各列の幅を25mmに設定
-                
-                x = 30 * mm
-                y = 180 * mm
-                
-                for i, header in enumerate(headers):
-                    c.drawString(x, y, header)
-                    x += header_widths[i] * mm
-                
-                # データ
-                y -= 10 * mm
-                
-                for _, row in df.iterrows():
-                    x = 30 * mm
-                    
-                    for i, col in enumerate(df.columns):
-                        c.drawString(x, y, str(row[col]))
-                        x += header_widths[i] * mm
-                    
-                    y -= 7 * mm
-                    
-                    # ページをまたぐ場合は新しいページを作成
-                    if y < 30 * mm:
-                        c.showPage()
-                        
-                        # 新しいページのヘッダー
-                        c.setFont('MSGothic', 16)
-                        c.drawString(30 * mm, 200 * mm, title)
-                        
-                        c.setFont('MSGothic', 10)
-                        c.drawString(30 * mm, 190 * mm, f'出力日: {datetime.now().strftime("%Y-%m-%d")}')
-                        
-                        x = 30 * mm
-                        y = 180 * mm
-                        
-                        for i, header in enumerate(headers):
-                            c.drawString(x, y, header)
-                            x += header_widths[i] * mm
-                        
-                        y -= 10 * mm
-                
-                # 合計
-                y -= 10 * mm
-                c.drawString(30 * mm, y, '合計')
-                
-                # 修繕費用の列を特定
-                cost_col = None
+                # 列幅を調整
                 for i, col in enumerate(df.columns):
-                    if '修繕費用' in col:
-                        cost_col = i
-                        break
+                    column_width = max(df[col].astype(str).map(len).max(), len(col)) + 2
+                    worksheet.set_column(i, i, column_width)
                 
-                if cost_col is not None:
-                    x = 30 * mm
-                    for i in range(cost_col + 1):
-                        x += header_widths[i] * mm
-                    c.drawString(x, y, f'{total_cost:,}円')
+                # タイトルを追加
+                title_format = workbook.add_format({'bold': True, 'font_size': 14})
+                title = f'修繕費用レポート ({start_date.strftime("%Y/%m/%d")} - {end_date.strftime("%Y/%m/%d")})'
+                worksheet.write(0, 0, title, title_format)
                 
-                # 予算情報
-                y -= 10 * mm
-                c.drawString(30 * mm, y, '年間予算')
+                # データを1行下にずらす
+                for i, row in df.iterrows():
+                    for j, col in enumerate(df.columns):
+                        worksheet.write(i + 2, j, row[col])
                 
-                if cost_col is not None:
-                    x = 30 * mm
-                    for i in range(cost_col + 1):
-                        x += header_widths[i] * mm
-                    c.drawString(x, y, f'{budget_amount:,}円')
+                # ヘッダーを再設定
+                header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
+                for i, col in enumerate(df.columns):
+                    worksheet.write(1, i, col, header_format)
                 
-                y -= 7 * mm
-                c.drawString(30 * mm, y, '予算消化率')
+                # グラフシートを作成
+                chart_sheet = workbook.add_worksheet('修繕費グラフ')
                 
-                if cost_col is not None:
-                    x = 30 * mm
-                    for i in range(cost_col + 1):
-                        x += header_widths[i] * mm
-                    c.drawString(x, y, f'{budget_usage_rate:.2f}%')
+                # グラフの代わりに説明文を追加
+                chart_sheet.write(1, 1, '修繕費用の月別推移データ')
+                chart_sheet.write(3, 1, '※データシートの内容を参照してください。')
                 
-                c.save()
-                
-                output.seek(0)
-                
-                # ファイル名を設定
-                filename = f"monthly_cost_{asset_type}_{year}"
-                if month:
-                    filename += f"_{month}"
-                filename += f"_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
-                
-                return send_file(
-                    output,
-                    as_attachment=True,
-                    download_name=filename,
-                    mimetype='application/pdf'
-                )
+            output.seek(0)
+            
+            # ファイル名を設定
+            filename = f"repair_cost_export_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.xlsx"
+            
+            current_app.logger.info(f"レポート生成完了: {filename}")
+            
+            return send_file(
+                output,
+                as_attachment=True,
+                download_name=filename,
+                mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
             
         except Exception as e:
             flash(f'レポート生成中にエラーが発生しました: {str(e)}', 'danger')
+            current_app.logger.error(f"レポート生成エラー: {str(e)}")
     
     # フォークリフト一覧を取得
     forklifts = Forklift.query.all()
@@ -422,15 +254,14 @@ def monthly_cost():
     # 倉庫施設一覧を取得
     facilities = Facility.query.all()
     
-    # 年のリストを作成
-    current_year = Config.CURRENT_DATE.year
-    years = list(range(current_year - 5, current_year + 1))
+    # その他修繕対象一覧を取得
+    other_targets = db.session.query(OtherRepair.target_name).distinct().all()
+    other_targets = [target[0] for target in other_targets]
     
-    return render_template('report/monthly_cost.html',
+    return render_template('report/repair_cost_export.html',
                           forklifts=forklifts,
                           facilities=facilities,
-                          years=years,
-                          asset_types=Config.ASSET_TYPE_NAMES)
+                          other_targets=other_targets)
 
 @report_bp.route('/vehicle_history', methods=['GET', 'POST'])
 def vehicle_history():

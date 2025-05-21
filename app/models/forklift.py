@@ -13,7 +13,7 @@ class Forklift(Asset):
     power_source = db.Column(db.String(20), nullable=False)  # battery, diesel, gasoline, lpg
     model = db.Column(db.String(50), nullable=False)
     serial_number = db.Column(db.String(50), nullable=False)
-    vehicle_id_number = db.Column(db.String(50), nullable=True, unique=True)  # 車体番号
+    # vehicle_id_number = db.Column(db.String(50), nullable=True, unique=True)  # 車体番号
     load_capacity = db.Column(db.Integer, nullable=False)  # kg
     manufacture_date = db.Column(db.Date, nullable=False)
     lift_height = db.Column(db.Integer, nullable=False)  # mm

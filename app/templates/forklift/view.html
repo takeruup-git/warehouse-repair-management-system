@@ -20,7 +20,7 @@
                 {% if forklift.repairs %}
                 <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_repair_pdf', asset_type='forklift', repair_id=forklift.repairs[0].id) }}">最新の修繕報告書</a></li>
                 {% endif %}
-                <li><a class="dropdown-item" href="{{ url_for('report.vehicle_history') }}?forklift_id={{ forklift.id }}&export_format=pdf">修繕履歴レポート</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('report.repair_cost_export') }}">修繕費用エクスポート</a></li>
             </ul>
         </div>
     </div>
