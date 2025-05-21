@@ -311,12 +311,21 @@ def upload():
 def view_pdf(filepath):
     # ファイルパスを安全に処理
     safe_path = os.path.normpath(filepath)
-    if safe_path.startswith('..') or safe_path.startswith('/'):
+    if safe_path.startswith('..'):
         abort(404)
     
-    file_path = os.path.join(current_app.root_path, safe_path)
+    # static/で始まるパスを処理
+    if safe_path.startswith('static/'):
+        file_path = os.path.join(current_app.root_path, safe_path)
+    else:
+        # staticで始まらない場合は、アプリケーションルートからの相対パスとして扱う
+        file_path = os.path.join(current_app.root_path, 'static', safe_path)
+    
+    # バックスラッシュをスラッシュに変換（Windowsパス対応）
+    file_path = file_path.replace('\\', '/')
     
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        current_app.logger.error(f"File not found: {file_path}")
         abort(404)
     
     return send_file(file_path, mimetype='application/pdf')
