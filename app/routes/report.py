@@ -264,10 +264,16 @@ def monthly_cost():
                     worksheet.write(0, 0, title, title_format)
                     
                     # データを1行下にずらす
-                    for i in range(len(df) + 5, 0, -1):
-                        for j in range(len(df.columns)):
-                            cell_value = worksheet.table[i - 1][j].value
-                            worksheet.write(i, j, cell_value)
+                    # Note: We can't directly access worksheet.table[i-1][j].value in xlsxwriter
+                    # Instead, we'll use the dataframe to get the values
+                    
+                    # First write the title in row 0
+                    worksheet.write(0, 0, title, title_format)
+                    
+                    # Then write the dataframe starting from row 2 (leaving row 1 for headers)
+                    for i, (_, row) in enumerate(df.iterrows(), start=2):
+                        for j, value in enumerate(row):
+                            worksheet.write(i, j, value)
                     
                     # ヘッダーを再設定
                     header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
@@ -729,10 +735,16 @@ def repair_target_summary():
                     worksheet.write(0, 0, title, title_format)
                     
                     # データを1行下にずらす
-                    for i in range(len(df) + 3, 0, -1):
-                        for j in range(len(df.columns)):
-                            cell_value = worksheet.table[i - 1][j].value
-                            worksheet.write(i, j, cell_value)
+                    # Note: We can't directly access worksheet.table[i-1][j].value in xlsxwriter
+                    # Instead, we'll use the dataframe to get the values
+                    
+                    # First write the title in row 0
+                    worksheet.write(0, 0, title, title_format)
+                    
+                    # Then write the dataframe starting from row 2 (leaving row 1 for headers)
+                    for i, (_, row) in enumerate(df.iterrows(), start=2):
+                        for j, value in enumerate(row):
+                            worksheet.write(i, j, value)
                     
                     # ヘッダーを再設定
                     header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
