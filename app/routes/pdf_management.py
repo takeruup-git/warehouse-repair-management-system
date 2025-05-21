@@ -330,6 +330,43 @@ def view_pdf(filepath):
     
     return send_file(file_path, mimetype='application/pdf')
 
+@pdf_management_bp.route('/view_image/<path:filepath>')
+def view_image(filepath):
+    """
+    画像ファイルを表示するためのルート
+    """
+    # ファイルパスを安全に処理
+    safe_path = os.path.normpath(filepath)
+    if safe_path.startswith('..'):
+        abort(404)
+    
+    # static/で始まるパスを処理
+    if safe_path.startswith('static/'):
+        file_path = os.path.join(current_app.root_path, safe_path)
+    else:
+        # staticで始まらない場合は、アプリケーションルートからの相対パスとして扱う
+        file_path = os.path.join(current_app.root_path, 'static', safe_path)
+    
+    # バックスラッシュをスラッシュに変換（Windowsパス対応）
+    file_path = file_path.replace('\\', '/')
+    
+    if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        current_app.logger.error(f"Image file not found: {file_path}")
+        abort(404)
+    
+    # ファイル拡張子に基づいてMIMEタイプを決定
+    mime_type = None
+    if file_path.lower().endswith('.jpg') or file_path.lower().endswith('.jpeg'):
+        mime_type = 'image/jpeg'
+    elif file_path.lower().endswith('.png'):
+        mime_type = 'image/png'
+    elif file_path.lower().endswith('.gif'):
+        mime_type = 'image/gif'
+    else:
+        mime_type = 'application/octet-stream'
+    
+    return send_file(file_path, mimetype=mime_type)
+
 @pdf_management_bp.route('/view_by_name/<filename>')
 def view_pdf_by_name(filename):
     # PDFディレクトリからファイルを取得

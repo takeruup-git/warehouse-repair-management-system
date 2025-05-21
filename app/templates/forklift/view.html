@@ -461,9 +461,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${file.description || '-'}</td>
                         <td>${file.created_at}</td>
                         <td>
-                            <a href="/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
-                                <i class="bi bi-eye"></i> 表示
-                            </a>
+                            ${file.file_type === 'pdf' ? 
+                                `<a href="/pdf_management/view/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF表示
+                                </a>` : 
+                                `<a href="/pdf_management/view_image/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
+                                    <i class="bi bi-image"></i> 画像表示
+                                </a>`
+                            }
                             <a href="/pdf_management/download/static/uploads/${file.file_path}" class="btn btn-sm btn-secondary">
                                 <i class="bi bi-download"></i> ダウンロード
                             </a>

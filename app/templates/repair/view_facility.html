@@ -95,7 +95,7 @@
                         <div class="card">
                             <div class="card-header">写真</div>
                             <div class="card-body text-center">
-                                <a href="{{ repair.photo_path }}" target="_blank">
+                                <a href="{{ url_for('pdf_management.view_image', filepath=repair.photo_path) }}" target="_blank">
                                     <img src="{{ repair.photo_path }}" alt="修繕写真" class="img-fluid" style="max-height: 150px;">
                                 </a>
                             </div>
@@ -108,7 +108,7 @@
                         <div class="card">
                             <div class="card-header">見積書</div>
                             <div class="card-body text-center">
-                                <a href="{{ repair.quotation_path }}" target="_blank" class="btn btn-outline-primary">
+                                <a href="{{ url_for('pdf_management.view_pdf', filepath=repair.quotation_path) }}" target="_blank" class="btn btn-outline-primary">
                                     <i class="bi bi-file-earmark-text"></i> 見積書を表示
                                 </a>
                             </div>
@@ -121,7 +121,7 @@
                         <div class="card">
                             <div class="card-header">承認書</div>
                             <div class="card-body text-center">
-                                <a href="{{ repair.approval_document_path }}" target="_blank" class="btn btn-outline-primary">
+                                <a href="{{ url_for('pdf_management.view_pdf', filepath=repair.approval_document_path) }}" target="_blank" class="btn btn-outline-primary">
                                     <i class="bi bi-file-earmark-check"></i> 承認書を表示
                                 </a>
                             </div>
@@ -134,7 +134,7 @@
                         <div class="card">
                             <div class="card-header">完了報告書</div>
                             <div class="card-body text-center">
-                                <a href="{{ repair.completion_report_path }}" target="_blank" class="btn btn-outline-primary">
+                                <a href="{{ url_for('pdf_management.view_pdf', filepath=repair.completion_report_path) }}" target="_blank" class="btn btn-outline-primary">
                                     <i class="bi bi-file-earmark-check"></i> 完了報告書を表示
                                 </a>
                             </div>
