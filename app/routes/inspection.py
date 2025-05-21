@@ -30,6 +30,8 @@ def index():
 @inspection_bp.route('/battery_fluid')
 def battery_fluid():
     # バッテリー液量点検表一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    from app.models.file import FileMetadata
+    
     pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'battery_fluid')
     pdf_files = []
     
@@ -41,9 +43,17 @@ def battery_fluid():
                 file_path = os.path.join(pdf_dir, filename)
                 file_stat = os.stat(file_path)
                 
+                # ファイルの相対パスを計算（UPLOADフォルダからの相対パス）
+                relative_path = os.path.join('pdf', 'battery_fluid', filename)
+                
+                # メタデータからオリジナルのファイル名を取得
+                metadata = FileMetadata.query.filter_by(file_path=relative_path).first()
+                display_name = metadata.original_filename if metadata else filename
+                
                 # ファイル情報を取得
                 pdf_files.append({
-                    'name': filename,
+                    'name': display_name,  # オリジナルのファイル名を表示
+                    'system_name': filename,  # システム内部のファイル名
                     'path': os.path.join('static', 'uploads', 'pdf', 'battery_fluid', filename),
                     'size': file_stat.st_size,
                     'created_at': datetime.fromtimestamp(file_stat.st_ctime)
@@ -207,6 +217,8 @@ def delete_battery_fluid(id):
 @inspection_bp.route('/periodic_self')
 def periodic_self():
     # 定期自主検査記録表一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    from app.models.file import FileMetadata
+    
     pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'periodic_self')
     pdf_files = []
     
@@ -218,9 +230,17 @@ def periodic_self():
                 file_path = os.path.join(pdf_dir, filename)
                 file_stat = os.stat(file_path)
                 
+                # ファイルの相対パスを計算（UPLOADフォルダからの相対パス）
+                relative_path = os.path.join('pdf', 'periodic_self', filename)
+                
+                # メタデータからオリジナルのファイル名を取得
+                metadata = FileMetadata.query.filter_by(file_path=relative_path).first()
+                display_name = metadata.original_filename if metadata else filename
+                
                 # ファイル情報を取得
                 pdf_files.append({
-                    'name': filename,
+                    'name': display_name,  # オリジナルのファイル名を表示
+                    'system_name': filename,  # システム内部のファイル名
                     'path': os.path.join('static', 'uploads', 'pdf', 'periodic_self', filename),
                     'size': file_stat.st_size,
                     'created_at': datetime.fromtimestamp(file_stat.st_ctime)
@@ -391,6 +411,8 @@ def delete_periodic_self(id):
 @inspection_bp.route('/pre_shift')
 def pre_shift():
     # 始業前点検報告書一覧 - PDFをUploadして閲覧・管理する機能のみに変更
+    from app.models.file import FileMetadata
+    
     pdf_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'pdf', 'pre_shift')
     pdf_files = []
     
@@ -402,9 +424,17 @@ def pre_shift():
                 file_path = os.path.join(pdf_dir, filename)
                 file_stat = os.stat(file_path)
                 
+                # ファイルの相対パスを計算（UPLOADフォルダからの相対パス）
+                relative_path = os.path.join('pdf', 'pre_shift', filename)
+                
+                # メタデータからオリジナルのファイル名を取得
+                metadata = FileMetadata.query.filter_by(file_path=relative_path).first()
+                display_name = metadata.original_filename if metadata else filename
+                
                 # ファイル情報を取得
                 pdf_files.append({
-                    'name': filename,
+                    'name': display_name,  # オリジナルのファイル名を表示
+                    'system_name': filename,  # システム内部のファイル名
                     'path': os.path.join('static', 'uploads', 'pdf', 'pre_shift', filename),
                     'size': file_stat.st_size,
                     'created_at': datetime.fromtimestamp(file_stat.st_ctime)
