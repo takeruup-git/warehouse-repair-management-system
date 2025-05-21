@@ -97,7 +97,7 @@
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ url_for('master.index') }}">マスタ管理</a></li>
-                            {% if current_user.is_admin() %}
+                            {% if current_user.is_authenticated and current_user.is_admin() %}
                             <li><a class="dropdown-item" href="{{ url_for('backup.index') }}">バックアップ管理</a></li>
                             {% endif %}
                         </ul>
@@ -116,7 +116,7 @@
                             <i class="bi bi-person-circle"></i> {{ current_user.username }}
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                            {% if current_user.is_admin() %}
+                            {% if current_user.is_authenticated and current_user.is_admin() %}
                             <li><a class="dropdown-item" href="{{ url_for('auth.user_list') }}">
                                 <i class="bi bi-people"></i> ユーザー管理
                             </a></li>
