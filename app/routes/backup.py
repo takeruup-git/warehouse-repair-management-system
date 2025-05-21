@@ -146,9 +146,19 @@ def restore_backup(filename):
             db_backup_path = os.path.join(temp_dir, 'warehouse.db')
             db_path = os.path.join(current_app.root_path, '..', 'instance', 'warehouse.db')
             
+            # パスを正規化
+            db_backup_path = os.path.normpath(db_backup_path)
+            db_path = os.path.normpath(db_path)
+            
             # 既存のデータベースをバックアップ
             db_before_restore = os.path.join(backup_dir, f"before_restore_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.db")
-            shutil.copy2(db_path, db_before_restore)
+            db_before_restore = os.path.normpath(db_before_restore)
+            
+            # ソースとデスティネーションが同じでないことを確認
+            if os.path.abspath(db_path) != os.path.abspath(db_before_restore):
+                shutil.copy2(db_path, db_before_restore)
+            else:
+                current_app.logger.warning(f"データベースバックアップをスキップしました: ソースとデスティネーションが同じです")
             
             # データベースを復元
             # 既存のデータベースを閉じる
@@ -157,14 +167,19 @@ def restore_backup(filename):
             db.engine.dispose()
             
             try:
-                # データベースファイルをコピー
-                shutil.copy2(db_backup_path, db_path)
-                
-                # 権限を設定
-                os.chmod(db_path, 0o666)
-                
-                # データベース復元の成功をログに記録
-                current_app.logger.info(f"データベースを正常に復元しました: {db_path}")
+                # ソースとデスティネーションが同じでないことを確認
+                if os.path.abspath(db_backup_path) != os.path.abspath(db_path):
+                    # データベースファイルをコピー
+                    shutil.copy2(db_backup_path, db_path)
+                    
+                    # 権限を設定
+                    os.chmod(db_path, 0o666)
+                    
+                    # データベース復元の成功をログに記録
+                    current_app.logger.info(f"データベースを正常に復元しました: {db_path}")
+                else:
+                    current_app.logger.error(f"データベース復元をスキップしました: ソースとデスティネーションが同じです")
+                    raise ValueError(f"データベース復元エラー: ソースとデスティネーションが同じです - {db_backup_path}")
             except Exception as e:
                 current_app.logger.error(f"データベース復元中にエラーが発生しました: {str(e)}")
                 raise
@@ -173,10 +188,20 @@ def restore_backup(filename):
             uploads_dir = current_app.config['UPLOAD_FOLDER']
             uploads_backup_dir = os.path.join(temp_dir, 'uploads')
             
+            # パスを正規化
+            uploads_dir = os.path.normpath(uploads_dir)
+            uploads_backup_dir = os.path.normpath(uploads_backup_dir)
+            
             # 既存のアップロードディレクトリをバックアップ
             if os.path.exists(uploads_dir):
                 uploads_before_restore = os.path.join(backup_dir, f"uploads_before_restore_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}")
-                shutil.copytree(uploads_dir, uploads_before_restore, ignore=shutil.ignore_patterns('backups'))
+                uploads_before_restore = os.path.normpath(uploads_before_restore)
+                
+                # ソースとデスティネーションが同じでないことを確認
+                if os.path.abspath(uploads_dir) != os.path.abspath(uploads_before_restore):
+                    shutil.copytree(uploads_dir, uploads_before_restore, ignore=shutil.ignore_patterns('backups'))
+                else:
+                    current_app.logger.warning(f"アップロードディレクトリのバックアップをスキップしました: ソースとデスティネーションが同じです")
             
             # アップロードファイルを復元
             if os.path.exists(uploads_backup_dir):
@@ -201,7 +226,16 @@ def restore_backup(filename):
                         src = os.path.join(uploads_backup_dir, item)
                         dst = os.path.join(uploads_dir, item)
                         
+                        # パスを正規化
+                        src = os.path.normpath(src)
+                        dst = os.path.normpath(dst)
+                        
                         if item == 'backups':  # バックアップディレクトリは特別処理
+                            continue
+                        
+                        # ソースとデスティネーションが同じでないことを確認
+                        if os.path.abspath(src) == os.path.abspath(dst):
+                            current_app.logger.warning(f"ファイル復元をスキップしました: ソースとデスティネーションが同じです - {src}")
                             continue
                             
                         if os.path.isdir(src):
@@ -221,7 +255,16 @@ def restore_backup(filename):
                     for backup_file in current_backups:
                         if os.path.exists(backup_file):
                             dst = os.path.join(backups_dir, os.path.basename(backup_file))
-                            shutil.copy2(backup_file, dst)
+                            
+                            # パスを正規化
+                            backup_file = os.path.normpath(backup_file)
+                            dst = os.path.normpath(dst)
+                            
+                            # ソースとデスティネーションが同じでないことを確認
+                            if os.path.abspath(backup_file) != os.path.abspath(dst):
+                                shutil.copy2(backup_file, dst)
+                            else:
+                                current_app.logger.warning(f"バックアップファイルの復元をスキップしました: ソースとデスティネーションが同じです - {backup_file}")
                     
                     # アップロードファイル復元の成功をログに記録
                     current_app.logger.info(f"アップロードファイルを正常に復元しました: {uploads_dir}")
