@@ -873,6 +873,15 @@ def all_files():
 
 @pdf_management_bp.route('/upload/inspection/<inspection_type>', methods=['GET', 'POST'])
 def upload_inspection_pdf(inspection_type):
+    # 点検タイプに応じたタイトルを設定（関数の先頭で定義）
+    title = ''
+    if inspection_type == 'battery_fluid':
+        title = 'バッテリー液量点検表'
+    elif inspection_type == 'periodic_self':
+        title = '定期自主検査記録表'
+    elif inspection_type == 'pre_shift':
+        title = '始業前点検報告書'
+    
     if request.method == 'POST':
         # ファイルが存在するか確認
         if 'pdf_file' not in request.files:
@@ -914,16 +923,19 @@ def upload_inspection_pdf(inspection_type):
                 entity_type=inspection_type
             ).first()
             
+            # ファイルの相対パスを計算（UPLOADフォルダからの相対パス）
+            relative_file_path = os.path.relpath(file_path, os.path.join(current_app.config['UPLOAD_FOLDER']))
+            
             if existing_metadata:
                 # 既存のメタデータを更新
-                existing_metadata.file_path = os.path.join('pdf', inspection_type, filename)
+                existing_metadata.file_path = relative_file_path
                 existing_metadata.description = f'{title} ({datetime.now().strftime("%Y-%m-%d")})'
                 existing_metadata.created_by = request.form.get('operator_name', 'システム')
                 existing_metadata.created_at = datetime.now()
             else:
                 # 新規メタデータを作成
                 file_metadata = FileMetadata(
-                    file_path=os.path.join('pdf', inspection_type, filename),
+                    file_path=relative_file_path,
                     original_filename=original_filename,
                     file_type='pdf',
                     entity_type=inspection_type,
@@ -948,14 +960,5 @@ def upload_inspection_pdf(inspection_type):
         else:
             flash('許可されていないファイル形式です。PDFファイルを選択してください。', 'danger')
             return redirect(request.url)
-    
-    # 点検タイプに応じたタイトルを設定
-    title = ''
-    if inspection_type == 'battery_fluid':
-        title = 'バッテリー液量点検表'
-    elif inspection_type == 'periodic_self':
-        title = '定期自主検査記録表'
-    elif inspection_type == 'pre_shift':
-        title = '始業前点検報告書'
     
     return render_template('pdf_management/upload_inspection.html', inspection_type=inspection_type, title=title)
