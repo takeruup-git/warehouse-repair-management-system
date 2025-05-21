@@ -491,14 +491,14 @@ document.addEventListener('DOMContentLoaded', function() {
                         <td>${file.created_at}</td>
                         <td>
                             ${file.file_type === 'pdf' ? 
-                                `<a href="/pdf_management/view/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
+                                `<a href="/pdf_management/view/static/uploads/${file.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-sm btn-info">
                                     <i class="bi bi-file-earmark-pdf"></i> PDF表示
                                 </a>` : 
-                                `<a href="/pdf_management/view_image/static/uploads/${file.file_path}" target="_blank" class="btn btn-sm btn-info">
+                                `<a href="/pdf_management/view_image/static/uploads/${file.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-sm btn-info">
                                     <i class="bi bi-image"></i> 画像表示
                                 </a>`
                             }
-                            <a href="/pdf_management/download/static/uploads/${file.file_path}" class="btn btn-sm btn-secondary">
+                            <a href="/pdf_management/download/static/uploads/${file.file_path.replace(/\\/g, '/')}" class="btn btn-sm btn-secondary">
                                 <i class="bi bi-download"></i> ダウンロード
                             </a>
                         </td>
