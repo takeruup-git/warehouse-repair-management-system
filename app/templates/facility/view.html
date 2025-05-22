@@ -20,7 +20,7 @@
                 {% if facility.repairs %}
                 <li><a class="dropdown-item" href="{{ url_for('pdf_management.generate_repair_pdf', asset_type='facility', repair_id=facility.repairs[0].id) }}">最新の修繕報告書</a></li>
                 {% endif %}
-                <li><a class="dropdown-item" href="{{ url_for('report.repair_cost_export') }}">修繕費用エクスポート</a></li>
+                <li><a class="dropdown-item" href="{{ url_for('report.database_export') }}">データベースエクスポート</a></li>
             </ul>
         </div>
         <a href="{{ url_for('pdf_management.upload', asset_type='facility', asset_id=facility.id) }}" class="btn btn-info">

@@ -2,14 +2,14 @@
 
 {% block content %}
 <div class="container mt-4">
-    <h1>レポート</h1>
+    <h1>データベースエクスポート</h1>
     <div class="row mt-4">
         <div class="col-md-6 mx-auto">
             <div class="card">
                 <div class="card-body text-center">
-                    <h5 class="card-title">修繕費用エクスポート</h5>
-                    <p class="card-text">期間を指定して修繕費用データをエクスポートします。<br>月別の修繕費推移グラフも含まれます。</p>
-                    <a href="{{ url_for('report.repair_cost_export') }}" class="btn btn-primary btn-lg">レポート作成</a>
+                    <h5 class="card-title">データベースエクスポート</h5>
+                    <p class="card-text">各種データベース情報をエクスポートします。<br>フィルタ機能を使って必要なデータを抽出できます。</p>
+                    <a href="{{ url_for('report.database_export') }}" class="btn btn-primary btn-lg">エクスポート画面へ</a>
                 </div>
             </div>
         </div>

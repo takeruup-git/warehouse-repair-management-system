@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1>データベースエクスポート</h1>
+    
+    <div class="card mt-4">
+        <div class="card-header">
+            エクスポート条件
+        </div>
+        <div class="card-body">
+            <form method="POST" action="{{ url_for('report.database_export') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="data_type">データ種類</label>
+                            <select class="form-control" id="data_type" name="data_type" required>
+                                <option value="repair">修繕データ</option>
+                                <option value="forklift">フォークリフトマスタ</option>
+                                <option value="facility">倉庫施設マスタ</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="form-group">
+                            <label for="export_format">エクスポート形式</label>
+                            <select class="form-control" id="export_format" name="export_format">
+                                <option value="excel">Excel</option>
+                                <option value="csv">CSV</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 修繕データ用フィルター -->
+                <div id="repair_filters" class="filter-section">
+                    <h5 class="mt-3">修繕データフィルター</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="start_date">開始日</label>
+                                <input type="date" class="form-control" id="start_date" name="start_date">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="end_date">終了日</label>
+                                <input type="date" class="form-control" id="end_date" name="end_date">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="repair_asset_type">資産種類</label>
+                                <select class="form-control" id="repair_asset_type" name="repair_asset_type">
+                                    <option value="all">すべて</option>
+                                    <option value="forklift">フォークリフト</option>
+                                    <option value="facility">倉庫施設</option>
+                                    <option value="other">その他</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="min_cost">最小費用</label>
+                                <input type="number" class="form-control" id="min_cost" name="min_cost" placeholder="例: 10000">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-12">
+                            <div class="form-group">
+                                <label id="repair_target_label" for="repair_target_ids">対象資産</label>
+                                <select class="form-control" id="repair_target_ids" name="repair_target_ids" multiple size="5">
+                                    <option value="" disabled>資産種類を選択してください</option>
+                                </select>
+                                <small class="form-text text-muted">複数選択する場合はCtrlキーを押しながら選択してください。何も選択しない場合はすべての対象が含まれます。</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- フォークリフトマスタ用フィルター -->
+                <div id="forklift_filters" class="filter-section" style="display: none;">
+                    <h5 class="mt-3">フォークリフトマスタフィルター</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="forklift_type">フォークリフト種類</label>
+                                <select class="form-control" id="forklift_type" name="forklift_type">
+                                    <option value="all">すべて</option>
+                                    {% for type_code, type_name in forklift_types.items() %}
+                                    <option value="{{ type_code }}">{{ type_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="power_source">動力源</label>
+                                <select class="form-control" id="power_source" name="power_source">
+                                    <option value="all">すべて</option>
+                                    {% for source_code, source_name in power_sources.items() %}
+                                    <option value="{{ source_code }}">{{ source_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="warehouse_group">倉庫グループ</label>
+                                <select class="form-control" id="warehouse_group" name="warehouse_group">
+                                    <option value="all">すべて</option>
+                                    {% for group in warehouse_groups %}
+                                    <option value="{{ group }}">{{ group }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="warehouse_number">倉庫番号</label>
+                                <select class="form-control" id="warehouse_number" name="warehouse_number">
+                                    <option value="all">すべて</option>
+                                    {% for number in warehouse_numbers %}
+                                    <option value="{{ number }}">{{ number }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- 倉庫施設マスタ用フィルター -->
+                <div id="facility_filters" class="filter-section" style="display: none;">
+                    <h5 class="mt-3">倉庫施設マスタフィルター</h5>
+                    
+                    <div class="row mb-3">
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="ownership_type">所有形態</label>
+                                <select class="form-control" id="ownership_type" name="ownership_type">
+                                    <option value="all">すべて</option>
+                                    {% for type_code, type_name in ownership_types.items() %}
+                                    <option value="{{ type_code }}">{{ type_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-group">
+                                <label for="min_floor_count">最小階数</label>
+                                <input type="number" class="form-control" id="min_floor_count" name="min_floor_count" min="1" placeholder="例: 1">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row mt-3">
+                    <div class="col-md-12">
+                        <button type="submit" class="btn btn-primary">エクスポート</button>
+                        <a href="{{ url_for('report.index') }}" class="btn btn-secondary">戻る</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const dataTypeSelect = document.getElementById('data_type');
+        const repairFilters = document.getElementById('repair_filters');
+        const forkliftFilters = document.getElementById('forklift_filters');
+        const facilityFilters = document.getElementById('facility_filters');
+        
+        const repairAssetTypeSelect = document.getElementById('repair_asset_type');
+        const repairTargetIdsSelect = document.getElementById('repair_target_ids');
+        const repairTargetLabel = document.getElementById('repair_target_label');
+        
+        // フォークリフトのデータ
+        const forklifts = [
+            {% for forklift in forklifts %}
+            { id: {{ forklift.id }}, name: "{{ forklift.management_number }}" },
+            {% endfor %}
+        ];
+        
+        // 倉庫施設のデータ
+        const facilities = [
+            {% for facility in facilities %}
+            { id: {{ facility.id }}, name: "{{ facility.warehouse_number }}" },
+            {% endfor %}
+        ];
+        
+        // その他資産のデータ
+        const otherTargets = [
+            {% for target in other_targets %}
+            { id: "{{ target.id }}", name: "{{ target.target_name }}" },
+            {% endfor %}
+        ];
+        
+        // データ種類に応じてフィルターセクションを表示
+        function updateFilterSections() {
+            repairFilters.style.display = 'none';
+            forkliftFilters.style.display = 'none';
+            facilityFilters.style.display = 'none';
+            
+            switch(dataTypeSelect.value) {
+                case 'repair':
+                    repairFilters.style.display = 'block';
+                    break;
+                case 'forklift':
+                    forkliftFilters.style.display = 'block';
+                    break;
+                case 'facility':
+                    facilityFilters.style.display = 'block';
+                    break;
+            }
+        }
+        
+        // 資産種類に応じて対象リストを更新
+        function updateRepairTargetOptions() {
+            // 既存のオプションをクリア
+            repairTargetIdsSelect.innerHTML = '';
+            
+            let options = [];
+            let labelText = '対象資産';
+            
+            switch(repairAssetTypeSelect.value) {
+                case 'forklift':
+                    options = forklifts;
+                    labelText = '対象フォークリフト';
+                    break;
+                case 'facility':
+                    options = facilities;
+                    labelText = '対象倉庫施設';
+                    break;
+                case 'other':
+                    options = otherTargets;
+                    labelText = 'その他対象';
+                    break;
+                case 'all':
+                    repairTargetIdsSelect.disabled = true;
+                    repairTargetIdsSelect.innerHTML = '<option value="" disabled selected>すべての資産が対象となります</option>';
+                    labelText = '対象資産（すべて）';
+                    return;
+            }
+            
+            // ラベルを更新
+            repairTargetLabel.textContent = labelText;
+            
+            // 選択肢を追加
+            repairTargetIdsSelect.disabled = false;
+            if (options.length === 0) {
+                repairTargetIdsSelect.innerHTML = '<option value="" disabled>データがありません</option>';
+            } else {
+                options.forEach(option => {
+                    const optionElement = document.createElement('option');
+                    optionElement.value = option.id;
+                    optionElement.textContent = option.name;
+                    repairTargetIdsSelect.appendChild(optionElement);
+                });
+            }
+        }
+        
+        // 初期表示
+        updateFilterSections();
+        updateRepairTargetOptions();
+        
+        // イベントリスナー
+        dataTypeSelect.addEventListener('change', updateFilterSections);
+        repairAssetTypeSelect.addEventListener('change', updateRepairTargetOptions);
+        
+        // 日付の初期値を設定（今月の1日から今日まで）
+        const today = new Date();
+        const firstDayOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+        
+        document.getElementById('start_date').valueAsDate = firstDayOfMonth;
+        document.getElementById('end_date').valueAsDate = today;
+    });
+</script>
+{% endblock %}

@@ -100,7 +100,7 @@ def create_app(config_name='default'):
     from app.routes.facility import facility_bp
     from app.routes.repair import repair_bp
     from app.routes.inspection import inspection_bp
-    from app.routes.report import report_bp
+    from app.routes.report_new import report_bp
     from app.routes.api import api_bp
     from app.routes.auth import auth_bp
     from app.routes.csv_upload import csv_upload_bp
