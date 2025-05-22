@@ -147,7 +147,7 @@
                         <td>{{ history.created_by }}</td>
                         <td>
                             {% if history.report_path %}
-                            <a href="{{ url_for('pdf_management.view_pdf', filepath=history.report_path) }}" target="_blank" class="btn btn-sm btn-info">
+                            <a href="{{ url_for('pdf_management.view_pdf', filepath=history.report_path.replace('\\', '/')) }}" target="_blank" class="btn btn-sm btn-info">
                                 <i class="bi bi-file-earmark-pdf"></i> 表示
                             </a>
                             {% else %}

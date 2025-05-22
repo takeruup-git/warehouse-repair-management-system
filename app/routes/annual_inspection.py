@@ -52,19 +52,8 @@ def manage_annual_inspection(forklift_id):
         if 'inspection_report' in request.files:
             file = request.files['inspection_report']
             if file and file.filename and allowed_file(file.filename):
-                # 古いファイルがあれば削除
-                if prediction.annual_inspection_report:
-                    old_file_path = os.path.join(current_app.root_path, prediction.annual_inspection_report)
-                    if os.path.exists(old_file_path):
-                        os.remove(old_file_path)
-                    
-                    # 古いファイルメタデータも削除
-                    from app.models.file import FileMetadata
-                    old_metadata = FileMetadata.query.filter_by(file_path=os.path.relpath(
-                        old_file_path, os.path.join(current_app.root_path, 'static', 'uploads')
-                    )).first()
-                    if old_metadata:
-                        db.session.delete(old_metadata)
+                # 古いファイルは削除せず、新しいファイルを追加する
+                # 履歴を保持するため、古いファイルは残しておく
                 
                 # オリジナルのファイル名を保持（日本語対応）
                 original_filename = file.filename
