@@ -352,146 +352,146 @@ def repair_cost_export():
                 download_name=filename,
                 mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
-        
-        elif export_format == 'csv':
-            # CSVファイルを作成
-            output = BytesIO()
             
-            # 詳細データを含むCSVを作成
-            all_data = []
+            if export_format == 'csv':
+                # CSVファイルを作成
+                output = BytesIO()
+                
+                # 詳細データを含むCSVを作成
+                all_data = []
             
-            # フォークリフトの詳細データを追加
-            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'forklift':
-                forklift_details = db.session.query(
-                    ForkliftRepair.repair_date,
-                    Forklift.management_number,
-                    Forklift.manufacturer,
-                    Forklift.model,
-                    Forklift.warehouse_group,
-                    ForkliftRepair.repair_target_type,
-                    ForkliftRepair.repair_item,
-                    ForkliftRepair.repair_cost,
-                    ForkliftRepair.repair_reason,
-                    ForkliftRepair.contractor,
-                    ForkliftRepair.notes
-                ).join(
-                    Forklift, ForkliftRepair.forklift_id == Forklift.id
-                ).filter(
-                    ForkliftRepair.repair_date.between(start_date, end_date)
-                )
+                # フォークリフトの詳細データを追加
+                if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'forklift':
+                    forklift_details = db.session.query(
+                        ForkliftRepair.repair_date,
+                        Forklift.management_number,
+                        Forklift.manufacturer,
+                        Forklift.model,
+                        Forklift.warehouse_group,
+                        ForkliftRepair.repair_target_type,
+                        ForkliftRepair.repair_item,
+                        ForkliftRepair.repair_cost,
+                        ForkliftRepair.repair_reason,
+                        ForkliftRepair.contractor,
+                        ForkliftRepair.notes
+                    ).join(
+                        Forklift, ForkliftRepair.forklift_id == Forklift.id
+                    ).filter(
+                        ForkliftRepair.repair_date.between(start_date, end_date)
+                    )
                 
-                if asset_type == 'forklift' and target_ids:
-                    forklift_details = forklift_details.filter(ForkliftRepair.forklift_id.in_([int(id) for id in target_ids if id.isdigit()]))
+                    if asset_type == 'forklift' and target_ids:
+                        forklift_details = forklift_details.filter(ForkliftRepair.forklift_id.in_([int(id) for id in target_ids if id.isdigit()]))
                 
-                for repair in forklift_details.all():
-                    all_data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '資産種別': 'フォークリフト',
-                        '管理番号': repair.management_number,
-                        'メーカー': repair.manufacturer,
-                        '型式': repair.model,
-                        '倉庫グループ': repair.warehouse_group,
-                        '修繕対象種別': Config.REPAIR_TARGET_TYPE_NAMES.get(repair.repair_target_type, repair.repair_target_type),
-                        '修繕項目': repair.repair_item,
-                        '修繕費用': repair.repair_cost,
-                        '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason),
-                        '業者': repair.contractor,
-                        '備考': repair.notes or ''
+                    for repair in forklift_details.all():
+                        all_data.append({
+                            '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
+                            '資産種別': 'フォークリフト',
+                            '管理番号': repair.management_number,
+                            'メーカー': repair.manufacturer,
+                            '型式': repair.model,
+                            '倉庫グループ': repair.warehouse_group,
+                            '修繕対象種別': Config.REPAIR_TARGET_TYPE_NAMES.get(repair.repair_target_type, repair.repair_target_type),
+                            '修繕項目': repair.repair_item,
+                            '修繕費用': repair.repair_cost,
+                            '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason),
+                            '業者': repair.contractor,
+                            '備考': repair.notes or ''
                     })
                 
                 # 倉庫施設の詳細データを追加
                 if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'facility':
-                facility_details = db.session.query(
-                    FacilityRepair.repair_date,
-                    Facility.warehouse_number,
-                    Facility.address,
-                    Facility.warehouse_group,
-                    FacilityRepair.floor,
-                    FacilityRepair.repair_item,
-                    FacilityRepair.repair_cost,
-                    FacilityRepair.repair_reason,
-                    FacilityRepair.vendor,
-                    FacilityRepair.notes
-                ).join(
-                    Facility, FacilityRepair.facility_id == Facility.id
-                ).filter(
-                    FacilityRepair.repair_date.between(start_date, end_date)
-                )
+                    facility_details = db.session.query(
+                        FacilityRepair.repair_date,
+                        Facility.warehouse_number,
+                        Facility.address,
+                        Facility.warehouse_group,
+                        FacilityRepair.floor,
+                        FacilityRepair.repair_item,
+                        FacilityRepair.repair_cost,
+                        FacilityRepair.repair_reason,
+                        FacilityRepair.vendor,
+                        FacilityRepair.notes
+                    ).join(
+                        Facility, FacilityRepair.facility_id == Facility.id
+                    ).filter(
+                        FacilityRepair.repair_date.between(start_date, end_date)
+                    )
                 
-                if asset_type == 'facility' and target_ids:
-                    facility_details = facility_details.filter(FacilityRepair.facility_id.in_([int(id) for id in target_ids if id.isdigit()]))
+                    if asset_type == 'facility' and target_ids:
+                        facility_details = facility_details.filter(FacilityRepair.facility_id.in_([int(id) for id in target_ids if id.isdigit()]))
                 
-                for repair in facility_details.all():
-                    all_data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '資産種別': '倉庫施設',
-                        '管理番号': repair.warehouse_number,
-                        'メーカー': '',
-                        '型式': '',
-                        '倉庫グループ': repair.warehouse_group,
-                        '修繕対象種別': f'倉庫施設 {repair.floor}階',
-                        '修繕項目': repair.repair_item,
-                        '修繕費用': repair.repair_cost,
-                        '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason),
-                        '業者': repair.vendor,
-                        '備考': repair.notes or ''
+                    for repair in facility_details.all():
+                        all_data.append({
+                            '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
+                            '資産種別': '倉庫施設',
+                            '管理番号': repair.warehouse_number,
+                            'メーカー': '',
+                            '型式': '',
+                            '倉庫グループ': repair.warehouse_group,
+                            '修繕対象種別': f'倉庫施設 {repair.floor}階',
+                            '修繕項目': repair.repair_item,
+                            '修繕費用': repair.repair_cost,
+                            '修繕理由': Config.REPAIR_REASON_NAMES.get(repair.repair_reason, repair.repair_reason),
+                            '業者': repair.vendor,
+                            '備考': repair.notes or ''
                     })
                 
                 # その他修繕の詳細データを追加
                 if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'other':
-                other_details = db.session.query(
-                    OtherRepair.repair_date,
-                    OtherRepair.target_name,
-                    OtherRepair.repair_target,
-                    OtherRepair.repair_item,
-                    OtherRepair.repair_cost,
-                    OtherRepair.vendor,
-                    OtherRepair.notes
-                ).filter(
-                    OtherRepair.repair_date.between(start_date, end_date)
-                )
+                    other_details = db.session.query(
+                        OtherRepair.repair_date,
+                        OtherRepair.target_name,
+                        OtherRepair.repair_target,
+                        OtherRepair.repair_item,
+                        OtherRepair.repair_cost,
+                        OtherRepair.vendor,
+                        OtherRepair.notes
+                    ).filter(
+                        OtherRepair.repair_date.between(start_date, end_date)
+                    )
                 
-                if asset_type == 'other' and target_ids:
-                    other_details = other_details.filter(OtherRepair.target_name.in_(target_ids))
+                    if asset_type == 'other' and target_ids:
+                        other_details = other_details.filter(OtherRepair.target_name.in_(target_ids))
                 
-                for repair in other_details.all():
-                    all_data.append({
-                        '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
-                        '資産種別': 'その他',
-                        '管理番号': repair.target_name,
-                        'メーカー': '',
-                        '型式': '',
-                        '倉庫グループ': '',
-                        '修繕対象種別': repair.repair_target,
-                        '修繕項目': repair.repair_item,
-                        '修繕費用': repair.repair_cost,
-                        '修繕理由': '',
-                        '業者': repair.vendor,
-                        '備考': repair.notes or ''
+                    for repair in other_details.all():
+                        all_data.append({
+                            '修繕日': repair.repair_date.strftime('%Y-%m-%d'),
+                            '資産種別': 'その他',
+                            '管理番号': repair.target_name,
+                            'メーカー': '',
+                            '型式': '',
+                            '倉庫グループ': '',
+                            '修繕対象種別': repair.repair_target,
+                            '修繕項目': repair.repair_item,
+                            '修繕費用': repair.repair_cost,
+                            '修繕理由': '',
+                            '業者': repair.vendor,
+                            '備考': repair.notes or ''
                     })
                 
                 # データをCSVに変換
-                df = pd.DataFrame(all_data)
+                    df = pd.DataFrame(all_data)
                 
-                # 日付でソート
-                df = df.sort_values(by='修繕日')
-                
-                # CSVに出力
-                csv_data = df.to_csv(index=False, encoding='utf-8-sig')
-                output.write(csv_data.encode('utf-8-sig'))
-                output.seek(0)
-                
-                # ファイル名を設定
-                filename = f"repair_cost_export_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
-                
-                current_app.logger.info(f"CSVレポート生成完了: {filename}")
-                
-                return send_file(
-                output,
-                as_attachment=True,
-                download_name=filename,
-                mimetype='text/csv'
-                )
+                    # 日付でソート
+                    df = df.sort_values(by='修繕日')
+                    
+                    # CSVに出力
+                    csv_data = df.to_csv(index=False, encoding='utf-8-sig')
+                    output.write(csv_data.encode('utf-8-sig'))
+                    output.seek(0)
+                    
+                    # ファイル名を設定
+                    filename = f"repair_cost_export_{start_date.strftime('%Y%m%d')}-{end_date.strftime('%Y%m%d')}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.csv"
+                    
+                    current_app.logger.info(f"CSVレポート生成完了: {filename}")
+                    
+                    return send_file(
+                        output,
+                        as_attachment=True,
+                        download_name=filename,
+                        mimetype='text/csv'
+                    )
             
         except Exception as e:
             flash(f'レポート生成中にエラーが発生しました: {str(e)}', 'danger')
