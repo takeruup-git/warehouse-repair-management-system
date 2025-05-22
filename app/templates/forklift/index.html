@@ -29,7 +29,6 @@
                         <th>経過年数</th>
                         <th>配置倉庫</th>
                         <th>ステータス</th>
-                        <th>画像</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -47,11 +46,6 @@
                             <span class="badge {% if forklift.asset_status == 'active' %}bg-success{% elif forklift.asset_status == 'under_repair' %}bg-warning{% else %}bg-secondary{% endif %}">
                                 {{ forklift.status_name }}
                             </span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('forklift.view_images', id=forklift.id) }}" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-images"></i> 画像閲覧
-                            </a>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">

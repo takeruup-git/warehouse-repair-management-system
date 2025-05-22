@@ -19,68 +19,7 @@ def index():
     forklifts = Forklift.query.all()
     return render_template('forklift/index.html', forklifts=forklifts)
 
-@forklift_bp.route('/<int:id>/images')
-def view_images(id):
-    """
-    フォークリフトに関連する画像を表示するルート
-    """
-    forklift = Forklift.query.get_or_404(id)
-    
-    # データベースから関連する画像ファイルのメタデータを取得
-    image_metadata = FileMetadata.query.filter_by(
-        entity_type='forklift',
-        entity_id=str(id),
-        file_type='image'
-    ).all()
-    
-    # 画像ファイルのパスを取得
-    image_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'images', 'forklift', str(id))
-    image_files = []
-    
-    # ディレクトリが存在する場合のみ検索
-    if os.path.exists(image_dir):
-        # サブディレクトリも含めて画像ファイルを検索
-        for root, dirs, files in os.walk(image_dir):
-            for file in files:
-                if file.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
-                    file_path = os.path.join(root, file)
-                    relative_path = os.path.relpath(file_path, os.path.join(current_app.config['UPLOAD_FOLDER']))
-                    
-                    # ファイルの情報を取得
-                    file_stats = os.stat(file_path)
-                    
-                    # メタデータから元のファイル名を取得
-                    display_filename = file
-                    description = None
-                    created_by = None
-                    
-                    for metadata in image_metadata:
-                        if metadata.file_path == relative_path:
-                            display_filename = metadata.original_filename
-                            description = metadata.description
-                            created_by = metadata.created_by
-                            break
-                    
-                    # 表示用のパスを作成
-                    display_path = os.path.join('static', 'uploads', relative_path)
-                    
-                    image_files.append({
-                        'filename': file,
-                        'display_filename': display_filename,
-                        'path': display_path,
-                        'size': file_stats.st_size,
-                        'created_at': datetime.fromtimestamp(file_stats.st_ctime),
-                        'modified_at': datetime.fromtimestamp(file_stats.st_mtime),
-                        'description': description,
-                        'created_by': created_by
-                    })
-    
-    # 修正日時の降順でソート
-    image_files.sort(key=lambda x: x['modified_at'], reverse=True)
-    
-    return render_template('forklift/images.html', 
-                          forklift=forklift, 
-                          image_files=image_files)
+# 画像閲覧機能は詳細画面に統合したため削除
 
 @forklift_bp.route('/generate_inspection_format')
 def generate_inspection_format_route():

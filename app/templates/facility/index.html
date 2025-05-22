@@ -30,7 +30,6 @@
                         <th>階層数</th>
                         <th>経過年数</th>
                         <th>ステータス</th>
-                        <th>画像</th>
                         <th>操作</th>
                     </tr>
                 </thead>
@@ -48,11 +47,6 @@
                             <span class="badge {% if facility.asset_status == 'active' %}bg-success{% elif facility.asset_status == 'inactive' %}bg-secondary{% elif facility.asset_status == 'under_repair' %}bg-warning{% else %}bg-danger{% endif %}">
                                 {{ facility.status_name }}
                             </span>
-                        </td>
-                        <td>
-                            <a href="{{ url_for('facility.view_images', id=facility.id) }}" class="btn btn-sm btn-outline-success">
-                                <i class="bi bi-images"></i> 画像閲覧
-                            </a>
                         </td>
                         <td>
                             <div class="btn-group btn-group-sm">

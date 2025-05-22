@@ -66,19 +66,27 @@ def get_file_metadata():
 def get_files():
     entity_type = request.args.get('entity_type')
     entity_id = request.args.get('entity_id')
+    file_type = request.args.get('file_type')
     
     if not entity_type or not entity_id:
         return jsonify({'success': False, 'error': 'Entity type and ID are required'})
     
     try:
         entity_id = int(entity_id)
-        files = FileMetadata.query.filter_by(entity_type=entity_type, entity_id=entity_id).order_by(FileMetadata.created_at.desc()).all()
+        query = FileMetadata.query.filter_by(entity_type=entity_type, entity_id=entity_id)
+        
+        # ファイルタイプでフィルタリング（指定がある場合）
+        if file_type:
+            query = query.filter_by(file_type=file_type)
+            
+        files = query.order_by(FileMetadata.created_at.desc()).all()
         
         return jsonify({
             'success': True,
             'files': [file.to_dict() for file in files]
         })
     except Exception as e:
+        from flask import current_app
         current_app.logger.error(f"Error fetching files: {str(e)}")
         return jsonify({'success': False, 'error': str(e)})
 
