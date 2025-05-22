@@ -347,6 +347,10 @@ def view_pdf(filepath):
     if safe_path.startswith('..'):
         abort(404)
     
+    # ログ出力
+    current_app.logger.info(f"Original filepath: {filepath}")
+    current_app.logger.info(f"Normalized safe_path: {safe_path}")
+    
     # static/で始まるパスを処理
     if safe_path.startswith('static/'):
         file_path = os.path.join(current_app.root_path, safe_path)
@@ -359,17 +363,39 @@ def view_pdf(filepath):
     
     current_app.logger.info(f"Attempting to access PDF file: {file_path}")
     
+    # ファイルの存在確認
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
-        # ファイルが見つからない場合、絶対パスでも試してみる
+        current_app.logger.warning(f"File not found at path: {file_path}")
+        
+        # 別の方法でパスを試す
+        alt_path = os.path.join(current_app.root_path, filepath)
+        current_app.logger.info(f"Trying alternative path: {alt_path}")
+        
+        if os.path.exists(alt_path) and os.path.isfile(alt_path):
+            current_app.logger.info(f"Found PDF file at alternative path: {alt_path}")
+            return send_file(alt_path, mimetype='application/pdf')
+            
+        # 絶対パスでも試す
         if os.path.isabs(filepath):
             file_path = filepath
             if os.path.exists(file_path) and os.path.isfile(file_path):
                 current_app.logger.info(f"Found PDF file using absolute path: {file_path}")
                 return send_file(file_path, mimetype='application/pdf')
         
-        current_app.logger.error(f"File not found: {file_path}")
+        # 最後の手段として、ファイル名だけを使って検索
+        filename = os.path.basename(safe_path)
+        uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+        
+        for root, dirs, files in os.walk(uploads_dir):
+            if filename in files:
+                found_path = os.path.join(root, filename)
+                current_app.logger.info(f"Found PDF file by filename search: {found_path}")
+                return send_file(found_path, mimetype='application/pdf')
+        
+        current_app.logger.error(f"File not found after all attempts: {file_path}")
         abort(404)
     
+    current_app.logger.info(f"Successfully found PDF file: {file_path}")
     return send_file(file_path, mimetype='application/pdf')
 
 @pdf_management_bp.route('/view_image/<path:filepath>')
@@ -385,6 +411,10 @@ def view_image(filepath):
     if safe_path.startswith('..'):
         abort(404)
     
+    # ログ出力
+    current_app.logger.info(f"Original image filepath: {filepath}")
+    current_app.logger.info(f"Normalized image safe_path: {safe_path}")
+    
     # static/で始まるパスを処理
     if safe_path.startswith('static/'):
         file_path = os.path.join(current_app.root_path, safe_path)
@@ -397,9 +427,38 @@ def view_image(filepath):
     
     current_app.logger.info(f"Attempting to access image file: {file_path}")
     
+    # ファイルの存在確認
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
-        current_app.logger.error(f"Image file not found: {file_path}")
-        abort(404)
+        current_app.logger.warning(f"Image file not found at path: {file_path}")
+        
+        # 別の方法でパスを試す
+        alt_path = os.path.join(current_app.root_path, filepath)
+        current_app.logger.info(f"Trying alternative path for image: {alt_path}")
+        
+        if os.path.exists(alt_path) and os.path.isfile(alt_path):
+            file_path = alt_path
+        else:
+            # 絶対パスでも試す
+            if os.path.isabs(filepath):
+                abs_path = filepath
+                if os.path.exists(abs_path) and os.path.isfile(abs_path):
+                    file_path = abs_path
+                else:
+                    # 最後の手段として、ファイル名だけを使って検索
+                    filename = os.path.basename(safe_path)
+                    uploads_dir = os.path.join(current_app.root_path, 'static', 'uploads')
+                    
+                    found = False
+                    for root, dirs, files in os.walk(uploads_dir):
+                        if filename in files:
+                            file_path = os.path.join(root, filename)
+                            found = True
+                            current_app.logger.info(f"Found image file by filename search: {file_path}")
+                            break
+                    
+                    if not found:
+                        current_app.logger.error(f"Image file not found after all attempts: {file_path}")
+                        abort(404)
     
     # ファイル拡張子に基づいてMIMEタイプを決定
     mime_type = None

@@ -144,11 +144,32 @@ def restore_backup(filename):
             
             # データベースを復元
             db_backup_path = os.path.join(temp_dir, 'warehouse.db')
-            db_path = os.path.join(current_app.root_path, '..', 'instance', 'warehouse.db')
+            
+            # 現在のデータベースパスを取得
+            # 開発環境と本番環境の両方に対応するため、複数のパスを試す
+            possible_db_paths = [
+                os.path.join(current_app.root_path, '..', 'instance', 'warehouse.db'),  # 標準パス
+                os.path.join(current_app.root_path, '..', 'instance', 'dev-app.db'),    # 開発環境パス
+                os.path.join(current_app.instance_path, 'warehouse.db'),                # Flaskのinstance_pathを使用
+                os.path.join(current_app.instance_path, 'dev-app.db')                  # 開発環境のinstance_path
+            ]
+            
+            # 実際に存在するデータベースファイルを探す
+            db_path = None
+            for path in possible_db_paths:
+                norm_path = os.path.normpath(path)
+                if os.path.exists(norm_path):
+                    db_path = norm_path
+                    current_app.logger.info(f"既存のデータベースファイルを見つけました: {db_path}")
+                    break
+            
+            # データベースファイルが見つからない場合は、デフォルトパスを使用
+            if not db_path:
+                db_path = os.path.normpath(possible_db_paths[0])
+                current_app.logger.warning(f"既存のデータベースファイルが見つからないため、デフォルトパスを使用します: {db_path}")
             
             # パスを正規化
             db_backup_path = os.path.normpath(db_backup_path)
-            db_path = os.path.normpath(db_path)
             
             # 既存のデータベースをバックアップ
             db_before_restore = os.path.join(backup_dir, f"before_restore_{datetime.datetime.now().strftime('%Y%m%d_%H%M%S')}.db")
@@ -167,8 +188,16 @@ def restore_backup(filename):
             db.engine.dispose()
             
             try:
+                # バックアップファイルの存在確認
+                if not os.path.exists(db_backup_path):
+                    current_app.logger.error(f"バックアップデータベースファイルが見つかりません: {db_backup_path}")
+                    raise ValueError(f"バックアップデータベースファイルが見つかりません: {db_backup_path}")
+                
                 # ソースとデスティネーションが同じでないことを確認
                 if os.path.abspath(db_backup_path) != os.path.abspath(db_path):
+                    # 親ディレクトリが存在することを確認
+                    os.makedirs(os.path.dirname(db_path), exist_ok=True)
+                    
                     # データベースファイルをコピー
                     shutil.copy2(db_backup_path, db_path)
                     
