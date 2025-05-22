@@ -149,10 +149,10 @@
     </div>
 </div>
 
-<!-- タイヤ交換予定 -->
+<!-- ドライブタイヤ交換予定 -->
 <div class="card mb-4">
     <div class="card-header bg-success text-white">
-        <h5 class="card-title mb-0">タイヤ交換予定</h5>
+        <h5 class="card-title mb-0">ドライブタイヤ交換予定</h5>
     </div>
     <div class="card-body">
         {% if tire_replacements %}
@@ -164,7 +164,6 @@
                         <th>メーカー</th>
                         <th>機種</th>
                         <th>前回交換日</th>
-                        <th>タイヤタイプ</th>
                         <th>次回交換予定日</th>
                         <th>残り日数</th>
                         <th>操作</th>
@@ -172,27 +171,13 @@
                 </thead>
                 <tbody>
                     {% for forklift, prediction in tire_replacements %}
+                    {% if prediction and prediction.tire_type == 'drive' or prediction and prediction.tire_type == 'both' %}
                     {% set days_left = (prediction.next_tire_replacement_date - now().date()).days if prediction and prediction.next_tire_replacement_date else None %}
                     <tr {% if days_left is not none and days_left <= 30 %}class="table-danger"{% elif days_left is not none and days_left <= 90 %}class="table-warning"{% endif %}>
                         <td>{{ forklift.management_number }}</td>
                         <td>{{ forklift.manufacturer }}</td>
                         <td>{{ forklift.model }}</td>
                         <td>{{ prediction.tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.tire_replacement_date else '-' }}</td>
-                        <td>
-                            {% if prediction and prediction.tire_type %}
-                                {% if prediction.tire_type == 'drive' %}
-                                    ドライブタイヤ
-                                {% elif prediction.tire_type == 'caster' %}
-                                    キャスタータイヤ
-                                {% elif prediction.tire_type == 'both' %}
-                                    両方
-                                {% else %}
-                                    {{ prediction.tire_type }}
-                                {% endif %}
-                            {% else %}
-                                -
-                            {% endif %}
-                        </td>
                         <td>{{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.next_tire_replacement_date else '-' }}</td>
                         <td>
                             {% if days_left is not none %}
@@ -212,12 +197,133 @@
                             </div>
                         </td>
                     </tr>
+                    {% endif %}
                     {% endfor %}
                 </tbody>
             </table>
         </div>
         {% else %}
-        <p class="text-center my-3">タイヤ交換予定はありません。</p>
+        <p class="text-center my-3">ドライブタイヤ交換予定はありません。</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- キャスタータイヤ交換予定 -->
+<div class="card mb-4">
+    <div class="card-header bg-info text-white">
+        <h5 class="card-title mb-0">キャスタータイヤ交換予定</h5>
+    </div>
+    <div class="card-body">
+        {% if tire_replacements %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>管理番号</th>
+                        <th>メーカー</th>
+                        <th>機種</th>
+                        <th>前回交換日</th>
+                        <th>次回交換予定日</th>
+                        <th>残り日数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forklift, prediction in tire_replacements %}
+                    {% if prediction and prediction.tire_type == 'caster' or prediction and prediction.tire_type == 'both' %}
+                    {% set days_left = (prediction.next_tire_replacement_date - now().date()).days if prediction and prediction.next_tire_replacement_date else None %}
+                    <tr {% if days_left is not none and days_left <= 30 %}class="table-danger"{% elif days_left is not none and days_left <= 90 %}class="table-warning"{% endif %}>
+                        <td>{{ forklift.management_number }}</td>
+                        <td>{{ forklift.manufacturer }}</td>
+                        <td>{{ forklift.model }}</td>
+                        <td>{{ prediction.tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.tire_replacement_date else '-' }}</td>
+                        <td>{{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.next_tire_replacement_date else '-' }}</td>
+                        <td>
+                            {% if days_left is not none %}
+                                {{ days_left }}日
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('annual_inspection.manage_battery_tire', forklift_id=forklift.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> 交換管理
+                                </a>
+                                <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i> 詳細
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center my-3">キャスタータイヤ交換予定はありません。</p>
+        {% endif %}
+    </div>
+</div>
+
+<!-- その他タイヤ交換予定 -->
+<div class="card mb-4">
+    <div class="card-header bg-warning text-dark">
+        <h5 class="card-title mb-0">その他タイヤ交換予定</h5>
+    </div>
+    <div class="card-body">
+        {% if tire_replacements %}
+        <div class="table-responsive">
+            <table class="table table-striped table-hover">
+                <thead>
+                    <tr>
+                        <th>管理番号</th>
+                        <th>メーカー</th>
+                        <th>機種</th>
+                        <th>前回交換日</th>
+                        <th>タイヤタイプ</th>
+                        <th>次回交換予定日</th>
+                        <th>残り日数</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for forklift, prediction in tire_replacements %}
+                    {% if prediction and prediction.tire_type and prediction.tire_type != 'drive' and prediction.tire_type != 'caster' and prediction.tire_type != 'both' %}
+                    {% set days_left = (prediction.next_tire_replacement_date - now().date()).days if prediction and prediction.next_tire_replacement_date else None %}
+                    <tr {% if days_left is not none and days_left <= 30 %}class="table-danger"{% elif days_left is not none and days_left <= 90 %}class="table-warning"{% endif %}>
+                        <td>{{ forklift.management_number }}</td>
+                        <td>{{ forklift.manufacturer }}</td>
+                        <td>{{ forklift.model }}</td>
+                        <td>{{ prediction.tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.tire_replacement_date else '-' }}</td>
+                        <td>{{ prediction.tire_type }}</td>
+                        <td>{{ prediction.next_tire_replacement_date.strftime('%Y-%m-%d') if prediction and prediction.next_tire_replacement_date else '-' }}</td>
+                        <td>
+                            {% if days_left is not none %}
+                                {{ days_left }}日
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <a href="{{ url_for('annual_inspection.manage_battery_tire', forklift_id=forklift.id) }}" class="btn btn-primary">
+                                    <i class="bi bi-pencil"></i> 交換管理
+                                </a>
+                                <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-info">
+                                    <i class="bi bi-eye"></i> 詳細
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <p class="text-center my-3">その他タイヤ交換予定はありません。</p>
         {% endif %}
     </div>
 </div>

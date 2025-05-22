@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+
+{% block title %}フォークリフト画像一覧 - 倉庫修繕費管理システム{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>フォークリフト画像一覧</h1>
+    <div>
+        <a href="{{ url_for('pdf_management.upload', asset_type='forklift', asset_id=forklift.id) }}" class="btn btn-success me-2">
+            <i class="bi bi-upload"></i> 画像アップロード
+        </a>
+        <a href="{{ url_for('forklift.view', id=forklift.id) }}" class="btn btn-primary me-2">
+            <i class="bi bi-eye"></i> フォークリフト詳細
+        </a>
+        <a href="{{ url_for('forklift.index') }}" class="btn btn-secondary">
+            <i class="bi bi-arrow-left"></i> 一覧に戻る
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-primary text-white">
+        <h5 class="card-title mb-0">フォークリフト情報</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <p><strong>管理番号:</strong> {{ forklift.management_number }}</p>
+                <p><strong>メーカー:</strong> {{ forklift.manufacturer }}</p>
+                <p><strong>機種:</strong> {{ forklift.model }}</p>
+            </div>
+            <div class="col-md-6">
+                <p><strong>タイプ:</strong> {{ forklift.type_name }}</p>
+                <p><strong>動力:</strong> {{ forklift.power_source_name }}</p>
+                <p><strong>製造年月日:</strong> {{ forklift.manufacture_date.strftime('%Y-%m-%d') }}</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if image_files %}
+<div class="row">
+    {% for image in image_files %}
+    <div class="col-md-4 mb-4">
+        <div class="card h-100">
+            <img src="{{ url_for('static', filename=image.path.replace('static/', '')) }}" class="card-img-top" alt="{{ image.display_filename }}" style="height: 200px; object-fit: cover;">
+            <div class="card-body">
+                <h5 class="card-title">{{ image.display_filename }}</h5>
+                {% if image.description %}
+                <p class="card-text">{{ image.description }}</p>
+                {% endif %}
+                <p class="card-text"><small class="text-muted">アップロード日: {{ image.created_at.strftime('%Y-%m-%d %H:%M') }}</small></p>
+                {% if image.created_by %}
+                <p class="card-text"><small class="text-muted">アップロード者: {{ image.created_by }}</small></p>
+                {% endif %}
+            </div>
+            <div class="card-footer">
+                <a href="{{ url_for('static', filename=image.path.replace('static/', '')) }}" class="btn btn-sm btn-primary" target="_blank">
+                    <i class="bi bi-eye"></i> 拡大表示
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="alert alert-info">
+    <i class="bi bi-info-circle"></i> このフォークリフトに関連する画像はありません。
+</div>
+{% endif %}
+{% endblock %}

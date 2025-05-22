@@ -175,6 +175,14 @@ def restore_backup(filename):
                     # 権限を設定
                     os.chmod(db_path, 0o666)
                     
+                    # データベース接続を再確立
+                    from flask import current_app
+                    with current_app.app_context():
+                        # SQLAlchemyエンジンを再作成
+                        db.engine.dispose()
+                        db.create_all()
+                        db.session.commit()
+                    
                     # データベース復元の成功をログに記録
                     current_app.logger.info(f"データベースを正常に復元しました: {db_path}")
                 else:
@@ -272,7 +280,17 @@ def restore_backup(filename):
                     current_app.logger.error(f"アップロードファイル復元中にエラーが発生しました: {str(e)}")
                     raise
         
-        flash('システムが正常に復元されました。アプリケーションを再起動してください。', 'success')
+        flash('システムが正常に復元されました。変更を完全に反映するには、アプリケーションを再起動してください。', 'success')
+        # データベース接続を再確立して即時反映を試みる
+        from app.models import db
+        try:
+            db.session.close_all()
+            db.engine.dispose()
+            db.create_all()
+            db.session.commit()
+            current_app.logger.info("データベース接続を再確立しました。")
+        except Exception as e:
+            current_app.logger.error(f"データベース接続の再確立中にエラーが発生しました: {str(e)}")
     except Exception as e:
         flash(f'復元中にエラーが発生しました: {str(e)}', 'danger')
     

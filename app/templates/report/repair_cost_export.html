@@ -31,6 +31,7 @@
                             <label for="asset_type">資産種類</label>
                             <select class="form-control" id="asset_type" name="asset_type" required>
                                 <option value="all">すべて</option>
+                                <option value="facility_forklift_other">倉庫施設・フォークリフト・その他</option>
                                 <option value="facility">倉庫施設</option>
                                 <option value="forklift">フォークリフト</option>
                                 <option value="other">その他</option>
@@ -110,6 +111,12 @@
                     options = otherTargets;
                     labelText = 'その他対象';
                     break;
+                case 'facility_forklift_other':
+                    // 倉庫施設・フォークリフト・その他を選択した場合
+                    targetIdsSelect.disabled = true;
+                    targetIdsSelect.innerHTML = '<option value="" disabled selected>倉庫施設・フォークリフト・その他のすべてが対象となります</option>';
+                    labelText = '対象資産（倉庫施設・フォークリフト・その他）';
+                    return;
                 case 'all':
                     targetIdsSelect.disabled = true;
                     targetIdsSelect.innerHTML = '<option value="" disabled selected>すべての資産が対象となります</option>';

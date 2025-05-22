@@ -360,6 +360,13 @@ def view_pdf(filepath):
     current_app.logger.info(f"Attempting to access PDF file: {file_path}")
     
     if not os.path.exists(file_path) or not os.path.isfile(file_path):
+        # ファイルが見つからない場合、絶対パスでも試してみる
+        if os.path.isabs(filepath):
+            file_path = filepath
+            if os.path.exists(file_path) and os.path.isfile(file_path):
+                current_app.logger.info(f"Found PDF file using absolute path: {file_path}")
+                return send_file(file_path, mimetype='application/pdf')
+        
         current_app.logger.error(f"File not found: {file_path}")
         abort(404)
     

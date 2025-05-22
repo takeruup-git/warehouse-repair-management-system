@@ -50,7 +50,7 @@ def repair_cost_export():
             monthly_data = {}
             
             # 資産タイプに応じたデータ取得
-            if asset_type == 'all' or asset_type == 'forklift':
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'forklift':
                 # フォークリフトのデータを取得
                 forklift_query = db.session.query(
                     extract('year', ForkliftRepair.repair_date).label('year'),
@@ -82,7 +82,7 @@ def repair_cost_export():
                     asset_key = f"フォークリフト: {management_number}"
                     monthly_data[month_key][asset_key] = total_cost
             
-            if asset_type == 'all' or asset_type == 'facility':
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'facility':
                 # 倉庫施設のデータを取得
                 facility_query = db.session.query(
                     extract('year', FacilityRepair.repair_date).label('year'),
@@ -114,7 +114,7 @@ def repair_cost_export():
                     asset_key = f"倉庫施設: {warehouse_number}"
                     monthly_data[month_key][asset_key] = total_cost
             
-            if asset_type == 'all' or asset_type == 'other':
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'other':
                 # その他資産のデータを取得
                 other_query = db.session.query(
                     extract('year', OtherRepair.repair_date).label('year'),
@@ -150,7 +150,90 @@ def repair_cost_export():
                 all_asset_keys.update(month_data.keys())
             all_asset_keys = sorted(list(all_asset_keys))
             
-            # データフレームを作成
+            # 詳細データを含むデータフレームを作成
+            # 全ての修繕データを取得
+            all_repairs = []
+            
+            # フォークリフト修繕データ
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'forklift':
+                forklift_repairs_query = db.session.query(
+                    ForkliftRepair, Forklift
+                ).join(
+                    Forklift, ForkliftRepair.forklift_id == Forklift.id
+                ).filter(
+                    ForkliftRepair.repair_date.between(start_date, end_date)
+                )
+                
+                if asset_type == 'forklift' and target_ids:
+                    forklift_repairs_query = forklift_repairs_query.filter(ForkliftRepair.forklift_id.in_([int(id) for id in target_ids if id.isdigit()]))
+                
+                for repair, forklift in forklift_repairs_query.all():
+                    all_repairs.append({
+                        '修繕日': repair.repair_date,
+                        '資産種類': 'フォークリフト',
+                        '資産ID': forklift.id,
+                        '資産名': forklift.management_number,
+                        '修繕項目': repair.repair_item,
+                        '修繕費用': repair.repair_cost,
+                        '修繕理由': repair.repair_reason,
+                        '業者': repair.contractor,
+                        '備考': repair.notes or ''
+                    })
+            
+            # 倉庫施設修繕データ
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'facility':
+                facility_repairs_query = db.session.query(
+                    FacilityRepair, Facility
+                ).join(
+                    Facility, FacilityRepair.facility_id == Facility.id
+                ).filter(
+                    FacilityRepair.repair_date.between(start_date, end_date)
+                )
+                
+                if asset_type == 'facility' and target_ids:
+                    facility_repairs_query = facility_repairs_query.filter(FacilityRepair.facility_id.in_([int(id) for id in target_ids if id.isdigit()]))
+                
+                for repair, facility in facility_repairs_query.all():
+                    all_repairs.append({
+                        '修繕日': repair.repair_date,
+                        '資産種類': '倉庫施設',
+                        '資産ID': facility.id,
+                        '資産名': facility.warehouse_number,
+                        '修繕項目': repair.repair_item,
+                        '修繕費用': repair.repair_cost,
+                        '修繕理由': repair.repair_reason,
+                        '業者': repair.contractor,
+                        '備考': repair.notes or ''
+                    })
+            
+            # その他修繕データ
+            if asset_type == 'all' or asset_type == 'facility_forklift_other' or asset_type == 'other':
+                other_repairs_query = OtherRepair.query.filter(
+                    OtherRepair.repair_date.between(start_date, end_date)
+                )
+                
+                if asset_type == 'other' and target_ids:
+                    other_repairs_query = other_repairs_query.filter(OtherRepair.id.in_([int(id) for id in target_ids if id.isdigit()]))
+                
+                for repair in other_repairs_query.all():
+                    all_repairs.append({
+                        '修繕日': repair.repair_date,
+                        '資産種類': 'その他',
+                        '資産ID': repair.id,
+                        '資産名': repair.target_name,
+                        '修繕項目': repair.repair_item,
+                        '修繕費用': repair.repair_cost,
+                        '修繕理由': repair.repair_reason,
+                        '業者': repair.contractor,
+                        '備考': repair.notes or ''
+                    })
+            
+            # 詳細データをDataFrameに変換
+            df_details = pd.DataFrame(all_repairs)
+            if not df_details.empty:
+                df_details = df_details.sort_values(by='修繕日')
+            
+            # 集計データを作成
             data = []
             for month in months:
                 month_str = month.strftime('%Y年%m月')
@@ -197,11 +280,11 @@ def repair_cost_export():
             output = BytesIO()
             
             with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
-                # データシートを作成
-                df.to_excel(writer, sheet_name='修繕費データ', index=False)
+                # 集計データシートを作成
+                df.to_excel(writer, sheet_name='修繕費集計', index=False)
                 
                 workbook = writer.book
-                worksheet = writer.sheets['修繕費データ']
+                worksheet = writer.sheets['修繕費集計']
                 
                 # 列幅を調整
                 for i, col in enumerate(df.columns):
@@ -222,6 +305,31 @@ def repair_cost_export():
                 header_format = workbook.add_format({'bold': True, 'bg_color': '#D9D9D9'})
                 for i, col in enumerate(df.columns):
                     worksheet.write(1, i, col, header_format)
+                
+                # 詳細データシートを作成
+                if not df_details.empty:
+                    # 日付を文字列に変換
+                    df_details['修繕日'] = df_details['修繕日'].dt.strftime('%Y-%m-%d')
+                    df_details.to_excel(writer, sheet_name='修繕詳細データ', index=False)
+                    
+                    detail_worksheet = writer.sheets['修繕詳細データ']
+                    
+                    # 列幅を調整
+                    for i, col in enumerate(df_details.columns):
+                        column_width = max(df_details[col].astype(str).map(len).max(), len(col)) + 2
+                        detail_worksheet.set_column(i, i, column_width)
+                    
+                    # タイトルを追加
+                    detail_worksheet.write(0, 0, f'修繕詳細データ ({start_date.strftime("%Y/%m/%d")} - {end_date.strftime("%Y/%m/%d")})', title_format)
+                    
+                    # データを1行下にずらす
+                    for i, row in df_details.iterrows():
+                        for j, col in enumerate(df_details.columns):
+                            detail_worksheet.write(i + 2, j, row[col])
+                    
+                    # ヘッダーを再設定
+                    for i, col in enumerate(df_details.columns):
+                        detail_worksheet.write(1, i, col, header_format)
                 
                 # グラフシートを作成
                 chart_sheet = workbook.add_worksheet('修繕費グラフ')
