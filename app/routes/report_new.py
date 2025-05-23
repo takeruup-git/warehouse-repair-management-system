@@ -9,6 +9,7 @@ from datetime import datetime, timedelta
 import pandas as pd
 from io import BytesIO
 import json
+import numpy as np
 from config import Config
 
 report_bp = Blueprint('report', __name__)
@@ -208,6 +209,11 @@ def export_repair_data(form_data, export_format):
     # データをDataFrameに変換
     df = pd.DataFrame(all_repairs)
     
+    # NaN/INF値を適切な値に置換
+    if not df.empty:
+        df = df.fillna('')
+        df = df.replace([np.inf, -np.inf], 0)
+    
     if df.empty:
         flash('条件に一致するデータがありませんでした。', 'warning')
         return redirect(url_for('report.database_export'))
@@ -244,7 +250,7 @@ def export_repair_data(form_data, export_format):
         # Excelファイルを作成
         output = BytesIO()
         
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output, engine='xlsxwriter', options={'nan_inf_to_errors': True}) as writer:
             df.to_excel(writer, sheet_name='修繕データ', index=False)
             
             workbook = writer.book
@@ -336,6 +342,11 @@ def export_forklift_data(form_data, export_format):
     # DataFrameに変換
     df = pd.DataFrame(forklift_data)
     
+    # NaN/INF値を適切な値に置換
+    if not df.empty:
+        df = df.fillna('')
+        df = df.replace([np.inf, -np.inf], 0)
+    
     # 日付列を文字列に変換
     if '製造日' in df.columns and pd.api.types.is_datetime64_any_dtype(df['製造日']):
         df['製造日'] = df['製造日'].dt.strftime('%Y-%m-%d')
@@ -361,7 +372,7 @@ def export_forklift_data(form_data, export_format):
         # Excelファイルを作成
         output = BytesIO()
         
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output, engine='xlsxwriter', options={'nan_inf_to_errors': True}) as writer:
             df.to_excel(writer, sheet_name='フォークリフトマスタ', index=False)
             
             workbook = writer.book
@@ -434,6 +445,11 @@ def export_facility_data(form_data, export_format):
     # DataFrameに変換
     df = pd.DataFrame(facility_data)
     
+    # NaN/INF値を適切な値に置換
+    if not df.empty:
+        df = df.fillna('')
+        df = df.replace([np.inf, -np.inf], 0)
+    
     # 日付列を文字列に変換
     if '建設日' in df.columns and pd.api.types.is_datetime64_any_dtype(df['建設日']):
         df['建設日'] = df['建設日'].dt.strftime('%Y-%m-%d')
@@ -459,7 +475,7 @@ def export_facility_data(form_data, export_format):
         # Excelファイルを作成
         output = BytesIO()
         
-        with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+        with pd.ExcelWriter(output, engine='xlsxwriter', options={'nan_inf_to_errors': True}) as writer:
             df.to_excel(writer, sheet_name='倉庫施設マスタ', index=False)
             
             workbook = writer.book

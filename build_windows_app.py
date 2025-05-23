@@ -17,7 +17,7 @@ def build_exe():
     pyinstaller_cmd = [
         'pyinstaller',
         '--name=倉庫修繕費管理システム',
-        '--icon=app/static/img/favicon.ico',  # アイコンファイルがある場合
+        # '--icon=app/static/img/favicon.ico',  # アイコンファイルが存在しないためコメントアウト
         '--add-data=app/templates;app/templates',
         '--add-data=app/static;app/static',
         '--add-data=migrations;migrations',
@@ -43,7 +43,17 @@ def build_exe():
     ]
     
     # PyInstallerを実行
-    subprocess.run(pyinstaller_cmd)
+    result = subprocess.run(pyinstaller_cmd)
+    
+    if result.returncode != 0:
+        print("PyInstallerの実行中にエラーが発生しました。")
+        return False
+    
+    # ビルド結果を確認
+    dist_dir = 'dist/倉庫修繕費管理システム'
+    if not os.path.exists(dist_dir):
+        print("ビルドディレクトリが作成されませんでした。")
+        return False
     
     print("実行ファイルのビルドが完了しました。")
     
@@ -57,9 +67,17 @@ def build_exe():
     create_inno_setup_script()
     
     print("セットアップファイルの準備が完了しました。")
+    return True
 
 def create_first_run_batch():
     """初回起動用のバッチファイルを作成"""
+    dist_dir = 'dist/倉庫修繕費管理システム'
+    
+    # ディレクトリが存在しない場合は作成
+    if not os.path.exists(dist_dir):
+        os.makedirs(dist_dir)
+        print(f"ディレクトリを作成しました: {dist_dir}")
+    
     batch_content = """@echo off
 echo 倉庫修繕費管理システム - 初回起動
 echo データベースを初期化しています...
@@ -89,23 +107,34 @@ echo 次回からは「倉庫修繕費管理システム.exe」を直接実行�
 pause
 """
     
-    with open('dist/倉庫修繕費管理システム/初回起動.bat', 'w', encoding='shift-jis') as f:
-        f.write(batch_content)
-    
-    print("初回起動用バッチファイルを作成しました。")
+    try:
+        with open(f'{dist_dir}/初回起動.bat', 'w', encoding='shift-jis') as f:
+            f.write(batch_content)
+        print("初回起動用バッチファイルを作成しました。")
+    except Exception as e:
+        print(f"初回起動用バッチファイルの作成中にエラーが発生しました: {e}")
 
 def create_run_batch():
     """通常起動用のバッチファイルを作成"""
+    dist_dir = 'dist/倉庫修繕費管理システム'
+    
+    # ディレクトリが存在しない場合は作成
+    if not os.path.exists(dist_dir):
+        os.makedirs(dist_dir)
+        print(f"ディレクトリを作成しました: {dist_dir}")
+    
     batch_content = """@echo off
 echo 倉庫修繕費管理システム - 起動中...
 cd %~dp0
 start "" "倉庫修繕費管理システム.exe"
 """
     
-    with open('dist/倉庫修繕費管理システム/起動.bat', 'w', encoding='shift-jis') as f:
-        f.write(batch_content)
-    
-    print("通常起動用バッチファイルを作成しました。")
+    try:
+        with open(f'{dist_dir}/起動.bat', 'w', encoding='shift-jis') as f:
+            f.write(batch_content)
+        print("通常起動用バッチファイルを作成しました。")
+    except Exception as e:
+        print(f"通常起動用バッチファイルの作成中にエラーが発生しました: {e}")
 
 def create_inno_setup_script():
     """Inno Setupスクリプトを作成"""
@@ -170,7 +199,11 @@ Filename: "{app}\\初回起動.bat"; Description: "初回セットアップを�
     print("Inno Setupスクリプトを作成しました。")
 
 if __name__ == "__main__":
-    build_exe()
-    print("ビルドプロセスが完了しました。")
-    print("Inno Setupを使用してインストーラーを作成するには、以下のコマンドを実行してください：")
-    print("iscc 倉庫修繕費管理システム.iss")
+    success = build_exe()
+    if success:
+        print("ビルドプロセスが完了しました。")
+        print("Inno Setupを使用してインストーラーを作成するには、以下のコマンドを実行してください：")
+        print("iscc 倉庫修繕費管理システム.iss")
+    else:
+        print("ビルドプロセス中にエラーが発生しました。")
+        sys.exit(1)

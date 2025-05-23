@@ -233,6 +233,9 @@ def repair_cost_export():
             df_details = pd.DataFrame(all_repairs)
             if not df_details.empty:
                 df_details = df_details.sort_values(by='修繕日')
+                # NaN/INF値を適切な値に置換
+                df_details = df_details.fillna('')
+                df_details = df_details.replace([np.inf, -np.inf], 0)
             
             # 集計データを作成
             data = []
@@ -247,6 +250,10 @@ def repair_cost_export():
                 data.append(row_data)
             
             df = pd.DataFrame(data)
+            
+            # NaN/INF値を0に置換
+            df = df.fillna(0)
+            df = df.replace([np.inf, -np.inf], 0)
             
             # 合計行を追加
             totals = {'月': '合計'}
@@ -280,7 +287,8 @@ def repair_cost_export():
             # Excelファイルを作成
             output = BytesIO()
             
-            with pd.ExcelWriter(output, engine='xlsxwriter') as writer:
+            # NaN/INF値を処理するためのオプションを設定
+            with pd.ExcelWriter(output, engine='xlsxwriter', options={'nan_inf_to_errors': True}) as writer:
                 # 集計データシートを作成
                 df.to_excel(writer, sheet_name='修繕費集計', index=False)
                 

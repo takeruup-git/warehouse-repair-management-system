@@ -319,6 +319,35 @@
 </div>
 {% endif %}
 
+<!-- PDFアップロード機能 -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">PDFアップロード</h5>
+    </div>
+    <div class="card-body">
+        <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data" class="mb-4">
+            {% include 'includes/csrf_token.html' %}
+            <input type="hidden" name="asset_type" value="forklift">
+            <input type="hidden" name="asset_id" value="{{ forklift.id }}">
+            <input type="hidden" name="operator_name" id="operator_name_pdf">
+            
+            <div class="mb-3">
+                <label for="pdf_file" class="form-label">PDFファイル</label>
+                <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf" required>
+            </div>
+            
+            <div class="mb-3">
+                <label for="pdf_description" class="form-label">ファイル説明</label>
+                <input type="text" class="form-control" id="pdf_description" name="description" placeholder="ファイルの説明を入力してください">
+            </div>
+            
+            <button type="submit" class="btn btn-primary">
+                <i class="bi bi-upload"></i> アップロード
+            </button>
+        </form>
+    </div>
+</div>
+
 <!-- 画像アップロード・閲覧機能 -->
 <div class="card mb-4">
     <div class="card-header d-flex justify-content-between align-items-center">
@@ -356,6 +385,23 @@
                     <span class="visually-hidden">Loading...</span>
                 </div>
                 <p>画像一覧を読み込み中...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- アップロードされたPDFファイル一覧 -->
+<div class="card mb-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="card-title mb-0">アップロードされたPDFファイル</h5>
+    </div>
+    <div class="card-body">
+        <div id="uploaded-pdfs-container">
+            <div class="text-center">
+                <div class="spinner-border text-primary" role="status">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p>PDFファイル一覧を読み込み中...</p>
             </div>
         </div>
     </div>
@@ -443,59 +489,7 @@
     </div>
 </div>
 
-<!-- PDF・画像アップロード機能 -->
-<div class="card mb-4">
-    <div class="card-header d-flex justify-content-between align-items-center">
-        <h5 class="card-title mb-0">PDF・画像アップロード</h5>
-    </div>
-    <div class="card-body">
-        <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data" class="mb-4">
-    
-            {% include 'includes/csrf_token.html' %}
-            <input type="hidden" name="asset_type" value="forklift">
-            <input type="hidden" name="asset_id" value="{{ forklift.id }}">
-            <input type="hidden" name="operator_name" id="operator_name_pdf">
-            
-            <div class="mb-3">
-                <label for="pdf_file" class="form-label">PDFファイル</label>
-                <input type="file" class="form-control" id="pdf_file" name="pdf_file" accept=".pdf" required>
-            </div>
-            
-            <div class="mb-3">
-                <label for="pdf_description" class="form-label">ファイル説明</label>
-                <input type="text" class="form-control" id="pdf_description" name="description" placeholder="ファイルの説明を入力してください">
-            </div>
-            
-            <button type="submit" class="btn btn-primary">
-                <i class="bi bi-upload"></i> アップロード
-            </button>
-        </form>
-        
-        <hr>
-        
-        <form action="{{ url_for('pdf_management.upload') }}" method="post" enctype="multipart/form-data">
-    
-            {% include 'includes/csrf_token.html' %}
-            <input type="hidden" name="asset_type" value="forklift">
-            <input type="hidden" name="asset_id" value="{{ forklift.id }}">
-            <input type="hidden" name="operator_name" id="operator_name_image">
-            
-            <div class="mb-3">
-                <label for="image_file" class="form-label">画像ファイル</label>
-                <input type="file" class="form-control" id="image_file" name="image_file" accept="image/*" required>
-            </div>
-            
-            <div class="mb-3">
-                <label for="image_description" class="form-label">画像説明</label>
-                <input type="text" class="form-control" id="image_description" name="description" placeholder="画像の説明を入力してください">
-            </div>
-            
-            <button type="submit" class="btn btn-success">
-                <i class="bi bi-upload"></i> アップロード
-            </button>
-        </form>
-    </div>
-</div>
+
 
 <!-- アップロードされたファイル一覧 -->
 <div class="card mb-4">
@@ -604,6 +598,49 @@ document.addEventListener('DOMContentLoaded', function() {
     if (operatorNameImage && globalOperator) {
         operatorNameImage.value = globalOperator.value;
     }
+    
+    // フォークリフトに関連するPDFファイルを取得
+    fetch(`/api/files?entity_type=forklift&entity_id={{ forklift.id }}&file_type=pdf`)
+        .then(response => response.json())
+        .then(data => {
+            const container = document.getElementById('uploaded-pdfs-container');
+            
+            if (data.success && data.files && data.files.length > 0) {
+                // PDFファイル一覧をテーブル表示
+                let html = '<div class="table-responsive">';
+                html += '<table class="table table-striped">';
+                html += '<thead><tr><th>ファイル名</th><th>説明</th><th>アップロード日</th><th>操作</th></tr></thead>';
+                html += '<tbody>';
+                
+                data.files.forEach(file => {
+                    html += `
+                    <tr>
+                        <td>${file.original_filename}</td>
+                        <td>${file.description || ''}</td>
+                        <td>${file.created_at}</td>
+                        <td>
+                            <a href="/pdf_management/view/static/uploads/${file.file_path.replace(/\\/g, '/')}" target="_blank" class="btn btn-sm btn-info">
+                                <i class="bi bi-file-earmark-pdf"></i> PDF表示
+                            </a>
+                            <a href="/pdf_management/download/static/uploads/${file.file_path.replace(/\\/g, '/')}" class="btn btn-sm btn-secondary">
+                                <i class="bi bi-download"></i> ダウンロード
+                            </a>
+                        </td>
+                    </tr>`;
+                });
+                
+                html += '</tbody></table></div>';
+                container.innerHTML = html;
+            } else {
+                // PDFファイルがない場合
+                container.innerHTML = '<div class="alert alert-info">アップロードされたPDFファイルはありません。</div>';
+            }
+        })
+        .catch(error => {
+            console.error('Error fetching PDF files:', error);
+            const container = document.getElementById('uploaded-pdfs-container');
+            container.innerHTML = '<div class="alert alert-danger">PDFファイル一覧の取得中にエラーが発生しました。</div>';
+        });
     
     // フォークリフトに関連する画像ファイルを取得
     fetch(`/api/files?entity_type=forklift&entity_id={{ forklift.id }}&file_type=image`)
