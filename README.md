@@ -157,6 +157,51 @@ http://localhost:53319
 http://[あなたのIPアドレス]:53319
 ```
 
+## Windows用インストーラーの作成
+
+Windows環境でインストーラーを作成する手順は以下の通りです：
+
+### 必要なツール
+
+1. Python 3.8以上
+2. PyInstaller
+3. Inno Setup (Windows用インストーラー作成ツール)
+
+### インストーラー作成手順
+
+1. 必要なパッケージをインストール
+
+```bash
+pip install pyinstaller pywin32 winshell
+```
+
+2. アプリケーションをビルド
+
+```bash
+python build_windows_app.py
+```
+
+このコマンドは以下の処理を行います：
+- PyInstallerを使用してアプリケーションをビルド
+- 初回起動用と通常起動用のバッチファイルを作成
+- Inno Setup用のスクリプトファイルを作成
+
+3. Inno Setupを使用してインストーラーを作成
+
+```bash
+iscc 倉庫修繕費管理システム.iss
+```
+
+4. 作成されたインストーラー（`installer/倉庫修繕費管理システム_セットアップ.exe`）を配布
+
+### インストール後の使用方法
+
+1. インストール完了時に「初回セットアップを実行」オプションを選択するか、スタートメニューまたはデスクトップの「倉庫修繕費管理システム - 初回起動」ショートカットをクリック
+2. 初回起動時に管理者ユーザーを作成し、必要に応じてサンプルデータを追加
+3. 以降は、デスクトップの「倉庫修繕費管理システム」アイコンをクリックして起動
+
+詳細な手順については、[Windows インストーラー作成手順](WINDOWS_INSTALLER_README.md)を参照してください。
+
 ## ディレクトリ構造
 
 ```
@@ -203,7 +248,9 @@ warehouse-repair-management-system/
 │   ├── integration/     # 統合テスト
 │   └── uploads/         # テスト用アップロードディレクトリ
 ├── app.py               # アプリケーションのエントリーポイント
+├── build_windows_app.py # Windows用インストーラービルドスクリプト
 ├── config.py            # 設定ファイル
+├── create_windows_shortcut.py # Windowsショートカット作成スクリプト
 ├── init_db.py           # データベース初期化スクリプト
 ├── add_sample_data.py   # サンプルデータ追加スクリプト
 ├── add_admin_user.py    # 管理者ユーザー作成スクリプト
@@ -214,10 +261,17 @@ warehouse-repair-management-system/
 ├── run_integration_tests.py  # 統合テスト実行スクリプト
 ├── run_migration.py     # マイグレーション実行スクリプト
 ├── run_migration_windows.bat # Windows用マイグレーション実行バッチ
+├── WINDOWS_INSTALLER_README.md # Windows用インストーラー作成手順
 └── README.md            # このファイル
 ```
 
 ## 最新の更新内容
+
+### 2025-05-23 更新
+- レポート機能のエラーを修正：「Can only use .dt accessor with datetimelike values」エラーを解決
+- 倉庫施設詳細画面のテンプレートエラーを修正：「Unexpected end of template. Jinja was looking for the following tags: 'endblock'」エラーを解決
+- フォークリフト詳細画面の画像アップロード機能を修正：アップロードした画像がファイル一覧に表示されない問題を解決
+- Windows用インストーラー作成機能を追加：EXEファイルと初回起動用のセットアップファイルを作成する機能を追加
 
 ### 2025-05-21 更新
 - ログイン時のTypeErrorを修正：未認証状態で`current_user.is_admin()`が呼び出されるエラーを修正
