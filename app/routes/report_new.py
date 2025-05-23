@@ -216,11 +216,11 @@ def export_repair_data(form_data, export_format):
     df = df.sort_values(by='修繕日')
     
     # 日時列を文字列に変換
-    if '修繕日' in df.columns:
+    if '修繕日' in df.columns and pd.api.types.is_datetime64_any_dtype(df['修繕日']):
         df['修繕日'] = df['修繕日'].dt.strftime('%Y-%m-%d')
-    if '作成日時' in df.columns:
+    if '作成日時' in df.columns and pd.api.types.is_datetime64_any_dtype(df['作成日時']):
         df['作成日時'] = df['作成日時'].dt.strftime('%Y-%m-%d %H:%M:%S')
-    if '更新日時' in df.columns:
+    if '更新日時' in df.columns and pd.api.types.is_datetime64_any_dtype(df['更新日時']):
         df['更新日時'] = df['更新日時'].dt.strftime('%Y-%m-%d %H:%M:%S')
     
     # ファイル名を設定
@@ -337,7 +337,7 @@ def export_forklift_data(form_data, export_format):
     df = pd.DataFrame(forklift_data)
     
     # 日付列を文字列に変換
-    if '製造日' in df.columns:
+    if '製造日' in df.columns and pd.api.types.is_datetime64_any_dtype(df['製造日']):
         df['製造日'] = df['製造日'].dt.strftime('%Y-%m-%d')
     
     # ファイル名を設定
@@ -435,7 +435,7 @@ def export_facility_data(form_data, export_format):
     df = pd.DataFrame(facility_data)
     
     # 日付列を文字列に変換
-    if '建設日' in df.columns:
+    if '建設日' in df.columns and pd.api.types.is_datetime64_any_dtype(df['建設日']):
         df['建設日'] = df['建設日'].dt.strftime('%Y-%m-%d')
     
     # ファイル名を設定

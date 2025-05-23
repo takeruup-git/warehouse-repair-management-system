@@ -303,8 +303,23 @@ def upload():
                 file_path = os.path.join(upload_dir, filename)
                 file.save(file_path)
                 
-                # 監査ログを記録
+                # 相対パスを保存
+                relative_path = os.path.join(unique_dir, filename)
+                
+                # ファイルメタデータを作成
                 operator = request.form.get('operator_name', 'システム')
+                file_metadata = FileMetadata(
+                    file_path=relative_path,
+                    original_filename=original_filename,
+                    file_type='image',
+                    entity_type=asset_type if asset_type else None,
+                    entity_id=asset_id if asset_id else None,
+                    description=description,
+                    created_by=operator
+                )
+                db.session.add(file_metadata)
+                
+                # 監査ログを記録
                 log_details = f'画像ファイル {filename} をアップロード'
                 if description:
                     log_details += f' (説明: {description})'
